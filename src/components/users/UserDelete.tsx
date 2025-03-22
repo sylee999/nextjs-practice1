@@ -1,5 +1,4 @@
 'use client'
-import React from 'react'
 
 interface User {
   id: string
@@ -15,8 +14,16 @@ const UserDelete = ({ userId }: { userId: string }) => {
       if (response.ok) {
         alert('User deleted successfully!')
       } else {
-        console.error('Failed to delete user')
-        alert('Failed to delete user')
+        try {
+          const errorData = await response.json()
+          console.error('Failed to delete user:', errorData)
+          alert(
+            `Failed to delete user: ${errorData.message || 'Unknown error'}`
+          )
+        } catch (parseError) {
+          console.error('Failed to delete user:', response.statusText)
+          alert(`Failed to delete user: ${response.statusText}`)
+        }
       }
     } catch (error) {
       console.error('Error deleting user:', error)

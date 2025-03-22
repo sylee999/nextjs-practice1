@@ -4,8 +4,8 @@
 
 - **Project Name:** nextjs-practice1
 - **Objective:**
-    - Learn AI-assisted development and prompt engineering.
-    - Implement basic CRUD features (users, posts) using [mockapi.io](https://mockapi.io/).
+  - Learn AI-assisted development and prompt engineering.
+  - Implement basic CRUD features (users, posts) using [mockapi.io](https://mockapi.io/).
 
 ## 2. Core Features
 

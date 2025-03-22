@@ -1,5 +1,5 @@
 'use client'
-import React, { useState, useEffect } from 'react'
+import { useEffect, useState } from 'react'
 
 interface User {
   id: string
@@ -24,8 +24,16 @@ const UserEdit = ({ userId }: { userId: string }) => {
           setName(data.name)
           setEmail(data.email)
         } else {
-          console.error('Failed to fetch user')
-          alert('Failed to fetch user')
+          try {
+            const errorData = await response.json()
+            console.error('Failed to fetch user:', errorData)
+            alert(
+              `Failed to fetch user: ${errorData.message || 'Unknown error'}`
+            )
+          } catch (parseError) {
+            console.error('Failed to fetch user:', response.statusText)
+            alert(`Failed to fetch user: ${response.statusText}`)
+          }
         }
       } catch (error) {
         console.error('Error fetching user:', error)
@@ -54,8 +62,16 @@ const UserEdit = ({ userId }: { userId: string }) => {
       if (response.ok) {
         alert('User updated successfully!')
       } else {
-        console.error('Failed to update user')
-        alert('Failed to update user')
+        try {
+          const errorData = await response.json()
+          console.error('Failed to update user:', errorData)
+          alert(
+            `Failed to update user: ${errorData.message || 'Unknown error'}`
+          )
+        } catch (parseError) {
+          console.error('Failed to update user:', response.statusText)
+          alert(`Failed to update user: ${response.statusText}`)
+        }
       }
     } catch (error) {
       console.error('Error updating user:', error)
