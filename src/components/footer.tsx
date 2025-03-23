@@ -2,10 +2,10 @@ import React from 'react'
 
 const Footer: React.FC = () => {
   return (
-    <footer className="bg-background fixed right-0 bottom-0 left-0 z-50 flex w-full items-center border-t">
+    <footer className="bg-background fixed bottom-0 left-0 z-50 flex w-full items-center border-t">
       <div className="container-wrapper w-full">
         <div className="container py-4">
-          <div className="text-muted-foreground text-center text-sm leading-loose text-balance md:text-left">
+          <div className="text-muted-foreground text-center text-sm leading-loose text-balance">
             Built by{' '}
             <a
               href="https://github.com/sylee999"
