@@ -36,7 +36,7 @@ const UserList = () => {
   }, [])
 
   return (
-    <div className="min-h-screen bg-black p-4 text-white">
+    <div className="flex flex-1 flex-col gap-4 p-4 pt-0">
       <h1 className="text-2xl font-bold">Team Members</h1>
       <p className="text-gray-400">Create your new team member.</p>
       <ul>

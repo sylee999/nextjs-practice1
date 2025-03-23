@@ -16,12 +16,12 @@ import * as React from 'react'
 const data = [
   {
     title: 'Users',
-    url: '#',
+    url: '/users',
     icon: UserRound,
   },
   {
     title: 'Posts',
-    url: '#',
+    url: '/posts',
     icon: MessageSquareText,
   },
 ]

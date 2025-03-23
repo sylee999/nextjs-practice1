@@ -5,7 +5,7 @@ interface MainProps {
 }
 
 const Main: React.FC<MainProps> = ({ children }) => {
-  return <main>{children}</main>
+  return <div className="flex flex-1 flex-col gap-4 p-4">{children}</div>
 }
 
 export default Main
