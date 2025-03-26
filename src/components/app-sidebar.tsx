@@ -16,12 +16,12 @@ import { MessageSquareText, UserRound } from 'lucide-react'
 const data = [
   {
     title: 'Users',
-    url: '/users',
+    url: '/user',
     icon: UserRound,
   },
   {
     title: 'Posts',
-    url: '/posts',
+    url: '/post',
     icon: MessageSquareText,
   },
 ]
