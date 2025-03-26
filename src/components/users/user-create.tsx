@@ -1,5 +1,5 @@
 'use client'
-import React, { useState } from 'react'
+import { useState } from 'react'
 
 const UserCreate = () => {
   const [name, setName] = useState('')
@@ -26,8 +26,16 @@ const UserCreate = () => {
         setEmail('')
         alert('User created successfully!')
       } else {
-        console.error('Failed to create user')
-        alert('Failed to create user')
+        try {
+          const errorData = await response.json()
+          console.error('Failed to create user:', errorData)
+          alert(
+            `Failed to create user: ${errorData.message || 'Unknown error'}`
+          )
+        } catch (parseError) {
+          console.error('Failed to create user:', response.statusText)
+          alert(`Failed to create user: ${response.statusText}`)
+        }
       }
     } catch (error) {
       console.error('Error creating user:', error)

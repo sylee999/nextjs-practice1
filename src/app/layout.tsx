@@ -1,3 +1,8 @@
+import { AppSidebar } from '@/components/app-sidebar'
+import Footer from '@/components/footer'
+import Header from '@/components/header'
+import Main from '@/components/main'
+import { SidebarInset, SidebarProvider } from '@/components/ui/sidebar'
 import type { Metadata } from 'next'
 import { Geist, Geist_Mono } from 'next/font/google'
 import './globals.css'
@@ -27,7 +32,27 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
-        {children}
+        <div className="[--header-height:calc(--spacing(14))]">
+          <Header />
+          <SidebarProvider
+            className="flex flex-col"
+            style={
+              {
+                '--sidebar-width': '10rem',
+              } as React.CSSProperties
+            }
+          >
+            <div className="flex flex-1">
+              <AppSidebar />
+              <SidebarInset>
+                <Main>
+                  <main>{children}</main>
+                </Main>
+              </SidebarInset>
+            </div>
+          </SidebarProvider>
+          <Footer />
+        </div>
       </body>
     </html>
   )
