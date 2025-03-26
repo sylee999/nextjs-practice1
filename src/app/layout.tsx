@@ -33,8 +33,15 @@ export default function RootLayout({
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
         <div className="[--header-height:calc(--spacing(14))]">
-          <SidebarProvider className="flex flex-col">
-            <Header />
+          <Header />
+          <SidebarProvider
+            className="flex flex-col"
+            style={
+              {
+                '--sidebar-width': '10rem',
+              } as React.CSSProperties
+            }
+          >
             <div className="flex flex-1">
               <AppSidebar />
               <SidebarInset>
@@ -43,8 +50,8 @@ export default function RootLayout({
                 </Main>
               </SidebarInset>
             </div>
-            <Footer />
           </SidebarProvider>
+          <Footer />
         </div>
       </body>
     </html>

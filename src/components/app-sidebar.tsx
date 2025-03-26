@@ -10,6 +10,7 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
 } from '@/components/ui/sidebar'
+import { useIsMobile } from '@/hooks/use-mobile'
 import { MessageSquareText, UserRound } from 'lucide-react'
 
 const data = [
@@ -26,9 +27,12 @@ const data = [
 ]
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
+  const isMobile = useIsMobile()
+
   return (
     <Sidebar
-      className="top-(--header-height) h-[calc(100svh-var(--header-height))]!"
+      className={isMobile ? 'w-[3rem] transition-all duration-300' : ''}
+      collapsible="none"
       {...props}
     >
       <SidebarContent>
