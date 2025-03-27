@@ -1,0 +1,15 @@
+import { UserListSkeleton } from '@/components/users/user-list-skeleton'
+import React, { Suspense } from 'react'
+
+export default function UserLayout({
+  children,
+}: {
+  children: React.ReactNode
+}) {
+  return (
+    <div className="container mx-auto py-8">
+      <h1 className="mb-6 text-3xl font-bold">User Management</h1>
+      <Suspense fallback={<UserListSkeleton />}>{children}</Suspense>
+    </div>
+  )
+}

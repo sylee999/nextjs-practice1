@@ -1,58 +1,44 @@
-'use client'
-import { useEffect, useState } from 'react'
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 
 interface User {
   id: string
+  createdAt: string // Assuming ISO string format
   name: string
-  email: string
+  avatar: string // URL
 }
 
-const UserList = () => {
-  const [users, setUsers] = useState<User[]>([])
+interface UserListProps {
+  users: User[]
+}
 
-  useEffect(() => {
-    const fetchUsers = async () => {
-      try {
-        const response = await fetch(
-          'https://67dc2dda1fd9e43fe4778cd6.mockapi.io/api/v1/users'
-        )
-        if (response.ok) {
-          const data: User[] = await response.json()
-          setUsers(data)
-        } else {
-          try {
-            const errorData = await response.json()
-            console.error('Failed to fetch users:', errorData)
-          } catch (parseError) {
-            console.error('Failed to fetch users:', response.statusText)
-          }
-        }
-      } catch (error) {
-        console.error('Error fetching users:', error)
-      }
-    }
-
-    fetchUsers()
-  }, [])
+export function UserList({ users }: UserListProps) {
+  if (!users || users.length === 0) {
+    return <p>No users found.</p>
+  }
 
   return (
-    <div className="flex flex-1 flex-col gap-4 p-4 pt-0">
-      <h1 className="text-2xl font-bold">Team Members</h1>
-      <p className="text-gray-400">Create your new team member.</p>
-      <ul>
-        {users.map((user) => (
-          <li key={user.id} className="flex items-center py-2">
-            {/* Placeholder for avatar */}
-            <div className="mr-2 h-8 w-8 rounded-full bg-gray-600"></div>
+    <ul className="space-y-4">
+      {users.map((user) => (
+        <li
+          key={user.id}
+          className="flex items-center justify-between rounded-md border p-4"
+        >
+          <div className="flex items-center space-x-4">
+            <Avatar>
+              <AvatarImage src={user.avatar} alt={user.name} />
+              <AvatarFallback>{user.name.charAt(0)}</AvatarFallback>
+            </Avatar>
             <div>
-              <p className="font-semibold">{user.name}</p>
-              <p className="text-gray-400">{user.email}</p>
+              <p className="font-medium">{user.name}</p>
+              <p className="text-sm text-gray-500">
+                Joined: {new Date(user.createdAt).toLocaleDateString()}
+              </p>
             </div>
-          </li>
-        ))}
-      </ul>
-    </div>
+          </div>
+          {/* Placeholder for action buttons (Edit/Delete) */}
+          <div></div>
+        </li>
+      ))}
+    </ul>
   )
 }
-
-export default UserList
