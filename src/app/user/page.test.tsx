@@ -3,19 +3,6 @@ import { render, screen, waitFor } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import UserPage from './page'
 
-// Mock the UserList component to isolate the page logic
-vi.mock('@/components/users/user-list', () => ({
-  UserList: ({ users }: { users: any[] }) => (
-    <div data-testid="user-list">
-      {users.map((user) => (
-        <div key={user.id} data-testid={`user-${user.id}`}>
-          {user.name}
-        </div>
-      ))}
-    </div>
-  ),
-}))
-
 // Mock environment variable
 const originalEnv = process.env
 
@@ -53,10 +40,10 @@ describe('UserPage', () => {
     } as Response)
 
     // Render the component - Need to resolve the promise returned by the async component
-    const { findByTestId } = render(await UserPage())
+    render(await UserPage())
 
     // Wait for the UserList component to be rendered with data
-    const userList = await findByTestId('user-list')
+    const userList = await screen.findByTestId('user-list')
     expect(userList).toBeInTheDocument()
 
     // Check if users are rendered (based on the mock UserList)
@@ -80,18 +67,9 @@ describe('UserPage', () => {
 
     render(await UserPage())
 
-    // UserList mock renders "No users found" when users array is empty
-    // We need to adjust the mock or the assertion based on actual UserList implementation
-    // For now, let's assume the mock UserList handles the empty case correctly
-    // Or, we can check if the list container is empty or shows a specific message
+    // UserList renders "No users found" when users array is empty
     await waitFor(() => {
-      // Depending on how UserList handles empty state, this might need adjustment
-      // If UserList renders <p>No users found.</p>, we can check for that text.
-      // Since we mocked UserList, let's check if the list container is present but empty
-      const userList = screen.queryByTestId('user-list')
-      expect(userList).toBeInTheDocument()
-      expect(userList?.childElementCount).toBe(0)
-      // If the actual UserList renders text: expect(screen.getByText('No users found.')).toBeInTheDocument();
+      expect(screen.getByText('No users found.')).toBeInTheDocument()
     })
   })
 
@@ -118,10 +96,7 @@ describe('UserPage', () => {
 
     // Check that it renders the empty state (as per current error handling)
     await waitFor(() => {
-      const userList = screen.queryByTestId('user-list')
-      expect(userList).toBeInTheDocument()
-      expect(userList?.childElementCount).toBe(0)
-      // If the actual UserList renders text: expect(screen.getByText('No users found.')).toBeInTheDocument();
+      expect(screen.getByText('No users found.')).toBeInTheDocument()
     })
 
     consoleErrorSpy.mockRestore()

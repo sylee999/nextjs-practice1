@@ -17,11 +17,12 @@ export function UserList({ users }: UserListProps) {
   }
 
   return (
-    <ul className="space-y-4">
+    <ul className="space-y-4" data-testid="user-list">
       {users.map((user) => (
         <li
           key={user.id}
           className="flex items-center justify-between rounded-md border p-4"
+          data-testid={`user-${user.id}`}
         >
           <div className="flex items-center space-x-4">
             <Avatar>
