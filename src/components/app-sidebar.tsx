@@ -1,7 +1,9 @@
-'use client'
+"use client"
 
-import * as React from 'react'
+import * as React from "react"
+import { MessageSquareText, UserRound } from "lucide-react"
 
+import { useIsMobile } from "@/hooks/use-mobile"
 import {
   Sidebar,
   SidebarContent,
@@ -9,19 +11,17 @@ import {
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
-} from '@/components/ui/sidebar'
-import { useIsMobile } from '@/hooks/use-mobile'
-import { MessageSquareText, UserRound } from 'lucide-react'
+} from "@/components/ui/sidebar"
 
 const data = [
   {
-    title: 'Users',
-    url: '/user',
+    title: "Users",
+    url: "/user",
     icon: UserRound,
   },
   {
-    title: 'Posts',
-    url: '/post',
+    title: "Posts",
+    url: "/post",
     icon: MessageSquareText,
   },
 ]
@@ -31,7 +31,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
 
   return (
     <Sidebar
-      className={isMobile ? 'w-[3rem] transition-all duration-300' : ''}
+      className={isMobile ? "w-[3rem] transition-all duration-300" : ""}
       collapsible="none"
       {...props}
     >

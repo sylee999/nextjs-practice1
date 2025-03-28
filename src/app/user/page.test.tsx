@@ -1,14 +1,16 @@
-import '@testing-library/jest-dom'
-import { render, screen, waitFor } from '@testing-library/react'
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import UserPage from './page'
+import "@testing-library/jest-dom"
+
+import { render, screen, waitFor } from "@testing-library/react"
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
+
+import UserPage from "./page"
 
 // Mock environment variable
 const originalEnv = process.env
 
-describe('UserPage', () => {
+describe("UserPage", () => {
   beforeEach(() => {
-    process.env = { ...originalEnv, MOCKAPI_TOKEN: 'test-token' }
+    process.env = { ...originalEnv, MOCKAPI_TOKEN: "test-token" }
     global.fetch = vi.fn()
   })
 
@@ -17,19 +19,19 @@ describe('UserPage', () => {
     vi.restoreAllMocks()
   })
 
-  it('renders user list on successful fetch', async () => {
+  it("renders user list on successful fetch", async () => {
     const mockUsers = [
       {
-        id: '1',
-        name: 'Alice',
+        id: "1",
+        name: "Alice",
         createdAt: new Date().toISOString(),
-        avatar: 'avatar1.png',
+        avatar: "avatar1.png",
       },
       {
-        id: '2',
-        name: 'Bob',
+        id: "2",
+        name: "Bob",
         createdAt: new Date().toISOString(),
-        avatar: 'avatar2.png',
+        avatar: "avatar2.png",
       },
     ]
 
@@ -43,18 +45,18 @@ describe('UserPage', () => {
     render(await UserPage())
 
     // Wait for the UserList component to be rendered with data
-    const userList = await screen.findByTestId('user-list')
+    const userList = await screen.findByTestId("user-list")
     expect(userList).toBeInTheDocument()
 
     // Check if users are rendered (based on the mock UserList)
-    expect(await screen.findByTestId('user-1')).toHaveTextContent('Alice')
-    expect(await screen.findByTestId('user-2')).toHaveTextContent('Bob')
+    expect(await screen.findByTestId("user-1")).toHaveTextContent("Alice")
+    expect(await screen.findByTestId("user-2")).toHaveTextContent("Bob")
 
     // Verify fetch was called correctly
     expect(global.fetch).toHaveBeenCalledTimes(1)
     expect(global.fetch).toHaveBeenCalledWith(
-      'https://test-token.mockapi.io/api/v1/users',
-      { cache: 'no-store' }
+      "https://test-token.mockapi.io/api/v1/users",
+      { cache: "no-store" }
     )
   })
 
@@ -69,19 +71,19 @@ describe('UserPage', () => {
 
     // UserList renders "No users found" when users array is empty
     await waitFor(() => {
-      expect(screen.getByText('No users found.')).toBeInTheDocument()
+      expect(screen.getByText("No users found.")).toBeInTheDocument()
     })
   })
 
-  it('handles fetch error gracefully', async () => {
+  it("handles fetch error gracefully", async () => {
     // Mock fetch to throw an error
     ;(global.fetch as ReturnType<typeof vi.fn>).mockRejectedValue(
-      new Error('API Error')
+      new Error("API Error")
     )
 
     // Spy on console.error
     const consoleErrorSpy = vi
-      .spyOn(console, 'error')
+      .spyOn(console, "error")
       .mockImplementation(() => {})
 
     render(await UserPage())
@@ -89,26 +91,26 @@ describe('UserPage', () => {
     // Expect console.error to have been called
     await waitFor(() => {
       expect(consoleErrorSpy).toHaveBeenCalledWith(
-        'Error fetching users:',
+        "Error fetching users:",
         expect.any(Error)
       )
     })
 
     // Check that it renders the empty state (as per current error handling)
     await waitFor(() => {
-      expect(screen.getByText('No users found.')).toBeInTheDocument()
+      expect(screen.getByText("No users found.")).toBeInTheDocument()
     })
 
     consoleErrorSpy.mockRestore()
   })
 
-  it('throws error if MOCKAPI_TOKEN is not set', async () => {
+  it("throws error if MOCKAPI_TOKEN is not set", async () => {
     delete process.env.MOCKAPI_TOKEN // Unset the token
 
     // We expect the component rendering to throw
     // Need to wrap the async component call properly to catch the error
     await expect(UserPage()).rejects.toThrow(
-      'MOCKAPI_TOKEN is not defined in environment variables.'
+      "MOCKAPI_TOKEN is not defined in environment variables."
     )
   })
 })

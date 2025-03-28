@@ -1,4 +1,4 @@
-import React from 'react'
+import React from "react"
 
 const Footer: React.FC = () => {
   return (
@@ -6,7 +6,7 @@ const Footer: React.FC = () => {
       <div className="container-wrapper w-full">
         <div className="container py-4">
           <div className="text-muted-foreground text-center text-sm leading-loose text-balance">
-            Built by{' '}
+            Built by{" "}
             <a
               href="https://github.com/sylee999"
               target="_blank"
@@ -15,7 +15,7 @@ const Footer: React.FC = () => {
             >
               sylee999
             </a>
-            . The source code is available on{' '}
+            . The source code is available on{" "}
             <a
               href="https://github.com/sylee999/nextjs-practice1"
               target="_blank"
