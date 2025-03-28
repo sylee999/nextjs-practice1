@@ -1,20 +1,25 @@
-'use client'
-import { useState } from 'react'
+"use client"
+
+import { useState } from "react"
+
+interface APIError {
+  message: string
+}
 
 const UserCreate = () => {
-  const [name, setName] = useState('')
-  const [email, setEmail] = useState('')
+  const [name, setName] = useState("")
+  const [email, setEmail] = useState("")
 
-  const handleSubmit = async (e: any) => {
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
 
     try {
       const response = await fetch(
-        'https://6601b60f6a8b6a4a6ea395a5.mockapi.io/api/v1/users',
+        "https://6601b60f6a8b6a4a6ea395a5.mockapi.io/api/v1/users",
         {
-          method: 'POST',
+          method: "POST",
           headers: {
-            'Content-Type': 'application/json',
+            "Content-Type": "application/json",
           },
           body: JSON.stringify({ name, email }),
         }
@@ -22,24 +27,24 @@ const UserCreate = () => {
 
       if (response.ok) {
         // Reset form
-        setName('')
-        setEmail('')
-        alert('User created successfully!')
+        setName("")
+        setEmail("")
+        alert("User created successfully!")
       } else {
         try {
-          const errorData = await response.json()
-          console.error('Failed to create user:', errorData)
+          const errorData = (await response.json()) as APIError
+          console.error("Failed to create user:", errorData)
           alert(
-            `Failed to create user: ${errorData.message || 'Unknown error'}`
+            `Failed to create user: ${errorData.message || "Unknown error"}`
           )
-        } catch (parseError) {
-          console.error('Failed to create user:', response.statusText)
-          alert(`Failed to create user: ${response.statusText}`)
+        } catch {
+          console.error("Error creating user")
+          alert("Error creating user")
         }
       }
-    } catch (error) {
-      console.error('Error creating user:', error)
-      alert('Error creating user')
+    } catch {
+      console.error("Error creating user")
+      alert("Error creating user")
     }
   }
 
