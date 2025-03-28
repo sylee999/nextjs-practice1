@@ -1,4 +1,4 @@
-import { UserList } from '@/components/users/user-list'
+import { UserList } from '@/components/user/user-list'
 
 interface User {
   id: string

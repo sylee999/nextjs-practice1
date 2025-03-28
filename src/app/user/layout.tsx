@@ -1,4 +1,4 @@
-import { UserListSkeleton } from '@/components/users/user-list-skeleton'
+import { UserListSkeleton } from '@/components/user/user-list-skeleton'
 import React, { Suspense } from 'react'
 
 export default function UserLayout({
