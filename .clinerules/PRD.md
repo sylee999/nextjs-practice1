@@ -1,34 +1,147 @@
 # Product Requirements Document (PRD)
 
-## 1. Project Overview
+## 1. Overview
+- **Project Name**: `nextjs-practice1`
+- **Goal**: Implement and learn CRUD operations for `user` and `post` resources via a REST API backend.
 
-- **Project Name:** nextjs-practice1
-- **Objective:**
-  - Learn AI-assisted development and prompt engineering.
-  - Implement basic CRUD features (users, posts) using [mockapi.io](https://mockapi.io/).
+---
 
-## 2. Core Features
+## 2. Main Features
+- **User**
+  - Create, Read, Update, Delete users
+  - View all posts by a user
+  - Like/unlike users
+  - View all users who liked a user
+- **Post**
+  - Create, Read, Update, Delete posts
+  - Like/unlike posts
+  - View all users liked by a post
 
-### 🟢 User Management
+---
 
-- Create, read, update, and delete users.
-- Display user details in a structured format.
+## 3. Tech Stack & Implementation
 
-### 🟠 Post Management
+### 3.1 Tech Stack
+- Next.js 15 (App Router)
+- Tailwind CSS + Shadcn/UI
+- mockapi.io REST API
+- Vercel (deployment)
+- GitHub (version control)
+- Vitest, React Testing Library (testing)
 
-- CRUD operations for posts.
-- Support text-based posts.
+### 3.2 Implementation Guidelines
+- **Project Structure**
+  ```text
+  /src
+    /app         # Next.js pages using App Router
+    /components  # React components
+    /lib         # Utility functions and API wrapper
+    /types       # TypeScript type definitions
+  /public        # Static assets
+  ```
+- Follow App Router conventions
+- Global styles in `globals.css`; component styles with Tailwind classes
+- Wrap REST calls in `/lib/api.ts`
+- Write tests with Vitest and React Testing Library
+- **Security**: Do not read or modify `.env*`, `/config/secrets.*`, or any file with API keys or credentials
 
-## 3. Technical Implementation
+---
 
-- **Framework:** Next.js 15 (Latest Spec)
-- **Data Fetching Strategies:** SSR, ISR, Caching
-- **API Handling:** `ServerAction` for backend interactions (`actions.ts`).
-- **UI & Styling:** TailwindCSS v4, ShadCN/UI.
-- **Testing:** Vitest, React Testing Library.
+## 4. Code Style & Naming
+- Use ESLint + Prettier for formatting
+- Follow Next.js and React naming and style conventions
 
-## 4. Performance & Optimization
+---
 
-- Use Next.js caching strategies.
-- Optimize API calls using `ServerAction`.
-- Ensure responsiveness with TailwindCSS.
+## 5. Development Process
+
+### 5.1 Branch Strategy
+- Use GitHub Flow
+- Branch types: `feature/*` and `bugfix/*`
+- **Naming**: `feature/{issue-number}-{short-title}` or `bugfix/{issue-number}-{short-title}`
+
+### 5.2 Issue, Commit & PR Guidelines
+
+#### Issue Management
+- **Labels**: `feature` for new features, `bug` for bugs
+- **Template**:
+  ```markdown
+  ### Why?
+  (Purpose)
+
+  ### What?
+  (Task to do)
+
+  ### Notes
+  (Screenshots, links)
+  ```
+
+#### Branch Rules
+- One branch per issue
+- Merge to `main` when work is complete
+
+#### Commit Messages
+```text
+<type>: <subject>
+```
+- **type**: `feat`, `fix`, `docs`, `chore`
+- **subject**: imperative, under 50 characters
+- **Examples**:
+  ```
+  feat: connect login API
+  fix: correct avatar upload error
+  ```
+
+#### Pull Request (PR)
+- **Title**: same as commit message
+- **Body**:
+  ```markdown
+  ### Summary
+  - Key changes
+
+  ### Details
+  - Detailed description
+
+  ### Related Issue
+  - Closes #123
+  ```
+- Merge directly if CI passes
+- For large changes:
+  1. Draft PR
+  2. Self-review
+  3. Ready for review
+  4. Merge after approval
+- **CI Checks**: commitlint, build, test
+
+---
+
+### 5.3 Testing & Quality
+- Unit tests for business logic
+- Integration tests for REST API endpoints
+- E2E tests for critical user flows (CRUD, like feature)
+
+---
+
+## 6. Entity Definitions
+
+### User
+| column     | type     |
+|------------|----------|
+| id         | ObjectID |
+| createdAt  | Date     |
+| name       | String   |
+| avatar     | String   |
+| email      | String   |
+| likeUsers  | Array    |
+
+### Post
+| column     | type     |
+|------------|----------|
+| id         | ObjectID |
+| userId     | ObjectID |
+| title      | String   |
+| content    | String   |
+| likeUsers  | Array    |
+| createdAt  | Date     |
+| updatedAt  | Date     |
+
