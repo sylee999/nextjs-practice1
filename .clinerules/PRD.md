@@ -55,6 +55,8 @@
 
 ## 5. Development Process
 
+**Note:** GitHub repo information is in the `repository` field in the `package.json` file.
+
 ### 5.1 Branch Strategy
 - Use GitHub Flow
 - Branch types: `feature/*` and `bugfix/*`
@@ -144,4 +146,3 @@
 | likeUsers  | Array    |
 | createdAt  | Date     |
 | updatedAt  | Date     |
-
