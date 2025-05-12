@@ -1,0 +1,45 @@
+---
+description: Entity definitions and relationships for the application data model
+globs: 
+alwaysApply: true
+---
+# Entity Definitions
+
+## User Entity
+| Column    | Type     | Description                               |
+|-----------|----------|-------------------------------------------|
+| id        | ObjectID | Unique identifier                         |
+| createdAt | Date     | Timestamp when user was created           |
+| name      | String   | User's display name                       |
+| avatar    | String   | URL to user's profile image               |
+| email     | String   | User's email address                      |
+| likeUsers | Array    | Array of user IDs who liked this user     |
+
+## Post Entity
+| Column    | Type     | Description                               |
+|-----------|----------|-------------------------------------------|
+| id        | ObjectID | Unique identifier                         |
+| userId    | ObjectID | Reference to the user who created the post|
+| title     | String   | Post title                                |
+| content   | String   | Post content                              |
+| likeUsers | Array    | Array of user IDs who liked this post     |
+| createdAt | Date     | Timestamp when post was created           |
+| updatedAt | Date     | Timestamp when post was last updated      |
+
+## Entity Relationships
+- A User can have multiple Posts (one-to-many)
+- A User can like multiple Users (many-to-many)
+- A User can like multiple Posts (many-to-many)
+- A Post belongs to a User (many-to-one)
+
+## API Operations
+### User Operations
+- Create, Read, Update, Delete users
+- View all posts by a user
+- Like/unlike users
+- View all users who liked a user
+
+### Post Operations
+- Create, Read, Update, Delete posts
+- Like/unlike posts
+- View all users who liked a post 

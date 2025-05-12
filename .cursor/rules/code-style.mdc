@@ -1,0 +1,39 @@
+---
+description: Code style and naming conventions
+globs: 
+alwaysApply: true
+---
+# Code Style & Naming Conventions
+
+## General Guidelines
+- Use ESLint + Prettier for formatting
+- Follow Next.js and React naming and style conventions
+- Keep files focused and with a single responsibility
+- Use TypeScript for all files
+
+## Naming Conventions
+- Use PascalCase for React components
+- Use camelCase for variables, functions, and instance methods
+- Use kebab-case for file names
+- Use ALL_CAPS for constants
+- Use descriptive, intention-revealing names
+
+## Component Structure
+- Place styles with Tailwind classes directly in components
+- Group related components in subdirectories
+- Keep components small and focused
+- Extract reusable components to `/components` directory
+- Use named exports for components
+
+## TypeScript
+- Define types in `/types` directory
+- Use interfaces for object shapes
+- Use descriptive names for type definitions
+- Avoid `any` type as much as possible
+- Use generics where appropriate
+
+## API Calls
+- Wrap all REST calls in `/lib/api.ts`
+- Use proper error handling for API calls
+- Implement proper loading states
+- Use TypeScript interfaces for API responses 

@@ -1,0 +1,61 @@
+---
+description: Development process and workflow guidelines
+globs:
+alwaysApply: false
+---
+# Development Process Guidelines
+
+## Branch Strategy
+- Use GitHub Flow
+- Create branches from `main`
+- Use branch types: `feature/*` and `bugfix/*`
+- Follow naming format: `feature/{issue-number}-{short-title}` or `bugfix/{issue-number}-{short-title}`
+- Merge to `main` when work is complete
+
+## Issue Management
+- Use labels: `feature` for new features, `bug` for bugs
+- Follow issue template:
+  ```markdown
+  ### Why?
+  (Purpose)
+
+  ### What?
+  (Task to do)
+
+  ### Notes
+  (Screenshots, links)
+  ```
+- One branch per issue
+
+## Commit Messages
+- Format: `<type>: <subject>`
+- Types: `feat`, `fix`, `docs`, `chore`
+- Subject: imperative, under 50 characters
+- Examples:
+  ```
+  feat: connect login API
+  fix: correct avatar upload error
+  ```
+
+## Pull Requests
+- Title: same as commit message
+- Follow PR template:
+  ```markdown
+  ### Summary
+  - Key changes
+
+  ### Details
+  - Detailed description
+
+  ### Related Issue
+  - Closes #123
+  ```
+- Draft PR for large changes
+- Merge directly if CI passes
+- Get approval for large changes
+
+## Testing & Quality
+- Write unit tests for business logic
+- Create integration tests for REST API endpoints
+- Implement E2E tests for critical user flows
+- Tests must pass before merging

@@ -1,0 +1,47 @@
+---
+description: Project structure and organization guidelines
+globs: 
+alwaysApply: true
+---
+# Project Structure Guidelines
+
+## Directory Structure
+```text
+/src
+  /app         # Next.js pages using App Router
+  /components  # React components
+  /lib         # Utility functions and API wrapper
+  /types       # TypeScript type definitions
+/public        # Static assets
+```
+
+## App Directory
+- Follow Next.js App Router conventions
+- Organize by route/feature
+- Place layout components in appropriate directories
+- Use loading.tsx for loading states
+- Use error.tsx for error boundaries
+
+## Components Directory
+- Organize by feature or component type
+- Keep components small and focused
+- Create subdirectories for complex components
+- Include tests alongside components
+
+## Lib Directory
+- Place API wrapper in `/lib/api.ts`
+- Group utility functions by domain
+- Keep utility functions pure when possible
+- Write tests for all utility functions
+
+## Types Directory
+- Define shared interfaces and types
+- Use descriptive names for type definitions
+- Export types from a central index file
+- Keep type definitions DRY
+
+## Public Directory
+- Only place static assets here
+- Organize assets by type (images, fonts, etc.)
+- Use optimized image formats (WebP, SVG)
+- Keep file sizes small 

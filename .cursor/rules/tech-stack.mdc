@@ -1,0 +1,45 @@
+---
+description: Technology stack and implementation guidelines
+globs: 
+alwaysApply: true
+---
+# Technology Stack Guidelines
+
+## Core Technologies
+- Next.js 15 (App Router)
+- Tailwind CSS + Shadcn/UI
+- mockapi.io REST API
+- Vercel (deployment)
+- GitHub (version control)
+- Vitest, React Testing Library (testing)
+
+## Frontend Development
+- Use Server Components by default
+- Mark client components explicitly with 'use client'
+- Style components using Tailwind CSS classes
+- Use Shadcn/UI components for consistent UI
+- Implement responsive design for all components
+
+## Backend Integration
+- Use mockapi.io as the REST API backend
+- Wrap all API calls in `/lib/api.ts`
+- Implement proper error handling for API calls
+- Use TypeScript interfaces for API responses
+
+## Testing
+- Write unit tests with Vitest and React Testing Library
+- Test business logic and component functionality
+- Implement integration tests for API endpoints
+- Write E2E tests for critical user flows
+
+## Deployment
+- Deploy to Vercel
+- Set up proper environment variables
+- Use continuous integration for automated testing
+- Implement proper monitoring and error tracking
+
+## Security
+- Do not read or modify `.env*`, `/config/secrets.*`, or any files with credentials
+- Validate all user inputs
+- Implement proper authentication and authorization
+- Use HTTPS for all API calls 
