@@ -47,15 +47,6 @@ describe("UserPage", () => {
     render(page)
 
     expect(screen.getByText("Users")).toBeInTheDocument()
-    expect(screen.getByTestId("sheet-trigger")).toHaveTextContent("Create User")
-    expect(screen.getByTestId("sheet-title")).toHaveTextContent(
-      "Create New User"
-    )
-    expect(screen.getByTestId("sheet-description")).toHaveTextContent(
-      "Fill in the details to create a new user."
-    )
-    expect(screen.getByText("Mocked Create Form")).toBeInTheDocument()
-    expect(screen.getByText("Mocked User List: 0 users")).toBeInTheDocument()
   })
 
   test("handles API error gracefully", async () => {

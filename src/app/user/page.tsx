@@ -1,15 +1,15 @@
 import { UserList } from "@/components/user/user-list"
 
 async function getUsers() {
-  const MOCKAPI_TOKEN = process.env.MOCKAPI_TOKEN
-
-  if (!MOCKAPI_TOKEN) {
-    throw new Error("MOCKAPI_TOKEN environment variable is not defined.")
-  }
-
-  const apiUrl = `https://${MOCKAPI_TOKEN}.mockapi.io/api/v1/users`
-
   try {
+    const MOCKAPI_TOKEN = process.env.MOCKAPI_TOKEN
+
+    if (!MOCKAPI_TOKEN) {
+      throw new Error("MOCKAPI_TOKEN environment variable is not defined.")
+    }
+
+    const apiUrl = `https://${MOCKAPI_TOKEN}.mockapi.io/api/v1/users`
+
     const response = await fetch(apiUrl, { cache: "no-store" })
 
     if (!response.ok) {
