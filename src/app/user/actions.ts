@@ -7,9 +7,13 @@ type State = {
 }
 
 export async function createUser(prevState: State, formData: FormData) {
+  const avatar = formData.get("avatar") as string
   const name = formData.get("name") as string
   const email = formData.get("email") as string
-  const avatar = formData.get("avatar") as string
+  const password = formData.get("password") as string
+  if (!email || !password) {
+    return { message: "Email and password are required." }
+  }
 
   const MOCKAPI_TOKEN = process.env.MOCKAPI_TOKEN
 
@@ -26,9 +30,11 @@ export async function createUser(prevState: State, formData: FormData) {
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
+        avatar,
         name,
         email,
-        avatar,
+        password, // In a real app, this should be hashed before sending
+        createdAt: new Date().toISOString(),
       }),
     })
 
@@ -39,11 +45,14 @@ export async function createUser(prevState: State, formData: FormData) {
     }
 
     revalidatePath("/user")
-    return { message: "User created successfully!" }
+    return { message: "success" }
   } catch (error: unknown) {
     console.error("Error creating user:", error)
     return {
-      message: "Failed to create user. Please try again.",
+      message:
+        error instanceof Error
+          ? error.message
+          : "Failed to create user. Please try again.",
     }
   }
 }

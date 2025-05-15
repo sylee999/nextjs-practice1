@@ -10,6 +10,7 @@ describe("createUser", () => {
   const mockFormData = new FormData()
   mockFormData.append("name", "Test User")
   mockFormData.append("email", "test@example.com")
+  mockFormData.append("password", "password")
   mockFormData.append("avatar", "https://example.com/avatar.jpg")
 
   const mockState = {
@@ -40,6 +41,7 @@ describe("createUser", () => {
         body: JSON.stringify({
           name: "Test User",
           email: "test@example.com",
+          password: "password",
           avatar: "https://example.com/avatar.jpg",
         }),
       })

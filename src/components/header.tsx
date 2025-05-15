@@ -50,8 +50,8 @@ const Header: React.FC = () => {
               </Link>
             </DropdownMenuItem>
             <DropdownMenuItem>
-              <Link href="/signin" className="flex w-full items-center">
-                Signin
+              <Link href="/signup" className="flex w-full items-center">
+                Sign up
               </Link>
             </DropdownMenuItem>
           </DropdownMenuContent>
