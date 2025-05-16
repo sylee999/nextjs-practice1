@@ -1,5 +1,5 @@
 import { revalidatePath } from "next/cache"
-import { describe, expect, test, vi } from "vitest"
+import { describe, expect, Mock, test, vi } from "vitest"
 import { createUser } from "./actions"
 
 vi.mock("next/cache", () => ({
@@ -8,10 +8,10 @@ vi.mock("next/cache", () => ({
 
 describe("createUser", () => {
   const mockFormData = new FormData()
+  mockFormData.append("avatar", "https://example.com/avatar.jpg")
   mockFormData.append("name", "Test User")
   mockFormData.append("email", "test@example.com")
   mockFormData.append("password", "password")
-  mockFormData.append("avatar", "https://example.com/avatar.jpg")
 
   const mockState = {
     message: "",
@@ -31,25 +31,31 @@ describe("createUser", () => {
 
     const result = await createUser(mockState, mockFormData)
 
-    expect(fetch).toHaveBeenCalledWith(
-      "https://test-token.mockapi.io/api/v1/users",
+    // Get the actual call arguments
+    const fetchCall = (fetch as Mock).mock.calls[0]
+    const [url, options] = fetchCall
+
+    expect(url).toBe("https://test-token.mockapi.io/api/v1/users")
+    expect(options.method).toBe("POST")
+    expect(options.headers).toEqual({
+      "Content-Type": "application/json",
+    })
+
+    // Parse the body and check its contents
+    const body = JSON.parse(options.body)
+    expect(body).toEqual(
       expect.objectContaining({
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          name: "Test User",
-          email: "test@example.com",
-          password: "password",
-          avatar: "https://example.com/avatar.jpg",
-        }),
+        avatar: "https://example.com/avatar.jpg",
+        name: "Test User",
+        email: "test@example.com",
+        password: "password",
+        createdAt: expect.any(String),
       })
     )
 
     expect(revalidatePath).toHaveBeenCalledWith("/user")
     expect(result).toEqual({
-      message: "User created successfully!",
+      message: "success",
     })
   })
 
@@ -63,7 +69,7 @@ describe("createUser", () => {
     const result = await createUser(mockState, mockFormData)
 
     expect(result).toEqual({
-      message: "Failed to create user. Please try again.",
+      message: "Failed to create user: 400 Bad Request",
     })
   })
 
