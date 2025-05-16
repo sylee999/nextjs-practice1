@@ -1,6 +1,6 @@
-import React from "react"
-import Link from "next/link"
 import { GalleryVerticalEnd } from "lucide-react"
+import Link from "next/link"
+import React from "react"
 
 import {
   DropdownMenu,
@@ -8,9 +8,9 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
+import { AvatarFallback } from "@radix-ui/react-avatar"
 import { SearchForm } from "./search-form"
 import { Avatar, AvatarImage } from "./ui/avatar"
-import { AvatarFallback } from "@radix-ui/react-avatar"
 
 interface User {
   name: string
@@ -18,8 +18,8 @@ interface User {
 }
 
 const user: User = {
-  name: "John Doe",
-  avatar: "https://github.com/shadcn.png",
+  name: "Not logged in",
+  avatar: "/default-avatar.png",
 }
 
 const Header: React.FC = () => {

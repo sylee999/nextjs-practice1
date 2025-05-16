@@ -8,25 +8,6 @@ vi.mock("@/components/user/user-list", () => ({
   )),
 }))
 
-vi.mock("@/components/ui/sheet", () => ({
-  Sheet: vi.fn(({ children }) => <div data-testid="sheet">{children}</div>),
-  SheetTrigger: vi.fn(({ children }) => (
-    <div data-testid="sheet-trigger">{children}</div>
-  )),
-  SheetContent: vi.fn(({ children }) => (
-    <div data-testid="sheet-content">{children}</div>
-  )),
-  SheetHeader: vi.fn(({ children }) => (
-    <div data-testid="sheet-header">{children}</div>
-  )),
-  SheetTitle: vi.fn(({ children }) => (
-    <div data-testid="sheet-title">{children}</div>
-  )),
-  SheetDescription: vi.fn(({ children }) => (
-    <div data-testid="sheet-description">{children}</div>
-  )),
-}))
-
 vi.mock("@/components/user/user-create-form", () => ({
   default: vi.fn(() => <div>Mocked Create Form</div>),
 }))
