@@ -5,7 +5,8 @@ import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { useActionState, useState } from "react"
+import { useRouter } from "next/navigation"
+import { useActionState, useEffect, useState } from "react"
 import { useFormStatus } from "react-dom"
 import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar"
 
@@ -34,6 +35,13 @@ export function UserForm({
   const [state, formAction, pending] = useActionState(createUser, {
     message: "",
   })
+  const router = useRouter()
+
+  useEffect(() => {
+    if (state.message === "success" && state.id) {
+      router.push(`/user/${state.id}`)
+    }
+  }, [state, router])
 
   return (
     <form className={"flex flex-col gap-6"} action={formAction} {...props}>

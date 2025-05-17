@@ -37,15 +37,15 @@ export async function createUser(prevState: State, formData: FormData) {
         createdAt: new Date().toISOString(),
       }),
     })
-
     if (!response.ok) {
       throw new Error(
         `Failed to create user: ${response.status} ${response.statusText}`
       )
     }
-
     revalidatePath("/user")
-    return { message: "success" }
+    const result = await response.json()
+    console.log(result)
+    return { message: "success", id: result.id }
   } catch (error: unknown) {
     console.error("Error creating user:", error)
     return {
