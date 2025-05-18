@@ -1,8 +1,26 @@
-import React from "react"
-import Link from "next/link"
 import { GalleryVerticalEnd } from "lucide-react"
+import Link from "next/link"
+import React from "react"
 
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
+import { AvatarFallback } from "@radix-ui/react-avatar"
 import { SearchForm } from "./search-form"
+import { Avatar, AvatarImage } from "./ui/avatar"
+
+interface User {
+  name: string
+  avatar: string
+}
+
+const user: User = {
+  name: "Not logged in",
+  avatar: "/default-avatar.png",
+}
 
 const Header: React.FC = () => {
   return (
@@ -18,6 +36,26 @@ const Header: React.FC = () => {
           </div>
         </Link>
         <SearchForm className="ml-auto w-auto" />
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Avatar className="cursor-pointer">
+              <AvatarImage src={user.avatar} alt={user.name} />
+              <AvatarFallback>{user.name.charAt(0)}</AvatarFallback>
+            </Avatar>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end">
+            <DropdownMenuItem>
+              <Link href="/login" className="flex w-full items-center">
+                Login
+              </Link>
+            </DropdownMenuItem>
+            <DropdownMenuItem>
+              <Link href="/signup" className="flex w-full items-center">
+                Sign up
+              </Link>
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
       </div>
     </header>
   )

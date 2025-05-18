@@ -13,6 +13,7 @@ alwaysApply: true
 | name      | String   | User's display name                       |
 | avatar    | String   | URL to user's profile image               |
 | email     | String   | User's email address                      |
+| password  | String   | User's password                           |
 | likeUsers | Array    | Array of user IDs who liked this user     |
 
 ## Post Entity
