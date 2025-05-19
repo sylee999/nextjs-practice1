@@ -55,6 +55,7 @@ describe("createUser", () => {
 
     expect(revalidatePath).toHaveBeenCalledWith("/user")
     expect(result).toEqual({
+      id: 1,
       message: "success",
     })
   })
