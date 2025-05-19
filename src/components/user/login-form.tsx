@@ -1,14 +1,13 @@
 "use client"
 
-import { useState } from "react"
-import { useRouter, useSearchParams } from "next/navigation"
-import { useFormState } from "react-dom"
-import { cn } from "@/lib/utils"
+import { login } from "@/app/auth/actions"
+import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { Alert, AlertDescription } from "@/components/ui/alert"
-import { login } from "@/app/auth/actions"
+import { cn } from "@/lib/utils"
+import { useRouter, useSearchParams } from "next/navigation"
+import { useActionState, useEffect, useState } from "react"
 
 export function LoginForm({
   className,
@@ -21,18 +20,25 @@ export function LoginForm({
   const from = searchParams.get("from") || "/user"
 
   // Use the server action with useFormState
-  const [state, formAction] = useFormState(login, {
+  const [state, formAction] = useActionState(login, {
     success: false,
     message: "",
     from,
   })
 
-  // Handle successful login
-  if (state.success && state.from) {
-    router.push(state.from)
-    router.refresh()
-    return null
-  }
+  useEffect(() => {
+    if (state.success && state.from) {
+      // TODO: Use a global state or context for auth
+      // Store user info and login status in a React context or global state (like Zustand, Redux, or React Context).
+      // Update the context on login/logout, and have the header subscribe to this context.
+      // This is the best practice for a seamless SPA experience, but requires more setup.
+
+      // Minimal fix(Full reload after login) for now. It will be fixed using a global state for auth later.
+      // router.push(state.from)
+      // router.refresh()
+      window.location.href = state.from
+    }
+  }, [state.success, state.from, router])
 
   return (
     <form

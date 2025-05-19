@@ -44,7 +44,6 @@ export async function createUser(prevState: State, formData: FormData) {
     }
     revalidatePath("/user")
     const result = await response.json()
-    console.log(result)
     return { message: "success", id: result.id }
   } catch (error: unknown) {
     console.error("Error creating user:", error)

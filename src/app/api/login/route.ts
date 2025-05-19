@@ -3,10 +3,9 @@ import { NextRequest, NextResponse } from "next/server"
 
 export async function POST(request: NextRequest) {
   try {
-    const body = await request.json()
-    const { userId, email, name } = body
+    const user = await request.json()
 
-    if (!userId || !email) {
+    if (!user.id || !user.email) {
       return NextResponse.json(
         { error: "Missing required fields" },
         { status: 400 }
@@ -14,7 +13,7 @@ export async function POST(request: NextRequest) {
     }
 
     // In a real app, you would encrypt this data
-    const sessionValue = JSON.stringify({ userId, email, name })
+    const sessionValue = JSON.stringify(user)
 
     // Set the session cookie
     const cookieStore = await cookies()

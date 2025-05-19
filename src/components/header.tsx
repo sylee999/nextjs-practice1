@@ -2,8 +2,8 @@
 
 import { GalleryVerticalEnd } from "lucide-react"
 import Link from "next/link"
-import React, { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
+import React, { useEffect, useState } from "react"
 
 import {
   DropdownMenu,
@@ -16,6 +16,7 @@ import { SearchForm } from "./search-form"
 import { Avatar, AvatarImage } from "./ui/avatar"
 
 interface User {
+  id: string
   name: string
   avatar: string
 }
@@ -23,6 +24,7 @@ interface User {
 const Header: React.FC = () => {
   const router = useRouter()
   const [user, setUser] = useState<User>({
+    id: "",
     name: "Not logged in",
     avatar: "/default-avatar.png",
   })
@@ -41,8 +43,8 @@ const Header: React.FC = () => {
           const data = await response.json()
           if (data.user) {
             setUser({
-              name: data.user.name,
               avatar: data.user.avatar || "/default-avatar.png",
+              ...data.user,
             })
             setIsLoggedIn(true)
           }
@@ -64,6 +66,7 @@ const Header: React.FC = () => {
 
       if (response.ok) {
         setUser({
+          id: "",
           name: "Not logged in",
           avatar: "/default-avatar.png",
         })
@@ -100,7 +103,10 @@ const Header: React.FC = () => {
             {isLoggedIn ? (
               <>
                 <DropdownMenuItem>
-                  <Link href="/user" className="flex w-full items-center">
+                  <Link
+                    href={`/user/${user.id}`}
+                    className="flex w-full items-center"
+                  >
                     Profile
                   </Link>
                 </DropdownMenuItem>

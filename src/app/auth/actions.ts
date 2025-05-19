@@ -55,11 +55,7 @@ export async function login(
     const cookieStore = await cookies()
     cookieStore.set({
       name: "session",
-      value: JSON.stringify({
-        userId: user.id,
-        email: user.email,
-        name: user.name,
-      }),
+      value: JSON.stringify(user),
       httpOnly: true,
       path: "/",
       secure: process.env.NODE_ENV === "production",
