@@ -5,6 +5,7 @@ import Link from "next/link"
 import { useRouter } from "next/navigation"
 import React, { useEffect, useState } from "react"
 
+import { logout } from "@/app/auth/actions"
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -14,7 +15,6 @@ import {
 import { AvatarFallback } from "@radix-ui/react-avatar"
 import { SearchForm } from "./search-form"
 import { Avatar, AvatarImage } from "./ui/avatar"
-
 interface User {
   id: string
   name: string
@@ -59,12 +59,8 @@ const Header: React.FC = () => {
 
   const handleLogout = async () => {
     try {
-      const response = await fetch("/api/logout", {
-        method: "POST",
-        credentials: "include",
-      })
-
-      if (response.ok) {
+      const response = await logout()
+      if (response.success) {
         setUser({
           id: "",
           name: "Not logged in",

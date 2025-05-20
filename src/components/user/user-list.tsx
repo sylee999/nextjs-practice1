@@ -1,11 +1,6 @@
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 
-interface User {
-  id: string
-  createdAt: string // Assuming ISO string format
-  name: string
-  avatar: string // URL
-}
+import { User } from "@/types"
 
 interface UserListProps {
   users: User[]
