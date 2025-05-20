@@ -1,7 +1,7 @@
 import { NextResponse, type NextRequest } from "next/server"
 
 // Define protected routes that require authentication
-const protectedRoutes: string[] = []
+const protectedRoutes: string[] = ["/post/create"]
 
 export function middleware(request: NextRequest) {
   const path = request.nextUrl.pathname
@@ -26,9 +26,10 @@ export function middleware(request: NextRequest) {
     return NextResponse.redirect(loginUrl)
   }
 
-  // Redirect to user dashboard if accessing login/signup while authenticated
+  // Redirect to from page if accessing login/signup while authenticated
   if (isAuthRoute && isAuthenticated) {
-    return NextResponse.redirect(new URL("/user", request.url))
+    const from = request.nextUrl.searchParams.get("from")
+    return NextResponse.redirect(new URL(from || "/", request.url))
   }
 
   // Allow the request to proceed
