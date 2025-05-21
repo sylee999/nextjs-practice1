@@ -1,8 +1,11 @@
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+"use client"
+import { UserDetail } from "@/components/user/user-detail"
 
 import { User } from "@/types/user"
+import { useRouter } from "next/navigation"
 
 export function UserList({ users }: { users: User[] }) {
+  const router = useRouter()
   if (!users || users.length === 0) {
     return <p>No users found.</p>
   }
@@ -12,23 +15,11 @@ export function UserList({ users }: { users: User[] }) {
       {users.map((user) => (
         <li
           key={user.id}
-          className="flex items-center justify-between rounded-md border p-4"
+          className="flex cursor-pointer items-center justify-between rounded-md border p-4 hover:bg-gray-50"
           data-testid={`user-${user.id}`}
+          onClick={() => router.push(`/user/${user.id}`)}
         >
-          <div className="flex items-center space-x-4">
-            <Avatar>
-              <AvatarImage src={user.avatar} alt={user.name} />
-              <AvatarFallback>{user.name.charAt(0)}</AvatarFallback>
-            </Avatar>
-            <div>
-              <p className="font-medium">{user.name}</p>
-              <p className="text-sm text-gray-500">
-                Joined: {new Date(user.createdAt).toLocaleDateString()}
-              </p>
-            </div>
-          </div>
-          {/* Placeholder for action buttons (Edit/Delete) */}
-          <div></div>
+          <UserDetail user={user} />
         </li>
       ))}
     </ul>

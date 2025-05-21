@@ -1,15 +1,13 @@
+import { UserDetail } from "@/components/user/user-detail"
+import { getUser } from "../actions"
+import { User } from "@/types/user"
 export default async function UserDetailPage({
   params,
 }: {
   params: { id: string }
 }) {
   const { id } = await params
+  const user = (await getUser(id)) as User
 
-  return (
-    <div>
-      <h1>User Detail Page</h1>
-      <p>User ID: {id}</p>
-      {/* TODO: Fetch and display user details */}
-    </div>
-  )
+  return <UserDetail user={user} />
 }
