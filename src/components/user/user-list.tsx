@@ -1,12 +1,8 @@
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 
-import { User } from "@/types"
+import { User } from "@/types/user"
 
-interface UserListProps {
-  users: User[]
-}
-
-export function UserList({ users }: UserListProps) {
+export function UserList({ users }: { users: User[] }) {
   if (!users || users.length === 0) {
     return <p>No users found.</p>
   }

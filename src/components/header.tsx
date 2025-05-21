@@ -15,11 +15,7 @@ import {
 import { AvatarFallback } from "@radix-ui/react-avatar"
 import { SearchForm } from "./search-form"
 import { Avatar, AvatarImage } from "./ui/avatar"
-interface User {
-  id: string
-  name: string
-  avatar: string
-}
+import { User } from "@/types/user"
 
 const Header: React.FC = () => {
   const router = useRouter()
@@ -27,6 +23,8 @@ const Header: React.FC = () => {
     id: "",
     name: "Not logged in",
     avatar: "/default-avatar.png",
+    email: "",
+    createdAt: "",
   })
   const [isLoggedIn, setIsLoggedIn] = useState(false)
 
@@ -65,6 +63,8 @@ const Header: React.FC = () => {
           id: "",
           name: "Not logged in",
           avatar: "/default-avatar.png",
+          email: "",
+          createdAt: "",
         })
         setIsLoggedIn(false)
         router.push("/login")
