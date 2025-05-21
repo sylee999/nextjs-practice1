@@ -1,7 +1,11 @@
+"use client"
+
 import { GalleryVerticalEnd } from "lucide-react"
 import Link from "next/link"
-import React from "react"
+import { useRouter } from "next/navigation"
+import React, { useEffect, useState } from "react"
 
+import { logout } from "@/app/auth/actions"
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -11,18 +15,66 @@ import {
 import { AvatarFallback } from "@radix-ui/react-avatar"
 import { SearchForm } from "./search-form"
 import { Avatar, AvatarImage } from "./ui/avatar"
-
-interface User {
-  name: string
-  avatar: string
-}
-
-const user: User = {
-  name: "Not logged in",
-  avatar: "/default-avatar.png",
-}
+import { User } from "@/types/user"
 
 const Header: React.FC = () => {
+  const router = useRouter()
+  const [user, setUser] = useState<User>({
+    id: "",
+    name: "Not logged in",
+    avatar: "/default-avatar.png",
+    email: "",
+    createdAt: "",
+  })
+  const [isLoggedIn, setIsLoggedIn] = useState(false)
+
+  useEffect(() => {
+    // Check if user is logged in by checking for session cookie
+    const checkSession = async () => {
+      try {
+        const response = await fetch("/api/check-auth", {
+          method: "GET",
+          credentials: "include",
+        })
+
+        if (response.ok) {
+          const data = await response.json()
+          if (data.user) {
+            setUser({
+              avatar: data.user.avatar || "/default-avatar.png",
+              ...data.user,
+            })
+            setIsLoggedIn(true)
+          }
+        }
+      } catch (error) {
+        console.error("Failed to check authentication status:", error)
+      }
+    }
+
+    checkSession()
+  }, [])
+
+  const handleLogout = async () => {
+    try {
+      const response = await logout()
+      if (response.success) {
+        setUser({
+          id: "",
+          name: "Not logged in",
+          avatar: "/default-avatar.png",
+          email: "",
+          createdAt: "",
+        })
+        setIsLoggedIn(false)
+        router.push("/login")
+        router.refresh()
+      }
+    } catch (error) {
+      console.error("Failed to logout:", error)
+    }
+  }
+
   return (
     <header className="bg-background sticky top-0 z-50 flex w-full items-center border-b">
       <div className="flex h-(--header-height) w-full items-center gap-2 px-4">
@@ -44,16 +96,39 @@ const Header: React.FC = () => {
             </Avatar>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
-            <DropdownMenuItem>
-              <Link href="/login" className="flex w-full items-center">
-                Login
-              </Link>
-            </DropdownMenuItem>
-            <DropdownMenuItem>
-              <Link href="/signup" className="flex w-full items-center">
-                Sign up
-              </Link>
-            </DropdownMenuItem>
+            {isLoggedIn ? (
+              <>
+                <DropdownMenuItem>
+                  <Link
+                    href={`/user/${user.id}`}
+                    className="flex w-full items-center"
+                  >
+                    Profile
+                  </Link>
+                </DropdownMenuItem>
+                <DropdownMenuItem>
+                  <button
+                    onClick={handleLogout}
+                    className="flex w-full items-center"
+                  >
+                    Logout
+                  </button>
+                </DropdownMenuItem>
+              </>
+            ) : (
+              <>
+                <DropdownMenuItem>
+                  <Link href="/login" className="flex w-full items-center">
+                    Login
+                  </Link>
+                </DropdownMenuItem>
+                <DropdownMenuItem>
+                  <Link href="/signup" className="flex w-full items-center">
+                    Sign up
+                  </Link>
+                </DropdownMenuItem>
+              </>
+            )}
           </DropdownMenuContent>
         </DropdownMenu>
       </div>

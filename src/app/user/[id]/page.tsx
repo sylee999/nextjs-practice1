@@ -3,13 +3,12 @@ export default async function UserDetailPage({
 }: {
   params: { id: string }
 }) {
-  // Use Promise.resolve to ensure params.id is awaited
-  const userId = await Promise.resolve(params.id)
+  const { id } = await params
 
   return (
     <div>
       <h1>User Detail Page</h1>
-      <p>User ID: {userId}</p>
+      <p>User ID: {id}</p>
       {/* TODO: Fetch and display user details */}
     </div>
   )
