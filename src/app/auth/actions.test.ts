@@ -1,6 +1,7 @@
-import { describe, expect, test, vi, beforeEach } from "vitest"
-import { login, logout } from "./actions"
+import type { User } from "@/types/user"
 import { cookies } from "next/headers"
+import { beforeEach, describe, expect, test, vi } from "vitest"
+import { login, logout } from "./actions"
 
 // Mock next/headers
 vi.mock("next/headers", () => ({
@@ -156,11 +157,14 @@ describe("auth actions", () => {
 
     test("should set session cookie and return success when credentials are valid", async () => {
       // Mock user data
-      const mockUser = {
+      const mockUser: User = {
         id: "1",
         email: "test@example.com",
         password: "password123",
         name: "Test User",
+        createdAt: new Date().toISOString(),
+        avatar: "https://example.com/avatar.png",
+        likeUsers: [],
       }
 
       // Mock global fetch to return a valid user
@@ -241,6 +245,47 @@ describe("auth actions", () => {
         success: false,
         message: "Failed to delete cookie",
       })
+    })
+  })
+
+  describe("checkAuth", () => {
+    test("should return null if there is no session cookie", async () => {
+      ;(cookies as unknown as ReturnType<typeof vi.fn>).mockReturnValue({
+        get: vi.fn().mockReturnValue(undefined),
+      })
+      const { checkAuth } = await import("./actions")
+      const result = await checkAuth()
+      expect(result).toBeNull()
+    })
+
+    test("should return user object if session cookie is valid", async () => {
+      const mockUser: User = {
+        id: "1",
+        email: "test@example.com",
+        password: "password123",
+        name: "Test User",
+        createdAt: new Date().toISOString(),
+        avatar: "https://example.com/avatar.png",
+        likeUsers: [],
+      }
+      ;(cookies as unknown as ReturnType<typeof vi.fn>).mockReturnValue({
+        get: vi.fn().mockReturnValue({ value: JSON.stringify(mockUser) }),
+      })
+      const { checkAuth } = await import("./actions")
+      const result = await checkAuth()
+      expect(result).toEqual(mockUser)
+    })
+
+    test("should return null and log error if session cookie is invalid JSON", async () => {
+      const errorSpy = vi.spyOn(console, "error").mockImplementation(() => {})
+      ;(cookies as unknown as ReturnType<typeof vi.fn>).mockReturnValue({
+        get: vi.fn().mockReturnValue({ value: "not-json" }),
+      })
+      const { checkAuth } = await import("./actions")
+      const result = await checkAuth()
+      expect(result).toBeNull()
+      expect(errorSpy).toHaveBeenCalled()
+      errorSpy.mockRestore()
     })
   })
 })

@@ -1,6 +1,7 @@
 "use server"
 
 import { getUserApiUrl } from "@/lib/api"
+import { User } from "@/types/user"
 import { cookies } from "next/headers"
 
 type LoginState = {
@@ -99,5 +100,24 @@ export async function logout(): Promise<LogoutState> {
           ? error.message
           : "An error occurred during logout.",
     }
+  }
+}
+
+export async function checkAuth(): Promise<User | null> {
+  try {
+    const cookieStore = await cookies()
+    const sessionCookie = cookieStore.get("session")
+
+    if (!sessionCookie?.value) {
+      return null
+    }
+
+    // In a real app, you would verify the session token
+    // and fetch the user data from your database
+    const user = JSON.parse(sessionCookie.value)
+    return user
+  } catch (error) {
+    console.error("Check auth error:", error)
+    return null
   }
 }

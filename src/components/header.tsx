@@ -5,54 +5,35 @@ import Link from "next/link"
 import { useRouter } from "next/navigation"
 import React, { useEffect, useState } from "react"
 
-import { logout } from "@/app/auth/actions"
+import { checkAuth, logout } from "@/app/auth/actions"
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
+import { User } from "@/types/user"
 import { AvatarFallback } from "@radix-ui/react-avatar"
 import { SearchForm } from "./search-form"
 import { Avatar, AvatarImage } from "./ui/avatar"
-import { User } from "@/types/user"
 
+const notLoggedUser = {
+  id: "",
+  name: "Not logged in",
+  avatar: "/default-avatar.png",
+  email: "",
+  createdAt: "",
+}
 const Header: React.FC = () => {
   const router = useRouter()
-  const [user, setUser] = useState<User>({
-    id: "",
-    name: "Not logged in",
-    avatar: "/default-avatar.png",
-    email: "",
-    createdAt: "",
-  })
-  const [isLoggedIn, setIsLoggedIn] = useState(false)
+  const [user, setUser] = useState<User>(notLoggedUser)
 
   useEffect(() => {
-    // Check if user is logged in by checking for session cookie
-    const checkSession = async () => {
-      try {
-        const response = await fetch("/api/check-auth", {
-          method: "GET",
-          credentials: "include",
-        })
-
-        if (response.ok) {
-          const data = await response.json()
-          if (data.user) {
-            setUser({
-              avatar: data.user.avatar || "/default-avatar.png",
-              ...data.user,
-            })
-            setIsLoggedIn(true)
-          }
-        }
-      } catch (error) {
-        console.error("Failed to check authentication status:", error)
-      }
+    const fetchUser = async () => {
+      const authUser = await checkAuth()
+      setUser(authUser || notLoggedUser)
     }
-
-    checkSession()
+    fetchUser()
   }, [])
 
   const handleLogout = async () => {
@@ -66,7 +47,6 @@ const Header: React.FC = () => {
           email: "",
           createdAt: "",
         })
-        setIsLoggedIn(false)
         router.push("/login")
         router.refresh()
       }
@@ -96,7 +76,7 @@ const Header: React.FC = () => {
             </Avatar>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
-            {isLoggedIn ? (
+            {user.id ? (
               <>
                 <DropdownMenuItem>
                   <Link
