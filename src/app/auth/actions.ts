@@ -1,5 +1,6 @@
 "use server"
 
+import { getUserApiUrl } from "@/lib/api"
 import { cookies } from "next/headers"
 
 type LoginState = {
@@ -25,13 +26,7 @@ export async function login(
   }
 
   try {
-    const MOCKAPI_TOKEN = process.env.MOCKAPI_TOKEN
-
-    if (!MOCKAPI_TOKEN) {
-      throw new Error("MOCKAPI_TOKEN environment variable is not defined.")
-    }
-
-    const apiUrl = `https://${MOCKAPI_TOKEN}.mockapi.io/api/v1/users`
+    const apiUrl = getUserApiUrl()
 
     // Fetch users and check credentials
     const response = await fetch(`${apiUrl}?email=${encodeURIComponent(email)}`)

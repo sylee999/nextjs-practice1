@@ -1,7 +1,8 @@
 "use server"
 
-import { revalidatePath } from "next/cache"
+import { getUserApiUrl } from "@/lib/api"
 import { User } from "@/types/user"
+import { revalidatePath } from "next/cache"
 
 type State = {
   message: string
@@ -9,13 +10,7 @@ type State = {
 
 export async function getUsers(): Promise<User[]> {
   try {
-    const MOCKAPI_TOKEN = process.env.MOCKAPI_TOKEN
-
-    if (!MOCKAPI_TOKEN) {
-      throw new Error("MOCKAPI_TOKEN environment variable is not defined.")
-    }
-
-    const apiUrl = `https://${MOCKAPI_TOKEN}.mockapi.io/api/v1/users`
+    const apiUrl = getUserApiUrl()
 
     const response = await fetch(apiUrl, { cache: "no-store" })
 
@@ -33,20 +28,20 @@ export async function getUsers(): Promise<User[]> {
 }
 
 export async function getUser(id: string): Promise<User> {
-  const MOCKAPI_TOKEN = process.env.MOCKAPI_TOKEN
-  if (!MOCKAPI_TOKEN) {
-    throw new Error("MOCKAPI_TOKEN environment variable is not defined.")
-  }
+  try {
+    const apiUrl = getUserApiUrl(id)
+    const response = await fetch(apiUrl)
+    if (!response.ok) {
+      throw new Error(
+        `Failed to fetch user: ${response.status} ${response.statusText}`
+      )
+    }
 
-  const apiUrl = `https://${MOCKAPI_TOKEN}.mockapi.io/api/v1/users/${id}`
-  const response = await fetch(apiUrl)
-  if (!response.ok) {
-    throw new Error(
-      `Failed to fetch user: ${response.status} ${response.statusText}`
-    )
+    return await response.json()
+  } catch (error) {
+    console.error("Error fetching user:", error)
+    throw error
   }
-
-  return await response.json()
 }
 
 export async function createUser(prevState: State, formData: FormData) {
@@ -58,13 +53,7 @@ export async function createUser(prevState: State, formData: FormData) {
     return { message: "Email and password are required." }
   }
 
-  const MOCKAPI_TOKEN = process.env.MOCKAPI_TOKEN
-
-  if (!MOCKAPI_TOKEN) {
-    throw new Error("MOCKAPI_TOKEN environment variable is not defined.")
-  }
-
-  const apiUrl = `https://${MOCKAPI_TOKEN}.mockapi.io/api/v1/users`
+  const apiUrl = getUserApiUrl()
 
   try {
     const response = await fetch(apiUrl, {
