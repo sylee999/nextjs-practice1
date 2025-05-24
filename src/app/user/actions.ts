@@ -3,6 +3,7 @@
 import { getUserApiUrl } from "@/lib/api"
 import { User } from "@/types/user"
 import { revalidatePath } from "next/cache"
+import { checkAuth, logout } from "../auth/actions"
 
 type State = {
   message: string
@@ -27,14 +28,12 @@ export async function getUsers(): Promise<User[]> {
   }
 }
 
-export async function getUser(id: string): Promise<User> {
+export async function getUser(id: string): Promise<User | null> {
   try {
     const apiUrl = getUserApiUrl(id)
-    const response = await fetch(apiUrl)
+    const response = await fetch(apiUrl, { cache: "no-store" })
     if (!response.ok) {
-      throw new Error(
-        `Failed to fetch user: ${response.status} ${response.statusText}`
-      )
+      return null
     }
 
     return await response.json()
@@ -84,6 +83,37 @@ export async function createUser(prevState: State, formData: FormData) {
         error instanceof Error
           ? error.message
           : "Failed to create user. Please try again.",
+    }
+  }
+}
+
+export async function deleteUser(prevState: State, formData: FormData) {
+  const id = formData.get("id") as string
+  const authUser = await checkAuth()
+  if (!authUser || authUser.id !== id) {
+    return { message: "You are not authorized to delete this user." }
+  }
+  await logout()
+
+  try {
+    const apiUrl = getUserApiUrl(id)
+    const response = await fetch(apiUrl, {
+      method: "DELETE",
+    })
+    if (!response.ok) {
+      throw new Error(
+        `Failed to delete user: ${response.status} ${response.statusText}`
+      )
+    }
+    revalidatePath("/user")
+    return { message: "success" }
+  } catch (error) {
+    console.error("Error deleting user:", error)
+    return {
+      message:
+        error instanceof Error
+          ? error.message
+          : "Failed to delete user. Please try again.",
     }
   }
 }
