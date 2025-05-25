@@ -3,7 +3,7 @@
 import { getUserApiUrl } from "@/lib/api"
 import { User } from "@/types/user"
 import { revalidatePath } from "next/cache"
-import { checkAuth, logout } from "../auth/actions"
+import { checkAuth, login, logout } from "../auth/actions"
 
 type State = {
   message: string
@@ -43,15 +43,28 @@ export async function getUser(id: string): Promise<User | null> {
   }
 }
 
-export async function createUser(prevState: State, formData: FormData) {
+export async function createUserAction(prevState: State, formData: FormData) {
   const avatar = formData.get("avatar") as string
   const name = formData.get("name") as string
   const email = formData.get("email") as string
   const password = formData.get("password") as string
   if (!email || !password) {
-    return { message: "Email and password are required." }
+    return { message: "Email and password are required.", id: "" }
   }
 
+  const result = await createUser(avatar, name, email, password)
+  if (result.message === "success") {
+    login(email, password)
+  }
+  return result
+}
+
+export async function createUser(
+  avatar: string,
+  name: string,
+  email: string,
+  password: string
+) {
   const apiUrl = getUserApiUrl()
 
   try {
@@ -83,12 +96,17 @@ export async function createUser(prevState: State, formData: FormData) {
         error instanceof Error
           ? error.message
           : "Failed to create user. Please try again.",
+      id: "",
     }
   }
 }
 
-export async function deleteUser(prevState: State, formData: FormData) {
+export async function deleteUserAction(prevState: State, formData: FormData) {
   const id = formData.get("id") as string
+  return deleteUser(id)
+}
+
+export async function deleteUser(id: string) {
   const authUser = await checkAuth()
   if (!authUser || authUser.id !== id) {
     return { message: "You are not authorized to delete this user." }

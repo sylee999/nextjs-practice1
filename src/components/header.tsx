@@ -1,5 +1,7 @@
 "use client"
 
+export const dynamic = "force-dynamic"
+
 import { GalleryVerticalEnd } from "lucide-react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
@@ -38,18 +40,9 @@ const Header: React.FC = () => {
 
   const handleLogout = async () => {
     try {
-      const response = await logout()
-      if (response.success) {
-        setUser({
-          id: "",
-          name: "Not logged in",
-          avatar: "/default-avatar.png",
-          email: "",
-          createdAt: "",
-        })
-        router.push("/login")
-        router.refresh()
-      }
+      await logout()
+      setUser(notLoggedUser)
+      router.refresh()
     } catch (error) {
       console.error("Failed to logout:", error)
     }

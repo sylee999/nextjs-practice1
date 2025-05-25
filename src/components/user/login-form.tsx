@@ -1,13 +1,13 @@
 "use client"
 
-import { login } from "@/app/auth/actions"
+import { loginAction } from "@/app/auth/actions"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { cn } from "@/lib/utils"
-import { useRouter, useSearchParams } from "next/navigation"
-import { useActionState, useEffect, useState } from "react"
+import { useSearchParams } from "next/navigation"
+import { useActionState, useState } from "react"
 
 export function LoginForm({
   className,
@@ -15,30 +15,14 @@ export function LoginForm({
 }: React.ComponentProps<"form">) {
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
-  const router = useRouter()
   const searchParams = useSearchParams()
-  const from = searchParams.get("from") || "/user"
+  const from = searchParams.get("from")
 
-  // Use the server action with useFormState
-  const [state, formAction] = useActionState(login, {
+  const [state, formAction] = useActionState(loginAction, {
     success: false,
     message: "",
     from,
   })
-
-  useEffect(() => {
-    if (state.success && state.from) {
-      // TODO: Use a global state or context for auth
-      // Store user info and login status in a React context or global state (like Zustand, Redux, or React Context).
-      // Update the context on login/logout, and have the header subscribe to this context.
-      // This is the best practice for a seamless SPA experience, but requires more setup.
-
-      // Minimal fix(Full reload after login) for now. It will be fixed using a global state for auth later.
-      // router.push(state.from)
-      // router.refresh()
-      window.location.href = state.from
-    }
-  }, [state.success, state.from, router])
 
   return (
     <form
@@ -58,8 +42,7 @@ export function LoginForm({
             <AlertDescription>{state.message}</AlertDescription>
           </Alert>
         )}
-        {/* Hidden input to store the from parameter */}
-        <input type="hidden" name="from" value={from} />
+        {from && <input type="hidden" name="from" value={from} />}
         <div className="grid gap-3">
           <Label htmlFor="email">Email</Label>
           <Input

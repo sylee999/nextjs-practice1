@@ -1,6 +1,6 @@
 "use client"
 
-import { createUser } from "@/app/user/actions"
+import { createUserAction } from "@/app/user/actions"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Button } from "@/components/ui/button"
@@ -32,16 +32,17 @@ export function UserForm({
   }
 }) {
   const [user, setUser] = useState(initialUser)
-  const [state, formAction, pending] = useActionState(createUser, {
+  const [state, formAction, pending] = useActionState(createUserAction, {
     message: "",
+    id: "",
   })
   const router = useRouter()
-
   useEffect(() => {
     if (state.message === "success" && state.id) {
+      // login(user.email, user.password)
       router.push(`/user/${state.id}`)
     }
-  }, [state, router])
+  }, [state, router, user])
 
   return (
     <form className={"flex flex-col gap-6"} action={formAction} {...props}>

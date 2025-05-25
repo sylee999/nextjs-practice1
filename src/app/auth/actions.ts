@@ -3,20 +3,21 @@
 import { getUserApiUrl } from "@/lib/api"
 import { User } from "@/types/user"
 import { cookies } from "next/headers"
+import { redirect } from "next/navigation"
 
 type LoginState = {
   success: boolean
   message: string
-  from?: string
+  from?: string | null
 }
 
-export async function login(
+export async function loginAction(
   prevState: LoginState,
   formData: FormData
-): Promise<LoginState> {
+): Promise<LoginState | never> {
   const email = formData.get("email") as string
   const password = formData.get("password") as string
-  const from = (formData.get("from") as string) || "/user"
+  const from = formData.get("from") as string | null
 
   if (!email || !password) {
     return {
@@ -26,28 +27,13 @@ export async function login(
     }
   }
 
+  let redirectTo: string | null
   try {
-    const apiUrl = getUserApiUrl()
+    // Authenticate user
+    const user = await login(email, password)
+    redirectTo = from ? from : `/user/${user.id}`
 
-    // Fetch users and check credentials
-    const response = await fetch(`${apiUrl}?email=${encodeURIComponent(email)}`)
-    if (!response.ok) {
-      throw new Error("Login failed. Please try again.")
-    }
-
-    const users = await response.json()
-    const user = users[0]
-
-    // Check if user exists and password matches
-    if (!user || user.password !== password) {
-      return {
-        success: false,
-        message: "Invalid email or password.",
-        from,
-      }
-    }
-
-    // Create a session
+    // Set session cookie here (inside Server Action)
     const cookieStore = await cookies()
     cookieStore.set({
       name: "session",
@@ -58,13 +44,6 @@ export async function login(
       maxAge: 60 * 60 * 24 * 7, // 1 week
       sameSite: "lax",
     })
-
-    // If successful, send a success response that will trigger a redirect
-    return {
-      success: true,
-      message: "Login successful",
-      from,
-    }
   } catch (error: unknown) {
     return {
       success: false,
@@ -75,6 +54,32 @@ export async function login(
       from,
     }
   }
+  if (from) {
+    redirect(from)
+  } else {
+    redirect(redirectTo)
+  }
+}
+
+export async function login(email: string, password: string) {
+  const apiUrl = getUserApiUrl()
+
+  // Fetch users and check credentials
+  const response = await fetch(`${apiUrl}?email=${encodeURIComponent(email)}`)
+  if (!response.ok) {
+    throw new Error("Login failed. Please try again.")
+  }
+
+  const users = await response.json()
+  const user = users[0]
+
+  // Check if user exists and password matches
+  if (!user || user.password !== password) {
+    throw new Error("Invalid email or password.")
+  }
+
+  // Return user to be used in Server Action
+  return user
 }
 
 type LogoutState = {
