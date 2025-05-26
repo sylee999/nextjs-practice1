@@ -1,52 +1,21 @@
-"use client"
-
 export const dynamic = "force-dynamic"
 
 import { GalleryVerticalEnd } from "lucide-react"
 import Link from "next/link"
-import { useRouter } from "next/navigation"
-import React, { useEffect, useState } from "react"
 
-import { checkAuth, logout } from "@/app/auth/actions"
+import { checkAuth } from "@/app/auth/actions"
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
-import { User } from "@/types/user"
-import { AvatarFallback } from "@radix-ui/react-avatar"
 import { SearchForm } from "./search-form"
-import { Avatar, AvatarImage } from "./ui/avatar"
+import { LogoutLabel } from "./user/logout-button"
+import { UserAvatar } from "./user/user-avatar"
 
-const notLoggedUser = {
-  id: "",
-  name: "Not logged in",
-  avatar: "/default-avatar.png",
-  email: "",
-  createdAt: "",
-}
-const Header: React.FC = () => {
-  const router = useRouter()
-  const [user, setUser] = useState<User>(notLoggedUser)
-
-  useEffect(() => {
-    const fetchUser = async () => {
-      const authUser = await checkAuth()
-      setUser(authUser || notLoggedUser)
-    }
-    fetchUser()
-  }, [])
-
-  const handleLogout = async () => {
-    try {
-      await logout()
-      setUser(notLoggedUser)
-      router.refresh()
-    } catch (error) {
-      console.error("Failed to logout:", error)
-    }
-  }
+export async function Header() {
+  const user = await checkAuth()
 
   return (
     <header className="bg-background sticky top-0 z-50 flex w-full items-center border-b">
@@ -63,13 +32,10 @@ const Header: React.FC = () => {
         <SearchForm className="ml-auto w-auto" />
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Avatar className="cursor-pointer">
-              <AvatarImage src={user.avatar} alt={user.name} />
-              <AvatarFallback>{user.name.charAt(0)}</AvatarFallback>
-            </Avatar>
+            <UserAvatar user={user} />
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
-            {user.id ? (
+            {user?.id ? (
               <>
                 <DropdownMenuItem>
                   <Link
@@ -80,12 +46,7 @@ const Header: React.FC = () => {
                   </Link>
                 </DropdownMenuItem>
                 <DropdownMenuItem>
-                  <button
-                    onClick={handleLogout}
-                    className="flex w-full items-center"
-                  >
-                    Logout
-                  </button>
+                  <LogoutLabel />
                 </DropdownMenuItem>
               </>
             ) : (
@@ -108,5 +69,3 @@ const Header: React.FC = () => {
     </header>
   )
 }
-
-export default Header

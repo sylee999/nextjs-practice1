@@ -1,13 +1,14 @@
 "use client"
 
 import { loginAction } from "@/app/auth/actions"
-import { Alert, AlertDescription } from "@/components/ui/alert"
+// import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { cn } from "@/lib/utils"
-import { useSearchParams } from "next/navigation"
-import { useActionState, useState } from "react"
+import { useRouter, useSearchParams } from "next/navigation"
+// import { useActionState, useEffect, useState } from "react"
+import { useState } from "react"
 
 export function LoginForm({
   className,
@@ -17,17 +18,35 @@ export function LoginForm({
   const [password, setPassword] = useState("")
   const searchParams = useSearchParams()
   const from = searchParams.get("from")
+  const router = useRouter()
 
-  const [state, formAction] = useActionState(loginAction, {
-    success: false,
-    message: "",
-    from,
-  })
+  const handleLogin = async (formData: FormData) => {
+    const state = await loginAction(formData)
+    if (state.success === true && state.id) {
+      const redirectTo = from ? from : `/user/${state.id}`
+      router.refresh()
+      router.push(redirectTo)
+    }
+  }
+  // const [state, formAction, pending] = useActionState(loginAction, {
+  //   success: false,
+  //   message: "",
+  // })
+
+  // const router = useRouter()
+  // useEffect(() => {
+  //   if (state.success === true && state.id) {
+  //     const redirectTo = from ? from : `/user/${state.id}`
+  //     router.refresh()
+  //     router.push(redirectTo)
+  //   }
+  // }, [state, router, from])
 
   return (
     <form
       className={cn("flex flex-col gap-6", className)}
-      action={formAction}
+      // action={formAction}
+      action={handleLogin}
       {...props}
     >
       <div className="flex flex-col items-center gap-2 text-center">
@@ -37,11 +56,11 @@ export function LoginForm({
         </p>
       </div>
       <div className="grid gap-6">
-        {state.message && !state.success && (
+        {/* {state.message && !state.success && (
           <Alert variant="destructive">
             <AlertDescription>{state.message}</AlertDescription>
           </Alert>
-        )}
+        )} */}
         {from && <input type="hidden" name="from" value={from} />}
         <div className="grid gap-3">
           <Label htmlFor="email">Email</Label>
@@ -52,6 +71,7 @@ export function LoginForm({
             placeholder="m@example.com"
             required
             value={email}
+            // disabled={pending}
             onChange={(e) => setEmail(e.target.value)}
           />
         </div>
@@ -65,9 +85,13 @@ export function LoginForm({
             type="password"
             required
             value={password}
+            // disabled={pending}
             onChange={(e) => setPassword(e.target.value)}
           />
         </div>
+        {/* <Button type="submit" className="w-full" disabled={pending}> */}
+        {/* {pending ? "Logging in..." : "Login"} */}
+        {/* </Button> */}
         <Button type="submit" className="w-full">
           Login
         </Button>

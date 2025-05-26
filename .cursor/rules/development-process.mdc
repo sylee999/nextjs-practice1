@@ -1,6 +1,6 @@
 ---
-description: Development process and workflow guidelines
-globs:
+description: 
+globs: 
 alwaysApply: false
 ---
 # Development Process Guidelines

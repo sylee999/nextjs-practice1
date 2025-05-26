@@ -3,35 +3,30 @@
 import { getUserApiUrl } from "@/lib/api"
 import { User } from "@/types/user"
 import { cookies } from "next/headers"
-import { redirect } from "next/navigation"
 
 type LoginState = {
   success: boolean
   message: string
-  from?: string | null
+  id?: string
 }
 
 export async function loginAction(
-  prevState: LoginState,
+  // prevState: LoginState,
   formData: FormData
 ): Promise<LoginState | never> {
   const email = formData.get("email") as string
   const password = formData.get("password") as string
-  const from = formData.get("from") as string | null
 
   if (!email || !password) {
     return {
       success: false,
       message: "Email and password are required.",
-      from,
     }
   }
 
-  let redirectTo: string | null
   try {
     // Authenticate user
     const user = await login(email, password)
-    redirectTo = from ? from : `/user/${user.id}`
 
     // Set session cookie here (inside Server Action)
     const cookieStore = await cookies()
@@ -44,6 +39,11 @@ export async function loginAction(
       maxAge: 60 * 60 * 24 * 7, // 1 week
       sameSite: "lax",
     })
+    return {
+      success: true,
+      message: "Login successful",
+      id: user?.id,
+    }
   } catch (error: unknown) {
     return {
       success: false,
@@ -51,13 +51,7 @@ export async function loginAction(
         error instanceof Error
           ? error.message
           : "An error occurred during login.",
-      from,
     }
-  }
-  if (from) {
-    redirect(from)
-  } else {
-    redirect(redirectTo)
   }
 }
 
