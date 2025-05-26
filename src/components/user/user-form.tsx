@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { useRouter } from "next/navigation"
-import { useActionState, useEffect, useState } from "react"
+import { useEffect, useState } from "react"
 import { useFormState, useFormStatus } from "react-dom"
 
 function SubmitButton() {
@@ -32,10 +32,6 @@ export function UserForm({
   }
 }) {
   const [user, setUser] = useState(initialUser)
-  const [state, formAction, pending] = useActionState(createUserAction, {
-    message: "",
-    id: "",
-  })
   const [state, formAction, pending] = useFormState(createUserAction, {
     message: "",
     id: "",
@@ -47,7 +43,7 @@ export function UserForm({
       router.refresh()
       router.push(`/user/${state.id}`)
     }
-  }, [state, router, user])
+  }, [state, router])
 
   return (
     <form className={"flex flex-col gap-6"} action={formAction} {...props}>

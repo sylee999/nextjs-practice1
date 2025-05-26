@@ -3,7 +3,8 @@
 import { getUserApiUrl } from "@/lib/api"
 import { User } from "@/types/user"
 import { revalidatePath } from "next/cache"
-import { checkAuth, login, logout } from "../auth/actions"
+import { cookies } from "next/headers"
+import { checkAuth, logout } from "../auth/actions"
 
 type State = {
   message: string
@@ -54,7 +55,18 @@ export async function createUserAction(prevState: State, formData: FormData) {
 
   const result = await createUser(avatar, name, email, password)
   if (result.message === "success") {
-    login(email, password)
+    const user = await getUser(result.id)
+    // Set session cookie here (inside Server Action)
+    const cookieStore = await cookies()
+    cookieStore.set({
+      name: "session",
+      value: JSON.stringify(user),
+      httpOnly: true,
+      path: "/",
+      secure: process.env.NODE_ENV === "production",
+      maxAge: 60 * 60 * 24 * 7, // 1 week
+      sameSite: "lax",
+    })
   }
   return result
 }
