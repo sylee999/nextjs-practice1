@@ -1,9 +1,11 @@
 "use server"
 
-import { getUserApiUrl } from "@/lib/api"
-import { User } from "@/types/user"
 import { revalidatePath } from "next/cache"
 import { cookies } from "next/headers"
+
+import { getUserApiUrl } from "@/lib/api"
+import { User } from "@/types/user"
+
 import { checkAuth, fetchLoginUser, logout } from "../auth/actions"
 
 type State = {

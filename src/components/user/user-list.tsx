@@ -1,7 +1,7 @@
-import { UserDetail } from "@/components/user/user-detail"
-
-import { User } from "@/types/user"
 import Link from "next/link"
+
+import { UserDetail } from "@/components/user/user-detail"
+import { User } from "@/types/user"
 
 export function UserList({ users }: { users: User[] }) {
   if (!users || users.length === 0) {

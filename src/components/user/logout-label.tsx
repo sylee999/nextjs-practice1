@@ -1,7 +1,8 @@
 "use client"
 
-import { logout } from "@/app/auth/actions"
 import { useRouter } from "next/navigation"
+
+import { logout } from "@/app/auth/actions"
 
 export function LogoutLabel() {
   const router = useRouter()

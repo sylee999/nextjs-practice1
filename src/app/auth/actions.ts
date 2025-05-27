@@ -1,8 +1,9 @@
 "use server"
 
+import { cookies } from "next/headers"
+
 import { getUserApiUrl } from "@/lib/api"
 import { User } from "@/types/user"
-import { cookies } from "next/headers"
 
 // Types should be moved to /types if reused elsewhere
 export type LoginState = {

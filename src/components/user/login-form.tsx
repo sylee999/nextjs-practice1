@@ -1,12 +1,14 @@
 "use client"
 
+import { useActionState, useEffect, useState } from "react"
+import { useRouter, useSearchParams } from "next/navigation"
+
 import { loginAction } from "@/app/auth/actions"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { cn } from "@/lib/utils"
-import { useRouter, useSearchParams } from "next/navigation"
-import { useActionState, useEffect, useState } from "react"
+
 import { Alert, AlertDescription } from "../ui/alert"
 
 export function LoginForm({
@@ -22,6 +24,7 @@ export function LoginForm({
   const [state, formAction, pending] = useActionState(loginAction, {
     success: false,
     message: "",
+    from: "",
   })
 
   useEffect(() => {

@@ -6,9 +6,20 @@ module.exports = {
   singleQuote: false,
   tabWidth: 2,
   trailingComma: "es5",
-  // importOrder options removed as they belong to @ianvs/prettier-plugin-sort-imports
-  // prettier-plugin-tailwindcss handles import sorting automatically
+  // Import order configuration
+  importOrder: [
+    "^(react/(.*)$)|^(react$)",
+    "^(next/(.*)$)|^(next$)",
+    "<THIRD_PARTY_MODULES>",
+    "",
+    "^@/(.*)$",
+    "",
+    "^[./]",
+  ],
+  importOrderParserPlugins: ["typescript", "jsx", "decorators-legacy"],
+  importOrderTypeScriptVersion: "5.0.0",
   plugins: [
-    "prettier-plugin-tailwindcss", // Keep only this plugin
+    "@ianvs/prettier-plugin-sort-imports",
+    "prettier-plugin-tailwindcss", // Keep this last for proper class sorting
   ],
 }

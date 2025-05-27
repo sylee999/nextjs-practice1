@@ -1,9 +1,11 @@
+import Link from "next/link"
+import { ArrowLeft, Pencil } from "lucide-react"
+
 import { checkAuth } from "@/app/auth/actions"
 import { Button } from "@/components/ui/button"
 import UserDeleteDialog from "@/components/user/user-delete-dialog"
 import { UserDetail } from "@/components/user/user-detail"
-import { ArrowLeft, Pencil } from "lucide-react"
-import Link from "next/link"
+
 import { getUser } from "../actions"
 
 export default async function UserDetailPage({

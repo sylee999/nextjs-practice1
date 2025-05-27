@@ -1,7 +1,5 @@
-export const dynamic = "force-dynamic"
-
-import { GalleryVerticalEnd } from "lucide-react"
 import Link from "next/link"
+import { GalleryVerticalEnd } from "lucide-react"
 
 import { checkAuth } from "@/app/auth/actions"
 import {
@@ -10,9 +8,12 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
+
 import { SearchForm } from "./search-form"
 import { LogoutLabel } from "./user/logout-label"
 import { UserAvatar } from "./user/user-avatar"
+
+export const dynamic = "force-dynamic"
 
 export async function Header() {
   const user = await checkAuth()

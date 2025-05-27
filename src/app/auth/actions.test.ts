@@ -1,6 +1,8 @@
-import type { User } from "@/types/user"
 import { cookies } from "next/headers"
 import { beforeEach, describe, expect, test, vi } from "vitest"
+
+import type { User } from "@/types/user"
+
 import { loginAction, logout } from "./actions"
 
 // Mock next/headers

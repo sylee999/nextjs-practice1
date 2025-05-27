@@ -1,6 +1,8 @@
 import { AvatarFallback } from "@radix-ui/react-avatar"
-import { Avatar, AvatarImage } from "../ui/avatar"
+
 import { User } from "@/types/user"
+
+import { Avatar, AvatarImage } from "../ui/avatar"
 
 const notLoggedUser = {
   id: "",

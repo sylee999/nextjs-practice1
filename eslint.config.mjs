@@ -19,6 +19,18 @@ const eslintConfig = [
     },
     rules: {
       "prettier/prettier": "error",
+      // Disable ESLint rules that conflict with Prettier
+      indent: "off",
+      "linebreak-style": "off",
+      quotes: "off",
+      semi: "off",
+      "comma-dangle": "off",
+      "max-len": "off",
+      "object-curly-spacing": "off",
+      "array-bracket-spacing": "off",
+      // Disable import ordering rules that conflict with Prettier plugin
+      "sort-imports": "off",
+      "import/order": "off",
     },
   },
 ]
