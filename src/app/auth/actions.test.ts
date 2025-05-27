@@ -1,7 +1,7 @@
 import type { User } from "@/types/user"
 import { cookies } from "next/headers"
 import { beforeEach, describe, expect, test, vi } from "vitest"
-import { login, logout } from "./actions"
+import { getLoginUser, logout } from "./actions"
 
 // Mock next/headers
 vi.mock("next/headers", () => ({
@@ -24,7 +24,7 @@ describe("auth actions", () => {
       formDataNoEmail.append("password", "password123")
       formDataNoEmail.append("from", "/dashboard")
 
-      const resultNoEmail = await login(
+      const resultNoEmail = await getLoginUser(
         { success: false, message: "" },
         formDataNoEmail
       )
@@ -40,7 +40,7 @@ describe("auth actions", () => {
       formDataNoPassword.append("email", "test@example.com")
       formDataNoPassword.append("from", "/dashboard")
 
-      const resultNoPassword = await login(
+      const resultNoPassword = await getLoginUser(
         { success: false, message: "" },
         formDataNoPassword
       )
@@ -62,7 +62,10 @@ describe("auth actions", () => {
       formData.append("email", "test@example.com")
       formData.append("password", "password123")
 
-      const result = await login({ success: false, message: "" }, formData)
+      const result = await getLoginUser(
+        { success: false, message: "" },
+        formData
+      )
 
       expect(result).toEqual({
         success: false,
@@ -89,7 +92,10 @@ describe("auth actions", () => {
       formData.append("email", "test@example.com")
       formData.append("password", "password123")
 
-      const result = await login({ success: false, message: "" }, formData)
+      const result = await getLoginUser(
+        { success: false, message: "" },
+        formData
+      )
 
       expect(result).toEqual({
         success: false,
@@ -116,7 +122,10 @@ describe("auth actions", () => {
       formData.append("email", "test@example.com")
       formData.append("password", "password123")
 
-      const result = await login({ success: false, message: "" }, formData)
+      const result = await getLoginUser(
+        { success: false, message: "" },
+        formData
+      )
 
       expect(result).toEqual({
         success: false,
@@ -146,7 +155,10 @@ describe("auth actions", () => {
       formData.append("email", "test@example.com")
       formData.append("password", "password123")
 
-      const result = await login({ success: false, message: "" }, formData)
+      const result = await getLoginUser(
+        { success: false, message: "" },
+        formData
+      )
 
       expect(result).toEqual({
         success: false,
@@ -187,7 +199,10 @@ describe("auth actions", () => {
       formData.append("password", "password123")
       formData.append("from", "/dashboard")
 
-      const result = await login({ success: false, message: "" }, formData)
+      const result = await getLoginUser(
+        { success: false, message: "" },
+        formData
+      )
 
       // Verify cookie was set with user data
       expect(mockSet).toHaveBeenCalledWith({

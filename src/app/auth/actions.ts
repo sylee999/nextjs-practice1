@@ -4,16 +4,25 @@ import { getUserApiUrl } from "@/lib/api"
 import { User } from "@/types/user"
 import { cookies } from "next/headers"
 
-type LoginState = {
+// Types should be moved to /types if reused elsewhere
+export type LoginState = {
   success: boolean
   message: string
   id?: string
 }
 
+export type LogoutState = {
+  success: boolean
+  message: string
+}
+
+/**
+ * Handles user login: validates credentials, sets session cookie.
+ */
 export async function loginAction(
-  // prevState: LoginState,
+  prevState: LoginState,
   formData: FormData
-): Promise<LoginState | never> {
+): Promise<LoginState> {
   const email = formData.get("email") as string
   const password = formData.get("password") as string
 
@@ -25,10 +34,9 @@ export async function loginAction(
   }
 
   try {
-    // Authenticate user
-    const user = await login(email, password)
+    const user = await fetchLoginUser(email, password)
 
-    // Set session cookie here (inside Server Action)
+    // Set session cookie (Server Action)
     const cookieStore = await cookies()
     cookieStore.set({
       name: "session",
@@ -42,9 +50,9 @@ export async function loginAction(
     return {
       success: true,
       message: "Login successful",
-      id: user?.id,
+      id: user.id,
     }
-  } catch (error: unknown) {
+  } catch (error) {
     return {
       success: false,
       message:
@@ -55,43 +63,43 @@ export async function loginAction(
   }
 }
 
-export async function login(email: string, password: string) {
+/**
+ * Fetches user by email and validates password.
+ * Throws error if invalid.
+ */
+export async function fetchLoginUser(
+  email: string,
+  password: string
+): Promise<User> {
   const apiUrl = getUserApiUrl()
-
-  // Fetch users and check credentials
   const response = await fetch(`${apiUrl}?email=${encodeURIComponent(email)}`)
+
   if (!response.ok) {
     throw new Error("Login failed. Please try again.")
   }
 
-  const users = await response.json()
+  const users: User[] = await response.json()
   const user = users[0]
 
-  // Check if user exists and password matches
   if (!user || user.password !== password) {
     throw new Error("Invalid email or password.")
   }
 
-  // Return user to be used in Server Action
   return user
 }
 
-type LogoutState = {
-  success: boolean
-  message: string
-}
-
+/**
+ * Logs out the user by deleting the session cookie.
+ */
 export async function logout(): Promise<LogoutState> {
   try {
-    // Delete the session cookie
     const cookieStore = await cookies()
     cookieStore.delete("session")
-
     return {
       success: true,
       message: "Logout successful",
     }
-  } catch (error: unknown) {
+  } catch (error) {
     return {
       success: false,
       message:
@@ -102,19 +110,16 @@ export async function logout(): Promise<LogoutState> {
   }
 }
 
+/**
+ * Checks authentication by reading the session cookie.
+ */
 export async function checkAuth(): Promise<User | null> {
   try {
     const cookieStore = await cookies()
     const sessionCookie = cookieStore.get("session")
-
-    if (!sessionCookie?.value) {
-      return null
-    }
-
-    // In a real app, you would verify the session token
-    // and fetch the user data from your database
-    const user = JSON.parse(sessionCookie.value)
-    return user
+    if (!sessionCookie?.value) return null
+    // In a real app, verify session token and fetch user from DB
+    return JSON.parse(sessionCookie.value)
   } catch (error) {
     console.error("Check auth error:", error)
     return null

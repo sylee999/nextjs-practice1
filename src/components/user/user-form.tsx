@@ -8,7 +8,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { useRouter } from "next/navigation"
 import { useActionState, useEffect, useState } from "react"
-import { useFormState, useFormStatus } from "react-dom"
+import { useFormStatus } from "react-dom"
 
 function SubmitButton() {
   const { pending } = useFormStatus()
@@ -36,14 +36,9 @@ export function UserForm({
     message: "",
     id: "",
   })
-  const [state, formAction, pending] = useFormState(createUserAction, {
-    message: "",
-    id: "",
-  })
   const router = useRouter()
   useEffect(() => {
     if (state.message === "success" && state.id) {
-      // login(user.email, user.password)
       router.refresh()
       router.push(`/user/${state.id}`)
     }

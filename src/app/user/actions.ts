@@ -3,7 +3,8 @@
 import { getUserApiUrl } from "@/lib/api"
 import { User } from "@/types/user"
 import { revalidatePath } from "next/cache"
-import { checkAuth, login, logout } from "../auth/actions"
+import { cookies } from "next/headers"
+import { checkAuth, fetchLoginUser, logout } from "../auth/actions"
 
 type State = {
   message: string
@@ -52,19 +53,6 @@ export async function createUserAction(prevState: State, formData: FormData) {
     return { message: "Email and password are required.", id: "" }
   }
 
-  const result = await createUser(avatar, name, email, password)
-  if (result.message === "success") {
-    login(email, password)
-  }
-  return result
-}
-
-export async function createUser(
-  avatar: string,
-  name: string,
-  email: string,
-  password: string
-) {
   const apiUrl = getUserApiUrl()
 
   try {
@@ -86,6 +74,17 @@ export async function createUser(
         `Failed to create user: ${response.status} ${response.statusText}`
       )
     }
+    const user = await fetchLoginUser(email, password)
+    const cookieStore = await cookies()
+    cookieStore.set({
+      name: "session",
+      value: JSON.stringify(user),
+      httpOnly: true,
+      path: "/",
+      secure: process.env.NODE_ENV === "production",
+      maxAge: 60 * 60 * 24 * 7, // 1 week
+      sameSite: "lax",
+    })
     revalidatePath("/user")
     const result = await response.json()
     return { message: "success", id: result.id }
@@ -103,10 +102,6 @@ export async function createUser(
 
 export async function deleteUserAction(prevState: State, formData: FormData) {
   const id = formData.get("id") as string
-  return deleteUser(id)
-}
-
-export async function deleteUser(id: string) {
   const authUser = await checkAuth()
   if (!authUser || authUser.id !== id) {
     return { message: "You are not authorized to delete this user." }

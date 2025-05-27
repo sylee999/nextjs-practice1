@@ -1,6 +1,6 @@
 "use client"
 
-import { deleteUser } from "@/app/user/actions"
+import { deleteUserAction } from "@/app/user/actions"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Button } from "@/components/ui/button"
 import {
@@ -18,7 +18,7 @@ import { Trash2 } from "lucide-react"
 import { useActionState } from "react"
 
 export default function UserDeleteDialog({ user }: { user: User }) {
-  const [state, formAction, pending] = useActionState(deleteUser, {
+  const [state, formAction, pending] = useActionState(deleteUserAction, {
     message: "",
   })
   return (
