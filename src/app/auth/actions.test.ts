@@ -1,7 +1,7 @@
 import type { User } from "@/types/user"
 import { cookies } from "next/headers"
 import { beforeEach, describe, expect, test, vi } from "vitest"
-import { getLoginUser, logout } from "./actions"
+import { loginAction, logout } from "./actions"
 
 // Mock next/headers
 vi.mock("next/headers", () => ({
@@ -24,7 +24,7 @@ describe("auth actions", () => {
       formDataNoEmail.append("password", "password123")
       formDataNoEmail.append("from", "/dashboard")
 
-      const resultNoEmail = await getLoginUser(
+      const resultNoEmail = await loginAction(
         { success: false, message: "" },
         formDataNoEmail
       )
@@ -40,7 +40,7 @@ describe("auth actions", () => {
       formDataNoPassword.append("email", "test@example.com")
       formDataNoPassword.append("from", "/dashboard")
 
-      const resultNoPassword = await getLoginUser(
+      const resultNoPassword = await loginAction(
         { success: false, message: "" },
         formDataNoPassword
       )
@@ -62,7 +62,7 @@ describe("auth actions", () => {
       formData.append("email", "test@example.com")
       formData.append("password", "password123")
 
-      const result = await getLoginUser(
+      const result = await loginAction(
         { success: false, message: "" },
         formData
       )
@@ -92,7 +92,7 @@ describe("auth actions", () => {
       formData.append("email", "test@example.com")
       formData.append("password", "password123")
 
-      const result = await getLoginUser(
+      const result = await loginAction(
         { success: false, message: "" },
         formData
       )
@@ -122,7 +122,7 @@ describe("auth actions", () => {
       formData.append("email", "test@example.com")
       formData.append("password", "password123")
 
-      const result = await getLoginUser(
+      const result = await loginAction(
         { success: false, message: "" },
         formData
       )
@@ -155,7 +155,7 @@ describe("auth actions", () => {
       formData.append("email", "test@example.com")
       formData.append("password", "password123")
 
-      const result = await getLoginUser(
+      const result = await loginAction(
         { success: false, message: "" },
         formData
       )
@@ -199,7 +199,7 @@ describe("auth actions", () => {
       formData.append("password", "password123")
       formData.append("from", "/dashboard")
 
-      const result = await getLoginUser(
+      const result = await loginAction(
         { success: false, message: "" },
         formData
       )

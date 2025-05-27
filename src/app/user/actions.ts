@@ -53,9 +53,8 @@ export async function createUserAction(prevState: State, formData: FormData) {
     return { message: "Email and password are required.", id: "" }
   }
 
-  const apiUrl = getUserApiUrl()
-
   try {
+    const apiUrl = getUserApiUrl()
     const response = await fetch(apiUrl, {
       method: "POST",
       headers: {
@@ -74,6 +73,7 @@ export async function createUserAction(prevState: State, formData: FormData) {
         `Failed to create user: ${response.status} ${response.statusText}`
       )
     }
+    const result = await response.json()
     const user = await fetchLoginUser(email, password)
     const cookieStore = await cookies()
     cookieStore.set({
@@ -86,8 +86,7 @@ export async function createUserAction(prevState: State, formData: FormData) {
       sameSite: "lax",
     })
     revalidatePath("/user")
-    const result = await response.json()
-    return { message: "success", id: result.id }
+    return { message: "success", id: String(result.id) }
   } catch (error: unknown) {
     console.error("Error creating user:", error)
     return {

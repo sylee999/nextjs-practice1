@@ -22,14 +22,16 @@ export type LogoutState = {
 export async function loginAction(
   prevState: LoginState,
   formData: FormData
-): Promise<LoginState> {
+): Promise<LoginState & { from: string }> {
   const email = formData.get("email") as string
   const password = formData.get("password") as string
+  const from = (formData.get("from") as string) || "/user"
 
   if (!email || !password) {
     return {
       success: false,
       message: "Email and password are required.",
+      from,
     }
   }
 
@@ -51,7 +53,7 @@ export async function loginAction(
     return {
       success: true,
       message: "Login successful",
-      id: user.id,
+      from,
     }
   } catch (error) {
     return {
@@ -60,6 +62,7 @@ export async function loginAction(
         error instanceof Error
           ? error.message
           : "An error occurred during login.",
+      from,
     }
   }
 }
