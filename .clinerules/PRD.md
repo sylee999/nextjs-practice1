@@ -1,12 +1,14 @@
 # Product Requirements Document (PRD)
 
 ## 1. Overview
+
 - **Project Name**: `nextjs-practice1`
 - **Goal**: Implement and learn CRUD operations for `user` and `post` resources via a REST API backend.
 
 ---
 
 ## 2. Main Features
+
 - **User**
   - Create, Read, Update, Delete users
   - View all posts by a user
@@ -22,6 +24,7 @@
 ## 3. Tech Stack & Implementation
 
 ### 3.1 Tech Stack
+
 - Next.js 15 (App Router)
 - Tailwind CSS + Shadcn/UI
 - mockapi.io REST API
@@ -30,6 +33,7 @@
 - Vitest, React Testing Library (testing)
 
 ### 3.2 Implementation Guidelines
+
 - **Project Structure**
   ```text
   /src
@@ -48,6 +52,7 @@
 ---
 
 ## 4. Code Style & Naming
+
 - Use ESLint + Prettier for formatting
 - Follow Next.js and React naming and style conventions
 
@@ -58,6 +63,7 @@
 **Note:** GitHub repo information is in the `repository` field in the `package.json` file.
 
 ### 5.1 Branch Strategy
+
 - Use GitHub Flow
 - Branch types: `feature/*` and `bugfix/*`
 - **Naming**: `feature/{issue-number}-{short-title}` or `bugfix/{issue-number}-{short-title}`
@@ -65,27 +71,35 @@
 ### 5.2 Issue, Commit & PR Guidelines
 
 #### Issue Management
+
 - **Labels**: `feature` for new features, `bug` for bugs
 - **Template**:
+
   ```markdown
   ### Why?
+
   (Purpose)
 
   ### What?
+
   (Task to do)
 
   ### Notes
+
   (Screenshots, links)
   ```
 
 #### Branch Rules
+
 - One branch per issue
 - Merge to `main` when work is complete
 
 #### Commit Messages
+
 ```text
 <type>: <subject>
 ```
+
 - **type**: `feat`, `fix`, `docs`, `chore`
 - **subject**: imperative, under 50 characters
 - **Examples**:
@@ -95,18 +109,24 @@
   ```
 
 #### Pull Request (PR)
+
 - **Title**: same as commit message
 - **Body**:
+
   ```markdown
   ### Summary
+
   - Key changes
 
   ### Details
+
   - Detailed description
 
   ### Related Issue
+
   - Closes #123
   ```
+
 - Merge directly if CI passes
 - For large changes:
   1. Draft PR
@@ -118,6 +138,7 @@
 ---
 
 ### 5.3 Testing & Quality
+
 - Unit tests for business logic
 - Integration tests for REST API endpoints
 - E2E tests for critical user flows (CRUD, like feature)
@@ -127,22 +148,24 @@
 ## 6. Entity Definitions
 
 ### User
-| column     | type     |
-|------------|----------|
-| id         | ObjectID |
-| createdAt  | Date     |
-| name       | String   |
-| avatar     | String   |
-| email      | String   |
-| likeUsers  | Array    |
+
+| column    | type     |
+| --------- | -------- |
+| id        | ObjectID |
+| createdAt | Date     |
+| name      | String   |
+| avatar    | String   |
+| email     | String   |
+| likeUsers | Array    |
 
 ### Post
-| column     | type     |
-|------------|----------|
-| id         | ObjectID |
-| userId     | ObjectID |
-| title      | String   |
-| content    | String   |
-| likeUsers  | Array    |
-| createdAt  | Date     |
-| updatedAt  | Date     |
+
+| column    | type     |
+| --------- | -------- |
+| id        | ObjectID |
+| userId    | ObjectID |
+| title     | String   |
+| content   | String   |
+| likeUsers | Array    |
+| createdAt | Date     |
+| updatedAt | Date     |
