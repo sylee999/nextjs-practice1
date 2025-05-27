@@ -47,6 +47,7 @@ export async function loginAction(
       maxAge: 60 * 60 * 24 * 7, // 1 week
       sameSite: "lax",
     })
+
     return {
       success: true,
       message: "Login successful",

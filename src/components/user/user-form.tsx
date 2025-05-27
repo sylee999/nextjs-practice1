@@ -42,7 +42,7 @@ export function UserForm({
       router.refresh()
       router.push(`/user/${state.id}`)
     }
-  }, [state, router, user])
+  }, [state, router])
 
   return (
     <form className={"flex flex-col gap-6"} action={formAction} {...props}>

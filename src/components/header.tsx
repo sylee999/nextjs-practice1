@@ -11,7 +11,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { SearchForm } from "./search-form"
-import { LogoutLabel } from "./user/logout-button"
+import { LogoutLabel } from "./user/logout-label"
 import { UserAvatar } from "./user/user-avatar"
 
 export async function Header() {
