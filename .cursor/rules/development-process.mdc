@@ -1,62 +1,66 @@
----
-description: 
-globs: 
-alwaysApply: false
----
 # Development Process Guidelines
 
 ## Branch Strategy
-- Use GitHub Flow
+- Use **GitHub Flow**
 - Create branches from `main`
 - Use branch types: `feature/*` and `bugfix/*`
 - Follow naming format: `feature/{issue-number}-{short-title}` or `bugfix/{issue-number}-{short-title}`
-- Merge to `main` when work is complete
+- Use **GitHub MCP** (e.g., GitHub Desktop, GitHub in VS Code) for branch operations to ensure proper syncing with GitHub
+- Merge to `main` only when the task is complete and reviewed
 
 ## Issue Management
 - Use labels: `feature` for new features, `bug` for bugs
 - Follow this issue template:
 
-  \`\`\`markdown
+  ```markdown
   ### Why?
   (Purpose)
 
   ### What?
-  (Task to do)
+  (Tasks or changes required)
 
   ### Notes
-  (Screenshots, links)
+  (Screenshots, links, context)
   ```
-- One branch per issue
+
+- Create one branch per issue
+- Use GitHub MCP to link branches with issues automatically
 
 ## Commit Messages
 - Format: `<type>: <subject>`
 - Types: `feat`, `fix`, `docs`, `chore`
-- Subject: imperative, under 50 characters
+- Subject: use the imperative mood and keep under 50 characters
 - Examples:
   ```
-  feat: connect login API
+  feat: connect login API  
   fix: correct avatar upload error
   ```
 
+- Use GitHub MCP when committing to ensure proper linking and formatting
+
 ## Pull Requests
-- Title: same as commit message
-- Follow PR template:
+- Title: same as the main commit message
+- Follow this PR template:
+
   ```markdown
   ### Summary
-  - Key changes
+  - Key changes introduced
 
   ### Details
-  - Detailed description
+  - Additional explanation or reasoning
 
   ### Related Issue
-  - Closes #123
+  - Closes #<issue-number>
   ```
-- Draft PR for large changes
-- Merge directly if CI passes
-- Get approval for large changes
+
+- Compose PR message based on the related issue’s description and commit history
+- Do **not** merge PRs directly  
+- Always wait for **reviewer confirmation** (e.g., team lead or requestor), even if CI passes
+- Use draft PRs for large or ongoing changes
+- Use **GitHub MCP** to open, track, and manage PRs effectively
 
 ## Testing & Quality
 - Write unit tests for business logic
 - Create integration tests for REST API endpoints
 - Implement E2E tests for critical user flows
-- Tests must pass before merging
+- All tests must pass before merging into `main`
