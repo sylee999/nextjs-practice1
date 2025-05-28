@@ -1,5 +1,6 @@
 import { render, screen } from "@testing-library/react"
 import { describe, expect, test, vi } from "vitest"
+
 import UserPage from "./page"
 
 vi.mock("@/components/user/user-list", () => ({

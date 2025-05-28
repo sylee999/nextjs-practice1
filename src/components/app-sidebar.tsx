@@ -3,7 +3,6 @@
 import * as React from "react"
 import { MessageSquareText, UserRound } from "lucide-react"
 
-import { useIsMobile } from "@/hooks/use-mobile"
 import {
   Sidebar,
   SidebarContent,
@@ -12,6 +11,7 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
 } from "@/components/ui/sidebar"
+import { useIsMobile } from "@/hooks/use-mobile"
 
 const data = [
   {

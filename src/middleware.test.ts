@@ -1,6 +1,7 @@
-import { middleware } from "./middleware"
 import { NextRequest, NextResponse } from "next/server"
-import { describe, expect, it, vi, beforeEach, Mock } from "vitest"
+import { beforeEach, describe, expect, it, Mock, vi } from "vitest"
+
+import { middleware } from "./middleware"
 
 // Mock Next.js response methods
 vi.mock("next/server", async () => {

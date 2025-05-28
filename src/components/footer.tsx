@@ -1,6 +1,6 @@
 import React from "react"
 
-const Footer: React.FC = () => {
+export async function Footer() {
   return (
     <footer className="bg-background fixed bottom-0 left-0 z-50 flex w-full items-center border-t">
       <div className="container-wrapper w-full">
@@ -31,5 +31,3 @@ const Footer: React.FC = () => {
     </footer>
   )
 }
-
-export default Footer

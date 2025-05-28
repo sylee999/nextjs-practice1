@@ -1,79 +1,22 @@
-"use client"
-
-import { GalleryVerticalEnd } from "lucide-react"
 import Link from "next/link"
-import { useRouter } from "next/navigation"
-import React, { useEffect, useState } from "react"
+import { GalleryVerticalEnd } from "lucide-react"
 
-import { logout } from "@/app/auth/actions"
+import { checkAuth } from "@/app/auth/actions"
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
-import { AvatarFallback } from "@radix-ui/react-avatar"
+
 import { SearchForm } from "./search-form"
-import { Avatar, AvatarImage } from "./ui/avatar"
-import { User } from "@/types/user"
+import { LogoutLabel } from "./user/logout-label"
+import { UserAvatar } from "./user/user-avatar"
 
-const Header: React.FC = () => {
-  const router = useRouter()
-  const [user, setUser] = useState<User>({
-    id: "",
-    name: "Not logged in",
-    avatar: "/default-avatar.png",
-    email: "",
-    createdAt: "",
-  })
-  const [isLoggedIn, setIsLoggedIn] = useState(false)
+export const dynamic = "force-dynamic"
 
-  useEffect(() => {
-    // Check if user is logged in by checking for session cookie
-    const checkSession = async () => {
-      try {
-        const response = await fetch("/api/check-auth", {
-          method: "GET",
-          credentials: "include",
-        })
-
-        if (response.ok) {
-          const data = await response.json()
-          if (data.user) {
-            setUser({
-              avatar: data.user.avatar || "/default-avatar.png",
-              ...data.user,
-            })
-            setIsLoggedIn(true)
-          }
-        }
-      } catch (error) {
-        console.error("Failed to check authentication status:", error)
-      }
-    }
-
-    checkSession()
-  }, [])
-
-  const handleLogout = async () => {
-    try {
-      const response = await logout()
-      if (response.success) {
-        setUser({
-          id: "",
-          name: "Not logged in",
-          avatar: "/default-avatar.png",
-          email: "",
-          createdAt: "",
-        })
-        setIsLoggedIn(false)
-        router.push("/login")
-        router.refresh()
-      }
-    } catch (error) {
-      console.error("Failed to logout:", error)
-    }
-  }
+export async function Header() {
+  const user = await checkAuth()
 
   return (
     <header className="bg-background sticky top-0 z-50 flex w-full items-center border-b">
@@ -90,13 +33,10 @@ const Header: React.FC = () => {
         <SearchForm className="ml-auto w-auto" />
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Avatar className="cursor-pointer">
-              <AvatarImage src={user.avatar} alt={user.name} />
-              <AvatarFallback>{user.name.charAt(0)}</AvatarFallback>
-            </Avatar>
+            <UserAvatar user={user} />
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
-            {isLoggedIn ? (
+            {user?.id ? (
               <>
                 <DropdownMenuItem>
                   <Link
@@ -107,12 +47,7 @@ const Header: React.FC = () => {
                   </Link>
                 </DropdownMenuItem>
                 <DropdownMenuItem>
-                  <button
-                    onClick={handleLogout}
-                    className="flex w-full items-center"
-                  >
-                    Logout
-                  </button>
+                  <LogoutLabel />
                 </DropdownMenuItem>
               </>
             ) : (
@@ -135,5 +70,3 @@ const Header: React.FC = () => {
     </header>
   )
 }
-
-export default Header

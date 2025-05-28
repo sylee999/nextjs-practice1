@@ -1,14 +1,15 @@
 "use client"
 
-import { createUser } from "@/app/user/actions"
+import { useActionState, useEffect, useState } from "react"
+import { useRouter } from "next/navigation"
+import { useFormStatus } from "react-dom"
+
+import { createUserAction } from "@/app/user/actions"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { useRouter } from "next/navigation"
-import { useActionState, useEffect, useState } from "react"
-import { useFormStatus } from "react-dom"
 
 function SubmitButton() {
   const { pending } = useFormStatus()
@@ -32,13 +33,14 @@ export function UserForm({
   }
 }) {
   const [user, setUser] = useState(initialUser)
-  const [state, formAction, pending] = useActionState(createUser, {
+  const [state, formAction, pending] = useActionState(createUserAction, {
     message: "",
+    id: "",
   })
   const router = useRouter()
-
   useEffect(() => {
     if (state.message === "success" && state.id) {
+      router.refresh()
       router.push(`/user/${state.id}`)
     }
   }, [state, router])

@@ -1,9 +1,23 @@
-import { revalidatePath } from "next/cache"
-import { describe, expect, Mock, test, vi } from "vitest"
-import { createUser } from "./actions"
+import { beforeEach, describe, expect, Mock, test, vi } from "vitest"
 
+import { createUserAction } from "./actions"
+
+// Mock Next.js server functions
 vi.mock("next/cache", () => ({
   revalidatePath: vi.fn(),
+}))
+
+vi.mock("next/headers", () => ({
+  cookies: vi.fn(() => ({
+    set: vi.fn(),
+  })),
+}))
+
+// Mock the auth actions
+vi.mock("../auth/actions", () => ({
+  fetchLoginUser: vi.fn(),
+  checkAuth: vi.fn(),
+  logout: vi.fn(),
 }))
 
 describe("createUser", () => {
@@ -23,13 +37,25 @@ describe("createUser", () => {
   })
 
   test("creates user successfully", async () => {
+    // Mock the fetch call
     global.fetch = vi.fn().mockResolvedValueOnce({
       ok: true,
       json: () =>
-        Promise.resolve({ id: 1, ...Object.fromEntries(mockFormData) }),
+        Promise.resolve({ id: "1", ...Object.fromEntries(mockFormData) }),
     })
 
-    const result = await createUser(mockState, mockFormData)
+    // Mock fetchLoginUser
+    const { fetchLoginUser } = await import("../auth/actions")
+    ;(fetchLoginUser as Mock).mockResolvedValueOnce({
+      id: "1",
+      email: "test@example.com",
+      password: "password",
+      name: "Test User",
+      avatar: "https://example.com/avatar.jpg",
+      createdAt: new Date().toISOString(),
+    })
+
+    const result = await createUserAction(mockState, mockFormData)
 
     // Get the actual call arguments
     const fetchCall = (fetch as Mock).mock.calls[0]
@@ -53,11 +79,14 @@ describe("createUser", () => {
       })
     )
 
-    expect(revalidatePath).toHaveBeenCalledWith("/user")
+    // Verify the result
     expect(result).toEqual({
-      id: 1,
       message: "success",
+      id: "1",
     })
+
+    // Verify that fetchLoginUser was called with correct parameters
+    expect(fetchLoginUser).toHaveBeenCalledWith("test@example.com", "password")
   })
 
   test("handles API error", async () => {
@@ -67,9 +96,10 @@ describe("createUser", () => {
       statusText: "Bad Request",
     })
 
-    const result = await createUser(mockState, mockFormData)
+    const result = await createUserAction(mockState, mockFormData)
 
     expect(result).toEqual({
+      id: "",
       message: "Failed to create user: 400 Bad Request",
     })
   })
@@ -77,8 +107,11 @@ describe("createUser", () => {
   test("handles missing API token", async () => {
     delete process.env.MOCKAPI_TOKEN
 
-    await expect(createUser(mockState, mockFormData)).rejects.toThrow(
-      "MOCKAPI_TOKEN environment variable is not defined."
-    )
+    const result = await createUserAction(mockState, mockFormData)
+
+    expect(result).toEqual({
+      id: "",
+      message: "MOCKAPI_TOKEN environment variable is not defined.",
+    })
   })
 })
