@@ -101,6 +101,85 @@ export async function createUserAction(prevState: State, formData: FormData) {
   }
 }
 
+export async function updateUserAction(prevState: State, formData: FormData) {
+  const id = formData.get("id") as string
+  const avatar = formData.get("avatar") as string
+  const name = formData.get("name") as string
+  const password = formData.get("password") as string
+
+  if (!id || !name) {
+    return { message: "ID and name are required." }
+  }
+
+  // Check authentication
+  const authUser = await checkAuth()
+  if (!authUser || authUser.id !== id) {
+    return { message: "You are not authorized to update this user." }
+  }
+
+  try {
+    const apiUrl = getUserApiUrl(id)
+
+    // Prepare update data - only include password if it's provided
+    const updateData: { avatar: string; name: string; password?: string } = {
+      avatar,
+      name,
+    }
+
+    // Only include password in update if a new password is provided
+    if (password && password.trim() !== "") {
+      updateData.password = password
+    }
+
+    const response = await fetch(apiUrl, {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(updateData),
+    })
+
+    if (!response.ok) {
+      throw new Error(
+        `Failed to update user: ${response.status} ${response.statusText}`
+      )
+    }
+
+    const updatedUser = await response.json()
+
+    // Update session cookie with new user data
+    const cookieStore = await cookies()
+    const sessionData = {
+      ...authUser,
+      avatar: updatedUser.avatar,
+      name: updatedUser.name,
+      // Update password in session if it was changed
+      ...(updateData.password && { password: updatedUser.password }),
+    }
+    cookieStore.set({
+      name: "session",
+      value: JSON.stringify(sessionData),
+      httpOnly: true,
+      path: "/",
+      secure: process.env.NODE_ENV === "production",
+      maxAge: 60 * 60 * 24 * 7, // 1 week
+      sameSite: "lax",
+    })
+
+    revalidatePath("/user")
+    revalidatePath(`/user/${id}`)
+    return { message: "success" }
+  } catch (error) {
+    console.error("Error updating user:", error)
+    return {
+      message:
+        error instanceof Error
+          ? error.message
+          : "Failed to update user. Please try again.",
+    }
+  }
+}
+
 export async function deleteUserAction(prevState: State, formData: FormData) {
   const id = formData.get("id") as string
   const authUser = await checkAuth()

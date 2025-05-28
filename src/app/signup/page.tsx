@@ -7,7 +7,8 @@ export default function SignUpPage() {
         <div className="flex flex-1 items-center justify-center">
           <div className="w-full max-w-xs">
             <UserForm
-              initialUser={{
+              mode="create"
+              initialData={{
                 avatar: "",
                 name: "",
                 email: "",

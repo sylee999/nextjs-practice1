@@ -12,7 +12,7 @@
     "start": "next start",
     "lint": "next lint && prettier --check .",
     "format": "prettier --write .",
-    "test": "vitest"
+    "test": "vitest --run"
   },
   "dependencies": {
     "@floating-ui/react-dom": "^2.1.2",

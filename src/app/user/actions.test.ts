@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, Mock, test, vi } from "vitest"
 
-import { createUserAction } from "./actions"
+import { createUserAction, updateUserAction } from "./actions"
 
 // Mock Next.js server functions
 vi.mock("next/cache", () => ({
@@ -112,6 +112,284 @@ describe("createUser", () => {
     expect(result).toEqual({
       id: "",
       message: "MOCKAPI_TOKEN environment variable is not defined.",
+    })
+  })
+})
+
+describe("updateUserAction", () => {
+  const mockFormData = new FormData()
+  mockFormData.append("id", "1")
+  mockFormData.append(
+    "avatar",
+    "https://i.pravatar.cc/150?u=updated@example.com"
+  )
+  mockFormData.append("name", "Updated User")
+  mockFormData.append("password", "newpassword123")
+
+  const mockState = {
+    message: "",
+  }
+
+  const mockAuthUser = {
+    id: "1",
+    name: "Test User",
+    email: "test@example.com",
+    avatar: "https://example.com/avatar.jpg",
+    createdAt: "2023-01-01T00:00:00.000Z",
+  }
+
+  beforeEach(() => {
+    vi.resetAllMocks()
+    process.env.MOCKAPI_TOKEN = "test-token"
+  })
+
+  test("updates user successfully with password", async () => {
+    // Mock checkAuth
+    const { checkAuth } = await import("../auth/actions")
+    ;(checkAuth as Mock).mockResolvedValueOnce(mockAuthUser)
+
+    // Mock the cookies function
+    const mockCookies = {
+      set: vi.fn(),
+    }
+    const { cookies } = await import("next/headers")
+    ;(cookies as Mock).mockResolvedValueOnce(mockCookies)
+
+    // Mock the fetch call
+    global.fetch = vi.fn().mockResolvedValueOnce({
+      ok: true,
+      json: () =>
+        Promise.resolve({
+          id: "1",
+          name: "Updated User",
+          avatar: "https://i.pravatar.cc/150?u=updated@example.com",
+          password: "newpassword123",
+        }),
+    })
+
+    const result = await updateUserAction(mockState, mockFormData)
+
+    // Get the actual call arguments
+    const fetchCall = (fetch as Mock).mock.calls[0]
+    const [url, options] = fetchCall
+
+    expect(url).toBe("https://test-token.mockapi.io/api/v1/users/1")
+    expect(options.method).toBe("PUT")
+    expect(options.headers).toEqual({
+      "Content-Type": "application/json",
+    })
+
+    // Parse the body and check its contents - should include avatar, name, and password
+    const body = JSON.parse(options.body)
+    expect(body).toEqual({
+      avatar: "https://i.pravatar.cc/150?u=updated@example.com",
+      name: "Updated User",
+      password: "newpassword123",
+    })
+
+    // Verify the session cookie was updated with password
+    expect(mockCookies.set).toHaveBeenCalledWith({
+      name: "session",
+      value: JSON.stringify({
+        ...mockAuthUser,
+        avatar: "https://i.pravatar.cc/150?u=updated@example.com",
+        name: "Updated User",
+        password: "newpassword123",
+      }),
+      httpOnly: true,
+      path: "/",
+      secure: process.env.NODE_ENV === "production",
+      maxAge: 60 * 60 * 24 * 7, // 1 week
+      sameSite: "lax",
+    })
+
+    // Verify the result
+    expect(result).toEqual({
+      message: "success",
+    })
+  })
+
+  test("updates user successfully without password", async () => {
+    // Create form data without password
+    const formDataWithoutPassword = new FormData()
+    formDataWithoutPassword.append("id", "1")
+    formDataWithoutPassword.append(
+      "avatar",
+      "https://i.pravatar.cc/150?u=updated@example.com"
+    )
+    formDataWithoutPassword.append("name", "Updated User")
+    formDataWithoutPassword.append("password", "") // Empty password
+
+    // Mock checkAuth
+    const { checkAuth } = await import("../auth/actions")
+    ;(checkAuth as Mock).mockResolvedValueOnce(mockAuthUser)
+
+    // Mock the cookies function
+    const mockCookies = {
+      set: vi.fn(),
+    }
+    const { cookies } = await import("next/headers")
+    ;(cookies as Mock).mockResolvedValueOnce(mockCookies)
+
+    // Mock the fetch call
+    global.fetch = vi.fn().mockResolvedValueOnce({
+      ok: true,
+      json: () =>
+        Promise.resolve({
+          id: "1",
+          name: "Updated User",
+          avatar: "https://i.pravatar.cc/150?u=updated@example.com",
+        }),
+    })
+
+    const result = await updateUserAction(mockState, formDataWithoutPassword)
+
+    // Get the actual call arguments
+    const fetchCall = (fetch as Mock).mock.calls[0]
+    const [url, options] = fetchCall
+
+    expect(url).toBe("https://test-token.mockapi.io/api/v1/users/1")
+    expect(options.method).toBe("PUT")
+    expect(options.headers).toEqual({
+      "Content-Type": "application/json",
+    })
+
+    // Parse the body and check its contents - should only include avatar and name
+    const body = JSON.parse(options.body)
+    expect(body).toEqual({
+      avatar: "https://i.pravatar.cc/150?u=updated@example.com",
+      name: "Updated User",
+    })
+
+    // Verify the session cookie was updated without password
+    expect(mockCookies.set).toHaveBeenCalledWith({
+      name: "session",
+      value: JSON.stringify({
+        ...mockAuthUser,
+        avatar: "https://i.pravatar.cc/150?u=updated@example.com",
+        name: "Updated User",
+      }),
+      httpOnly: true,
+      path: "/",
+      secure: process.env.NODE_ENV === "production",
+      maxAge: 60 * 60 * 24 * 7, // 1 week
+      sameSite: "lax",
+    })
+
+    // Verify the result
+    expect(result).toEqual({
+      message: "success",
+    })
+  })
+
+  test("handles unauthorized user", async () => {
+    // Mock checkAuth to return different user
+    const { checkAuth } = await import("../auth/actions")
+    ;(checkAuth as Mock).mockResolvedValueOnce({
+      ...mockAuthUser,
+      id: "2", // Different user ID
+    })
+
+    const result = await updateUserAction(mockState, mockFormData)
+
+    expect(result).toEqual({
+      message: "You are not authorized to update this user.",
+    })
+
+    // Verify fetch was not called
+    expect(global.fetch).not.toHaveBeenCalled()
+  })
+
+  test("handles unauthenticated user", async () => {
+    // Mock checkAuth to return null
+    const { checkAuth } = await import("../auth/actions")
+    ;(checkAuth as Mock).mockResolvedValueOnce(null)
+
+    const result = await updateUserAction(mockState, mockFormData)
+
+    expect(result).toEqual({
+      message: "You are not authorized to update this user.",
+    })
+
+    // Verify fetch was not called
+    expect(global.fetch).not.toHaveBeenCalled()
+  })
+
+  test("handles missing required fields", async () => {
+    const incompleteFormData = new FormData()
+    incompleteFormData.append("id", "1")
+    // Missing name
+
+    const result = await updateUserAction(mockState, incompleteFormData)
+
+    expect(result).toEqual({
+      message: "ID and name are required.",
+    })
+
+    // Verify fetch was not called
+    expect(global.fetch).not.toHaveBeenCalled()
+  })
+
+  test("handles API error", async () => {
+    // Mock checkAuth
+    const { checkAuth } = await import("../auth/actions")
+    ;(checkAuth as Mock).mockResolvedValueOnce(mockAuthUser)
+
+    // Mock fetch to return error
+    global.fetch = vi.fn().mockResolvedValueOnce({
+      ok: false,
+      status: 400,
+      statusText: "Bad Request",
+    })
+
+    const result = await updateUserAction(mockState, mockFormData)
+
+    expect(result).toEqual({
+      message: "Failed to update user: 400 Bad Request",
+    })
+  })
+
+  test("handles missing API token", async () => {
+    delete process.env.MOCKAPI_TOKEN
+
+    // Mock checkAuth
+    const { checkAuth } = await import("../auth/actions")
+    ;(checkAuth as Mock).mockResolvedValueOnce(mockAuthUser)
+
+    const result = await updateUserAction(mockState, mockFormData)
+
+    expect(result).toEqual({
+      message: "MOCKAPI_TOKEN environment variable is not defined.",
+    })
+  })
+
+  test("handles network error", async () => {
+    // Mock checkAuth
+    const { checkAuth } = await import("../auth/actions")
+    ;(checkAuth as Mock).mockResolvedValueOnce(mockAuthUser)
+
+    // Mock fetch to throw an error
+    global.fetch = vi.fn().mockRejectedValueOnce(new Error("Network error"))
+
+    const result = await updateUserAction(mockState, mockFormData)
+
+    expect(result).toEqual({
+      message: "Network error",
+    })
+  })
+
+  test("handles generic error", async () => {
+    // Mock checkAuth
+    const { checkAuth } = await import("../auth/actions")
+    ;(checkAuth as Mock).mockResolvedValueOnce(mockAuthUser)
+
+    // Mock fetch to throw a non-Error object
+    global.fetch = vi.fn().mockRejectedValueOnce("Unknown error")
+
+    const result = await updateUserAction(mockState, mockFormData)
+
+    expect(result).toEqual({
+      message: "Failed to update user. Please try again.",
     })
   })
 })
