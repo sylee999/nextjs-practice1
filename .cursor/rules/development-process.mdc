@@ -14,8 +14,9 @@ alwaysApply: false
 
 ## Issue Management
 - Use labels: `feature` for new features, `bug` for bugs
-- Follow issue template:
-  ```markdown
+- Follow this issue template:
+
+  \`\`\`markdown
   ### Why?
   (Purpose)
 
