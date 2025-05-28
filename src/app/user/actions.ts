@@ -101,6 +101,77 @@ export async function createUserAction(prevState: State, formData: FormData) {
   }
 }
 
+export async function updateUserAction(prevState: State, formData: FormData) {
+  const id = formData.get("id") as string
+  const avatar = formData.get("avatar") as string
+  const name = formData.get("name") as string
+  const email = formData.get("email") as string
+
+  if (!id || !name || !email) {
+    return { message: "ID, name, and email are required." }
+  }
+
+  // Check authentication
+  const authUser = await checkAuth()
+  if (!authUser || authUser.id !== id) {
+    return { message: "You are not authorized to update this user." }
+  }
+
+  try {
+    const apiUrl = getUserApiUrl(id)
+    const response = await fetch(apiUrl, {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        avatar,
+        name,
+        email,
+        // Don't update password, createdAt, id, or likeUsers
+      }),
+    })
+
+    if (!response.ok) {
+      throw new Error(
+        `Failed to update user: ${response.status} ${response.statusText}`
+      )
+    }
+
+    await response.json()
+
+    // Update session cookie with new user data
+    const cookieStore = await cookies()
+    const sessionData = {
+      ...authUser,
+      avatar,
+      name,
+      email,
+    }
+    cookieStore.set({
+      name: "session",
+      value: JSON.stringify(sessionData),
+      httpOnly: true,
+      path: "/",
+      secure: process.env.NODE_ENV === "production",
+      maxAge: 60 * 60 * 24 * 7, // 1 week
+      sameSite: "lax",
+    })
+
+    revalidatePath("/user")
+    revalidatePath(`/user/${id}`)
+    return { message: "success" }
+  } catch (error) {
+    console.error("Error updating user:", error)
+    return {
+      message:
+        error instanceof Error
+          ? error.message
+          : "Failed to update user. Please try again.",
+    }
+  }
+}
+
 export async function deleteUserAction(prevState: State, formData: FormData) {
   const id = formData.get("id") as string
   const authUser = await checkAuth()
