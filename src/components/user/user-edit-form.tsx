@@ -47,7 +47,7 @@ export function UserEditForm({ user, ...props }: { user: User }) {
       <div className="flex flex-col items-center gap-2 text-center">
         <h1 className="text-2xl font-bold">Update your profile</h1>
         <p className="text-muted-foreground text-sm text-balance">
-          Update your name and email below to modify your profile
+          Update your name below to modify your profile
         </p>
       </div>
       <div className="grid gap-6">
@@ -74,9 +74,6 @@ export function UserEditForm({ user, ...props }: { user: User }) {
               <AvatarImage src="/default-avatar.png" alt="Default Avatar" />
             </AvatarFallback>
           </Avatar>
-          <p className="text-muted-foreground text-center text-sm">
-            Avatar is automatically generated from your email
-          </p>
           <Input type="hidden" name="avatar" value={formData.avatar} />
         </div>
 
@@ -93,7 +90,6 @@ export function UserEditForm({ user, ...props }: { user: User }) {
             onChange={(e) => setFormData({ ...formData, name: e.target.value })}
           />
         </div>
-
         <div className="grid gap-3">
           <Label htmlFor="email">Email</Label>
           <Input
@@ -103,7 +99,7 @@ export function UserEditForm({ user, ...props }: { user: User }) {
             placeholder="m@example.com"
             required
             autoComplete="email"
-            disabled={pending}
+            disabled={true}
             value={formData.email}
             onChange={(e) =>
               setFormData({
@@ -114,18 +110,18 @@ export function UserEditForm({ user, ...props }: { user: User }) {
             }
           />
         </div>
-
-        <SubmitButton />
-
-        <Button
-          type="button"
-          variant="outline"
-          className="w-full"
-          onClick={() => router.push(`/user/${user.id}`)}
-          disabled={pending}
-        >
-          Cancel
-        </Button>
+        <div className="grid gap-3">
+          <SubmitButton />
+          <Button
+            type="button"
+            variant="outline"
+            className="w-full"
+            onClick={() => router.push(`/user/${user.id}`)}
+            disabled={pending}
+          >
+            Cancel
+          </Button>
+        </div>
       </div>
     </form>
   )

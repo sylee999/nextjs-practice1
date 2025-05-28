@@ -124,7 +124,6 @@ describe("updateUserAction", () => {
     "https://i.pravatar.cc/150?u=updated@example.com"
   )
   mockFormData.append("name", "Updated User")
-  mockFormData.append("email", "updated@example.com")
 
   const mockState = {
     message: "",
@@ -148,6 +147,13 @@ describe("updateUserAction", () => {
     const { checkAuth } = await import("../auth/actions")
     ;(checkAuth as Mock).mockResolvedValueOnce(mockAuthUser)
 
+    // Mock the cookies function
+    const mockCookies = {
+      set: vi.fn(),
+    }
+    const { cookies } = await import("next/headers")
+    ;(cookies as Mock).mockResolvedValueOnce(mockCookies)
+
     // Mock the fetch call
     global.fetch = vi.fn().mockResolvedValueOnce({
       ok: true,
@@ -155,7 +161,6 @@ describe("updateUserAction", () => {
         Promise.resolve({
           id: "1",
           name: "Updated User",
-          email: "updated@example.com",
           avatar: "https://i.pravatar.cc/150?u=updated@example.com",
         }),
     })
@@ -172,12 +177,26 @@ describe("updateUserAction", () => {
       "Content-Type": "application/json",
     })
 
-    // Parse the body and check its contents
+    // Parse the body and check its contents - should only include avatar and name
     const body = JSON.parse(options.body)
     expect(body).toEqual({
       avatar: "https://i.pravatar.cc/150?u=updated@example.com",
       name: "Updated User",
-      email: "updated@example.com",
+    })
+
+    // Verify the session cookie was updated
+    expect(mockCookies.set).toHaveBeenCalledWith({
+      name: "session",
+      value: JSON.stringify({
+        ...mockAuthUser,
+        avatar: "https://i.pravatar.cc/150?u=updated@example.com",
+        name: "Updated User",
+      }),
+      httpOnly: true,
+      path: "/",
+      secure: process.env.NODE_ENV === "production",
+      maxAge: 60 * 60 * 24 * 7, // 1 week
+      sameSite: "lax",
     })
 
     // Verify the result
@@ -222,13 +241,12 @@ describe("updateUserAction", () => {
   test("handles missing required fields", async () => {
     const incompleteFormData = new FormData()
     incompleteFormData.append("id", "1")
-    incompleteFormData.append("name", "Updated User")
-    // Missing email
+    // Missing name
 
     const result = await updateUserAction(mockState, incompleteFormData)
 
     expect(result).toEqual({
-      message: "ID, name, and email are required.",
+      message: "ID and name are required.",
     })
 
     // Verify fetch was not called
@@ -265,6 +283,36 @@ describe("updateUserAction", () => {
 
     expect(result).toEqual({
       message: "MOCKAPI_TOKEN environment variable is not defined.",
+    })
+  })
+
+  test("handles network error", async () => {
+    // Mock checkAuth
+    const { checkAuth } = await import("../auth/actions")
+    ;(checkAuth as Mock).mockResolvedValueOnce(mockAuthUser)
+
+    // Mock fetch to throw an error
+    global.fetch = vi.fn().mockRejectedValueOnce(new Error("Network error"))
+
+    const result = await updateUserAction(mockState, mockFormData)
+
+    expect(result).toEqual({
+      message: "Network error",
+    })
+  })
+
+  test("handles generic error", async () => {
+    // Mock checkAuth
+    const { checkAuth } = await import("../auth/actions")
+    ;(checkAuth as Mock).mockResolvedValueOnce(mockAuthUser)
+
+    // Mock fetch to throw a non-Error object
+    global.fetch = vi.fn().mockRejectedValueOnce("Unknown error")
+
+    const result = await updateUserAction(mockState, mockFormData)
+
+    expect(result).toEqual({
+      message: "Failed to update user. Please try again.",
     })
   })
 })

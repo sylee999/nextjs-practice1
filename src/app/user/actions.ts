@@ -105,10 +105,9 @@ export async function updateUserAction(prevState: State, formData: FormData) {
   const id = formData.get("id") as string
   const avatar = formData.get("avatar") as string
   const name = formData.get("name") as string
-  const email = formData.get("email") as string
 
-  if (!id || !name || !email) {
-    return { message: "ID, name, and email are required." }
+  if (!id || !name) {
+    return { message: "ID and name are required." }
   }
 
   // Check authentication
@@ -127,7 +126,6 @@ export async function updateUserAction(prevState: State, formData: FormData) {
       body: JSON.stringify({
         avatar,
         name,
-        email,
         // Don't update password, createdAt, id, or likeUsers
       }),
     })
@@ -146,7 +144,6 @@ export async function updateUserAction(prevState: State, formData: FormData) {
       ...authUser,
       avatar,
       name,
-      email,
     }
     cookieStore.set({
       name: "session",
