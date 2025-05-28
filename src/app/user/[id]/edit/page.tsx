@@ -2,7 +2,7 @@ import { redirect } from "next/navigation"
 
 import { checkAuth } from "@/app/auth/actions"
 import { getUser } from "@/app/user/actions"
-import { UserEditForm } from "@/components/user/user-edit-form"
+import { UserForm } from "@/components/user/user-form"
 
 export default async function UserEditPage({
   params,
@@ -30,7 +30,15 @@ export default async function UserEditPage({
 
   return (
     <div className="mx-auto max-w-md px-4 py-8">
-      <UserEditForm user={user} />
+      <UserForm
+        mode="edit"
+        initialData={{
+          id: user.id,
+          avatar: user.avatar,
+          name: user.name,
+          email: user.email,
+        }}
+      />
     </div>
   )
 }
