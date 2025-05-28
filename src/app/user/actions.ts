@@ -105,6 +105,7 @@ export async function updateUserAction(prevState: State, formData: FormData) {
   const id = formData.get("id") as string
   const avatar = formData.get("avatar") as string
   const name = formData.get("name") as string
+  const password = formData.get("password") as string
 
   if (!id || !name) {
     return { message: "ID and name are required." }
@@ -118,16 +119,24 @@ export async function updateUserAction(prevState: State, formData: FormData) {
 
   try {
     const apiUrl = getUserApiUrl(id)
+
+    // Prepare update data - only include password if it's provided
+    const updateData: { avatar: string; name: string; password?: string } = {
+      avatar,
+      name,
+    }
+
+    // Only include password in update if a new password is provided
+    if (password && password.trim() !== "") {
+      updateData.password = password
+    }
+
     const response = await fetch(apiUrl, {
       method: "PUT",
       headers: {
         "Content-Type": "application/json",
       },
-      body: JSON.stringify({
-        avatar,
-        name,
-        // Don't update password, createdAt, id, or likeUsers
-      }),
+      body: JSON.stringify(updateData),
     })
 
     if (!response.ok) {
@@ -136,14 +145,16 @@ export async function updateUserAction(prevState: State, formData: FormData) {
       )
     }
 
-    await response.json()
+    const updatedUser = await response.json()
 
     // Update session cookie with new user data
     const cookieStore = await cookies()
     const sessionData = {
       ...authUser,
-      avatar,
-      name,
+      avatar: updatedUser.avatar,
+      name: updatedUser.name,
+      // Update password in session if it was changed
+      ...(updateData.password && { password: updatedUser.password }),
     }
     cookieStore.set({
       name: "session",

@@ -124,6 +124,7 @@ describe("updateUserAction", () => {
     "https://i.pravatar.cc/150?u=updated@example.com"
   )
   mockFormData.append("name", "Updated User")
+  mockFormData.append("password", "newpassword123")
 
   const mockState = {
     message: "",
@@ -142,7 +143,83 @@ describe("updateUserAction", () => {
     process.env.MOCKAPI_TOKEN = "test-token"
   })
 
-  test("updates user successfully", async () => {
+  test("updates user successfully with password", async () => {
+    // Mock checkAuth
+    const { checkAuth } = await import("../auth/actions")
+    ;(checkAuth as Mock).mockResolvedValueOnce(mockAuthUser)
+
+    // Mock the cookies function
+    const mockCookies = {
+      set: vi.fn(),
+    }
+    const { cookies } = await import("next/headers")
+    ;(cookies as Mock).mockResolvedValueOnce(mockCookies)
+
+    // Mock the fetch call
+    global.fetch = vi.fn().mockResolvedValueOnce({
+      ok: true,
+      json: () =>
+        Promise.resolve({
+          id: "1",
+          name: "Updated User",
+          avatar: "https://i.pravatar.cc/150?u=updated@example.com",
+          password: "newpassword123",
+        }),
+    })
+
+    const result = await updateUserAction(mockState, mockFormData)
+
+    // Get the actual call arguments
+    const fetchCall = (fetch as Mock).mock.calls[0]
+    const [url, options] = fetchCall
+
+    expect(url).toBe("https://test-token.mockapi.io/api/v1/users/1")
+    expect(options.method).toBe("PUT")
+    expect(options.headers).toEqual({
+      "Content-Type": "application/json",
+    })
+
+    // Parse the body and check its contents - should include avatar, name, and password
+    const body = JSON.parse(options.body)
+    expect(body).toEqual({
+      avatar: "https://i.pravatar.cc/150?u=updated@example.com",
+      name: "Updated User",
+      password: "newpassword123",
+    })
+
+    // Verify the session cookie was updated with password
+    expect(mockCookies.set).toHaveBeenCalledWith({
+      name: "session",
+      value: JSON.stringify({
+        ...mockAuthUser,
+        avatar: "https://i.pravatar.cc/150?u=updated@example.com",
+        name: "Updated User",
+        password: "newpassword123",
+      }),
+      httpOnly: true,
+      path: "/",
+      secure: process.env.NODE_ENV === "production",
+      maxAge: 60 * 60 * 24 * 7, // 1 week
+      sameSite: "lax",
+    })
+
+    // Verify the result
+    expect(result).toEqual({
+      message: "success",
+    })
+  })
+
+  test("updates user successfully without password", async () => {
+    // Create form data without password
+    const formDataWithoutPassword = new FormData()
+    formDataWithoutPassword.append("id", "1")
+    formDataWithoutPassword.append(
+      "avatar",
+      "https://i.pravatar.cc/150?u=updated@example.com"
+    )
+    formDataWithoutPassword.append("name", "Updated User")
+    formDataWithoutPassword.append("password", "") // Empty password
+
     // Mock checkAuth
     const { checkAuth } = await import("../auth/actions")
     ;(checkAuth as Mock).mockResolvedValueOnce(mockAuthUser)
@@ -165,7 +242,7 @@ describe("updateUserAction", () => {
         }),
     })
 
-    const result = await updateUserAction(mockState, mockFormData)
+    const result = await updateUserAction(mockState, formDataWithoutPassword)
 
     // Get the actual call arguments
     const fetchCall = (fetch as Mock).mock.calls[0]
@@ -184,7 +261,7 @@ describe("updateUserAction", () => {
       name: "Updated User",
     })
 
-    // Verify the session cookie was updated
+    // Verify the session cookie was updated without password
     expect(mockCookies.set).toHaveBeenCalledWith({
       name: "session",
       value: JSON.stringify({

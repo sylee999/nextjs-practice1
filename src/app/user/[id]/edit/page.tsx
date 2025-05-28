@@ -37,6 +37,7 @@ export default async function UserEditPage({
           avatar: user.avatar,
           name: user.name,
           email: user.email,
+          password: user.password || "",
         }}
       />
     </div>

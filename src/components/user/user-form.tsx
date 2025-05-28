@@ -18,7 +18,7 @@ type UserFormData = {
   avatar: string
   name: string
   email: string
-  password?: string // Only used in create mode
+  password?: string // Used in both create and edit modes
 }
 
 type UserFormProps = {
@@ -55,9 +55,9 @@ export function UserForm({ mode, initialData, ...props }: UserFormProps) {
   // Initialize form data with defaults for missing fields
   const getInitialFormData = () => {
     return {
-      avatar: initialData.avatar || "",
-      name: initialData.name || "",
-      email: initialData.email || "",
+      avatar: initialData.avatar,
+      name: initialData.name,
+      email: initialData.email,
       password: initialData.password || "",
     }
   }
@@ -70,8 +70,10 @@ export function UserForm({ mode, initialData, ...props }: UserFormProps) {
 
     // In edit mode, check if editable fields have changed
     return (
-      formData.name !== (initialData.name || "") ||
-      formData.avatar !== (initialData.avatar || "")
+      formData.name !== initialData.name ||
+      formData.avatar !== initialData.avatar ||
+      (formData.password !== "" &&
+        formData.password !== (initialData.password || ""))
     )
   }
 
@@ -105,7 +107,7 @@ export function UserForm({ mode, initialData, ...props }: UserFormProps) {
     },
     edit: {
       title: "Update your profile",
-      description: "Update your name below to modify your profile",
+      description: "Update your name and password below to modify your profile",
     },
   }
 
@@ -182,27 +184,32 @@ export function UserForm({ mode, initialData, ...props }: UserFormProps) {
           />
         </div>
 
-        {/* Password field only for create mode */}
-        {mode === "create" && (
-          <div className="grid gap-3">
-            <div className="flex items-center">
-              <Label htmlFor="password">Password</Label>
-            </div>
-            <Input
-              id="password"
-              name="password"
-              type="password"
-              required
-              autoComplete="new-password"
-              minLength={8}
-              disabled={pending}
-              value={formData.password}
-              onChange={(e) =>
-                setFormData({ ...formData, password: e.target.value })
-              }
-            />
+        {/* Password field for both create and edit modes */}
+        <div className="grid gap-3">
+          <div className="flex items-center">
+            <Label htmlFor="password">
+              {mode === "edit" ? "New Password (optional)" : "Password"}
+            </Label>
           </div>
-        )}
+          <Input
+            id="password"
+            name="password"
+            type="password"
+            placeholder={
+              mode === "edit" ? "Leave blank to keep current password" : ""
+            }
+            required={mode === "create"}
+            autoComplete={
+              mode === "create" ? "new-password" : "current-password"
+            }
+            minLength={8}
+            disabled={pending}
+            value={formData.password}
+            onChange={(e) =>
+              setFormData({ ...formData, password: e.target.value })
+            }
+          />
+        </div>
 
         <div className="grid gap-3">
           <SubmitButton mode={mode} hasChanges={hasChanges()} />
