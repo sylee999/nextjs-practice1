@@ -54,6 +54,7 @@ export async function loginAction(
     return {
       success: true,
       message: "Login successful",
+      id: user.id,
       from,
     }
   } catch (error) {
