@@ -13,4 +13,9 @@ export function getUserApiUrl(id?: string): string {
   return id ? `${baseUrl}/users/${id}` : `${baseUrl}/users`
 }
 
-// Add more functions for other entities as needed, e.g., getPostApiUrl
+export function getPostApiUrl(id?: string): string {
+  const baseUrl = getApiBaseUrl()
+  return id ? `${baseUrl}/posts/${id}` : `${baseUrl}/posts`
+}
+
+// Add more functions for other entities as needed
