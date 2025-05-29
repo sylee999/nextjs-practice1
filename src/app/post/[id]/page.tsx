@@ -1,8 +1,9 @@
 import Link from "next/link"
-import { ArrowLeft, Pencil, Trash2 } from "lucide-react"
+import { ArrowLeft, Pencil } from "lucide-react"
 
 import { checkAuth } from "@/app/auth/actions"
 import { getUser } from "@/app/user/actions"
+import PostDeleteDialog from "@/components/post/post-delete-dialog"
 import { PostDetail } from "@/components/post/post-detail"
 import { Button } from "@/components/ui/button"
 
@@ -41,10 +42,7 @@ export default async function PostDetailPage({
               Edit Post
             </Link>
           </Button>
-          <Button variant="destructive" className="flex items-center">
-            <Trash2 className="mr-2 size-4" />
-            Delete Post
-          </Button>
+          <PostDeleteDialog post={post} />
         </div>
       )}
     </div>
