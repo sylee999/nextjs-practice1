@@ -1,7 +1,11 @@
 import { NextResponse, type NextRequest } from "next/server"
 
 // Define protected routes that require authentication
-const protectedRoutes: string[] = ["/post/create"]
+const protectedRoutes: string[] = [
+  "/post/create",
+  "/post/[id]/edit", // Protect post edit routes
+  "/user/[id]/edit", // Protect user edit routes
+]
 
 export function middleware(request: NextRequest) {
   const path = request.nextUrl.pathname
@@ -11,9 +15,15 @@ export function middleware(request: NextRequest) {
   const isAuthenticated = !!session
 
   // Check if current path is in protected routes (or is a sub-path)
-  const isProtectedRoute = protectedRoutes.some(
-    (route) => path === route || path.startsWith(`${route}/`)
-  )
+  const isProtectedRoute = protectedRoutes.some((route) => {
+    // Handle dynamic routes like /post/[id]/edit
+    if (route.includes("[id]")) {
+      const routePattern = route.replace("[id]", "\\d+")
+      const regex = new RegExp(`^${routePattern}$`)
+      return regex.test(path)
+    }
+    return path === route || path.startsWith(`${route}/`)
+  })
 
   // Check if user is trying to access login/signup while already authenticated
   const isAuthRoute = path === "/login" || path === "/signup"

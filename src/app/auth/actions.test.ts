@@ -221,6 +221,7 @@ describe("auth actions", () => {
       expect(result).toEqual({
         success: true,
         message: "Login successful",
+        id: "1",
         from: "/dashboard",
       })
     })

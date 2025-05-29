@@ -1,6 +1,6 @@
 "use client"
 
-import { useActionState, useEffect } from "react"
+import { useActionState, useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
 import { Trash2 } from "lucide-react"
 
@@ -23,11 +23,13 @@ export default function PostDeleteDialog({ post }: { post: Post }) {
   const [state, formAction, pending] = useActionState(deletePostAction, {
     message: "",
   })
+  const [isOpen, setIsOpen] = useState(false)
   const router = useRouter()
 
-  // Handle successful deletion
+  // Handle successful deletion or errors
   useEffect(() => {
     if (state.message === "success") {
+      setIsOpen(false) // Close dialog
       router.push("/post")
     }
   }, [state.message, router])
@@ -35,7 +37,7 @@ export default function PostDeleteDialog({ post }: { post: Post }) {
   return (
     <form action={formAction} id="delete-post-form">
       <input type="hidden" name="id" value={post.id} />
-      <Dialog>
+      <Dialog open={isOpen} onOpenChange={setIsOpen}>
         <DialogTrigger asChild>
           <Button variant="destructive" className="flex items-center">
             <Trash2 className="mr-2 size-4" />
@@ -49,15 +51,17 @@ export default function PostDeleteDialog({ post }: { post: Post }) {
               This action cannot be undone. This will permanently delete your
               post &ldquo;{post.title}&rdquo; and remove it from our servers.
             </DialogDescription>
-            {state.message && state.message !== "success" && (
-              <Alert variant="destructive">
-                <AlertDescription>{state.message}</AlertDescription>
-              </Alert>
-            )}
           </DialogHeader>
+
+          {state.message && state.message !== "success" && (
+            <Alert variant="destructive">
+              <AlertDescription>{state.message}</AlertDescription>
+            </Alert>
+          )}
+
           <DialogFooter>
             <DialogClose asChild>
-              <Button type="button" variant="outline">
+              <Button type="button" variant="outline" disabled={pending}>
                 Cancel
               </Button>
             </DialogClose>

@@ -22,7 +22,13 @@ export async function getPosts(): Promise<Post[]> {
       )
     }
 
-    return response.json()
+    const posts: Post[] = await response.json()
+
+    // Ensure likeUsers is always an array
+    return posts.map((post) => ({
+      ...post,
+      likeUsers: post.likeUsers || [],
+    }))
   } catch (error) {
     console.error("Error fetching posts:", error)
     return []
@@ -37,7 +43,13 @@ export async function getPost(id: string): Promise<Post | null> {
       return null
     }
 
-    return await response.json()
+    const post: Post = await response.json()
+
+    // Ensure likeUsers is always an array
+    return {
+      ...post,
+      likeUsers: post.likeUsers || [],
+    }
   } catch (error) {
     console.error("Error fetching post:", error)
     throw error
@@ -73,7 +85,7 @@ export async function createPostAction(prevState: State, formData: FormData) {
       },
       body: JSON.stringify({
         ...postData,
-        likeUsers: [],
+        likeUsers: [], // Always initialize as empty array
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
       }),
@@ -176,10 +188,10 @@ export async function deletePostAction(prevState: State, formData: FormData) {
     return { message: "You must be logged in to delete a post." }
   }
 
-  // Check if user owns the post
+  // Check if user owns the post - this also verifies the post exists
   const existingPost = await getPost(id)
   if (!existingPost) {
-    return { message: "Post not found." }
+    return { message: "Post not found or has already been deleted." }
   }
 
   if (existingPost.userId !== authUser.id) {
@@ -193,6 +205,16 @@ export async function deletePostAction(prevState: State, formData: FormData) {
     })
 
     if (!response.ok) {
+      // Handle specific error cases
+      if (response.status === 404) {
+        // Post was already deleted or doesn't exist
+        console.warn(
+          `Post ${id} not found during deletion, may have been already deleted`
+        )
+        revalidatePath("/post")
+        return { message: "success" } // Treat as success since the goal (post deletion) is achieved
+      }
+
       throw new Error(
         `Failed to delete post: ${response.status} ${response.statusText}`
       )

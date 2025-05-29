@@ -47,7 +47,7 @@ export function PostDetail({ post, author }: PostDetailProps) {
           <p className="whitespace-pre-wrap text-gray-700">{post.content}</p>
         </div>
         <div className="mt-4 flex items-center justify-between text-sm text-gray-500">
-          <span>{post.likeUsers.length} likes</span>
+          <span>{(post.likeUsers || []).length} likes</span>
           {post.updatedAt !== post.createdAt && (
             <span>
               Updated: {new Date(post.updatedAt).toLocaleDateString()}

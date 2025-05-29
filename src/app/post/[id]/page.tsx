@@ -1,4 +1,5 @@
 import Link from "next/link"
+import { notFound } from "next/navigation"
 import { ArrowLeft, Pencil } from "lucide-react"
 
 import { checkAuth } from "@/app/auth/actions"
@@ -16,10 +17,16 @@ export default async function PostDetailPage({
 }) {
   const { id } = await params
   const post = await getPost(id)
+
+  // If post doesn't exist, show 404 page
+  if (!post) {
+    notFound()
+  }
+
   const authUser = await checkAuth()
 
-  // Fetch author information if post exists
-  const author = post ? await getUser(post.userId) : null
+  // Fetch author information
+  const author = await getUser(post.userId)
 
   return (
     <div className="mx-auto max-w-4xl px-4 py-6 sm:px-6 lg:px-8">
@@ -34,7 +41,7 @@ export default async function PostDetailPage({
 
       <PostDetail post={post} author={author} />
 
-      {post && authUser?.id === post.userId && (
+      {authUser?.id === post.userId && (
         <div className="mt-6 flex space-x-2">
           <Button variant="outline" className="flex items-center" asChild>
             <Link href={`/post/${post.id}/edit`}>
