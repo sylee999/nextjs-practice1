@@ -1,13 +1,52 @@
-interface PostDetailPageProps {
-  params: { id: string }
-}
+import Link from "next/link"
+import { ArrowLeft, Pencil, Trash2 } from "lucide-react"
 
-export default function PostDetailPage({ params }: PostDetailPageProps) {
+import { checkAuth } from "@/app/auth/actions"
+import { getUser } from "@/app/user/actions"
+import { PostDetail } from "@/components/post/post-detail"
+import { Button } from "@/components/ui/button"
+
+import { getPost } from "../actions"
+
+export default async function PostDetailPage({
+  params,
+}: {
+  params: Promise<{ id: string }>
+}) {
+  const { id } = await params
+  const post = await getPost(id)
+  const authUser = await checkAuth()
+
+  // Fetch author information if post exists
+  const author = post ? await getUser(post.userId) : null
+
   return (
-    <div>
-      <h1>Post Detail Page</h1>
-      <p>Post ID: {params.id}</p>
-      {/* TODO: Fetch and display post details */}
+    <div className="mx-auto max-w-4xl px-4 py-6 sm:px-6 lg:px-8">
+      <div className="mb-6">
+        <Button variant="outline" className="flex items-center" asChild>
+          <Link href="/post">
+            <ArrowLeft className="mr-2 size-4" />
+            Back to Posts
+          </Link>
+        </Button>
+      </div>
+
+      <PostDetail post={post} author={author} />
+
+      {post && authUser?.id === post.userId && (
+        <div className="mt-6 flex space-x-2">
+          <Button variant="outline" className="flex items-center" asChild>
+            <Link href={`/post/${post.id}/edit`}>
+              <Pencil className="mr-2 size-4" />
+              Edit Post
+            </Link>
+          </Button>
+          <Button variant="destructive" className="flex items-center">
+            <Trash2 className="mr-2 size-4" />
+            Delete Post
+          </Button>
+        </div>
+      )}
     </div>
   )
 }
