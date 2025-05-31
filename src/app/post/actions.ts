@@ -3,7 +3,7 @@
 import { revalidatePath } from "next/cache"
 
 import { checkAuth } from "@/app/auth/actions"
-import { getPostApiUrl } from "@/lib/api"
+import { getDeletePostApiUrl, getPostApiUrl } from "@/lib/api"
 import { CreatePostData, Post, UpdatePostData } from "@/types/post"
 
 type State = {
@@ -199,7 +199,7 @@ export async function deletePostAction(prevState: State, formData: FormData) {
   }
 
   try {
-    const apiUrl = getPostApiUrl(id)
+    const apiUrl = getDeletePostApiUrl(authUser.id, id)
     const response = await fetch(apiUrl, {
       method: "DELETE",
     })
