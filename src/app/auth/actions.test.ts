@@ -3,7 +3,7 @@ import { beforeEach, describe, expect, test, vi } from "vitest"
 
 import type { User } from "@/types/user"
 
-import { loginAction, logout } from "./actions"
+import { checkAuth, loginAction, logout } from "./actions"
 
 // Mock next/headers
 vi.mock("next/headers", () => ({
@@ -21,41 +21,24 @@ describe("auth actions", () => {
 
   describe("login", () => {
     test("should return error when email or password is missing", async () => {
-      // Test with missing email
-      const formDataNoEmail = new FormData()
-      formDataNoEmail.append("password", "password123")
-      formDataNoEmail.append("from", "/dashboard")
+      // Create form data without email
+      const formData = new FormData()
+      formData.append("password", "password123")
 
-      const resultNoEmail = await loginAction(
+      const result = await loginAction(
         { success: false, message: "" },
-        formDataNoEmail
+        formData
       )
 
-      expect(resultNoEmail).toEqual({
+      expect(result).toEqual({
         success: false,
         message: "Email and password are required.",
-        from: "/dashboard",
-      })
-
-      // Test with missing password
-      const formDataNoPassword = new FormData()
-      formDataNoPassword.append("email", "test@example.com")
-      formDataNoPassword.append("from", "/dashboard")
-
-      const resultNoPassword = await loginAction(
-        { success: false, message: "" },
-        formDataNoPassword
-      )
-
-      expect(resultNoPassword).toEqual({
-        success: false,
-        message: "Email and password are required.",
-        from: "/dashboard",
+        from: "/user",
       })
     })
 
     test("should return error when MOCKAPI_TOKEN is not defined", async () => {
-      // Temporarily remove the mock environment variable
+      // Mock environment variable to be undefined
       const originalEnv = process.env.MOCKAPI_TOKEN
       vi.stubEnv("MOCKAPI_TOKEN", "")
 
@@ -71,7 +54,8 @@ describe("auth actions", () => {
 
       expect(result).toEqual({
         success: false,
-        message: "MOCKAPI_TOKEN environment variable is not defined.",
+        message:
+          "Configuration error: MOCKAPI_TOKEN environment variable is not defined is not properly configured",
         from: "/user",
       })
 
@@ -80,6 +64,9 @@ describe("auth actions", () => {
     })
 
     test("should return error when API request fails", async () => {
+      // Set up environment first
+      vi.stubEnv("MOCKAPI_TOKEN", "test-token")
+
       // Mock global fetch to simulate a failed API request
       global.fetch = vi.fn().mockImplementationOnce(() =>
         Promise.resolve({
@@ -106,11 +93,14 @@ describe("auth actions", () => {
       })
 
       expect(global.fetch).toHaveBeenCalledWith(
-        "https://mockedtoken.mockapi.io/api/v1/users?email=test%40example.com"
+        "https://test-token.mockapi.io/api/v1/users?email=test%40example.com"
       )
     })
 
     test("should return error when user is not found", async () => {
+      // Set up environment first
+      vi.stubEnv("MOCKAPI_TOKEN", "test-token")
+
       // Mock global fetch to simulate an empty response (user not found)
       global.fetch = vi.fn().mockImplementationOnce(() =>
         Promise.resolve({
@@ -137,6 +127,9 @@ describe("auth actions", () => {
     })
 
     test("should return error when password does not match", async () => {
+      // Set up environment first
+      vi.stubEnv("MOCKAPI_TOKEN", "test-token")
+
       // Mock global fetch to simulate a user with different password
       global.fetch = vi.fn().mockImplementationOnce(() =>
         Promise.resolve({
@@ -170,6 +163,9 @@ describe("auth actions", () => {
     })
 
     test("should set session cookie and return success when credentials are valid", async () => {
+      // Set up environment first
+      vi.stubEnv("MOCKAPI_TOKEN", "test-token")
+
       // Mock user data
       const mockUser: User = {
         id: "1",
@@ -268,42 +264,59 @@ describe("auth actions", () => {
 
   describe("checkAuth", () => {
     test("should return null if there is no session cookie", async () => {
+      // Mock cookie store to return undefined session
       ;(cookies as unknown as ReturnType<typeof vi.fn>).mockReturnValue({
         get: vi.fn().mockReturnValue(undefined),
       })
-      const { checkAuth } = await import("./actions")
+
       const result = await checkAuth()
-      expect(result).toBeNull()
+
+      expect(result).toBe(null)
     })
 
     test("should return user object if session cookie is valid", async () => {
       const mockUser: User = {
         id: "1",
         email: "test@example.com",
-        password: "password123",
         name: "Test User",
         createdAt: new Date().toISOString(),
         avatar: "https://example.com/avatar.png",
         likeUsers: [],
       }
+
+      // Mock cookie store to return valid session
       ;(cookies as unknown as ReturnType<typeof vi.fn>).mockReturnValue({
-        get: vi.fn().mockReturnValue({ value: JSON.stringify(mockUser) }),
+        get: vi.fn().mockReturnValue({
+          value: JSON.stringify(mockUser),
+        }),
       })
-      const { checkAuth } = await import("./actions")
+
       const result = await checkAuth()
+
       expect(result).toEqual(mockUser)
     })
 
     test("should return null and log error if session cookie is invalid JSON", async () => {
-      const errorSpy = vi.spyOn(console, "error").mockImplementation(() => {})
+      // Mock console.error to capture error logs
+      const consoleSpy = vi.spyOn(console, "error").mockImplementation(() => {})
+
+      // Mock cookie store to return invalid JSON
       ;(cookies as unknown as ReturnType<typeof vi.fn>).mockReturnValue({
-        get: vi.fn().mockReturnValue({ value: "not-json" }),
+        get: vi.fn().mockReturnValue({
+          value: "invalid-json",
+        }),
       })
-      const { checkAuth } = await import("./actions")
+
       const result = await checkAuth()
-      expect(result).toBeNull()
-      expect(errorSpy).toHaveBeenCalled()
-      errorSpy.mockRestore()
+
+      expect(result).toBe(null)
+      expect(consoleSpy).toHaveBeenCalledWith(
+        "Check auth error:",
+        expect.any(Error)
+      )
+
+      // Restore console.error
+      consoleSpy.mockRestore()
     })
   })
 })

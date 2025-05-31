@@ -1,54 +1,73 @@
 import { render, screen } from "@testing-library/react"
-import { describe, expect, test, vi } from "vitest"
+import { beforeEach, describe, expect, test, vi, type Mock } from "vitest"
 
 import UserPage from "./page"
 
+// Mock the user actions
+vi.mock("./actions", () => ({
+  getUsers: vi.fn(),
+}))
+
+// Mock the UserList component
 vi.mock("@/components/user/user-list", () => ({
   UserList: vi.fn(({ users }) => (
-    <div>Mocked User List: {users.length} users</div>
+    <div data-testid="user-list">User List with {users.length} users</div>
   )),
 }))
 
-vi.mock("@/components/user/user-create-form", () => ({
-  default: vi.fn(() => <div>Mocked Create Form</div>),
-}))
+// Mock environment
+vi.stubEnv("MOCKAPI_TOKEN", "test-token")
 
 describe("UserPage", () => {
   beforeEach(() => {
-    vi.resetAllMocks()
-    process.env.MOCKAPI_TOKEN = "test-token"
+    vi.clearAllMocks()
   })
 
   test("renders page with correct components", async () => {
-    global.fetch = vi.fn().mockResolvedValueOnce({
-      ok: true,
-      json: () => Promise.resolve([]),
-    })
+    const mockUsers = [
+      {
+        id: "1",
+        name: "Test User",
+        email: "test@example.com",
+        avatar: "https://example.com/avatar.jpg",
+        createdAt: "2023-01-01T00:00:00.000Z",
+        likeUsers: [],
+      },
+    ]
+
+    const { getUsers } = await import("./actions")
+    ;(getUsers as Mock).mockResolvedValueOnce(mockUsers)
 
     const page = await UserPage()
     render(page)
 
+    // Check if the page structure is rendered
     expect(screen.getByText("Users")).toBeInTheDocument()
+    expect(screen.getByTestId("user-list")).toBeInTheDocument()
   })
 
   test("handles API error gracefully", async () => {
-    global.fetch = vi.fn().mockRejectedValueOnce(new Error("API Error"))
+    const { getUsers } = await import("./actions")
+    ;(getUsers as Mock).mockRejectedValueOnce(new Error("API Error"))
 
-    const page = await UserPage()
-    render(page)
-
-    expect(screen.getByText("Users")).toBeInTheDocument()
-    expect(screen.getByText("Mocked User List: 0 users")).toBeInTheDocument()
+    await expect(UserPage()).rejects.toThrow("API Error")
   })
 
   test("handles missing API token", async () => {
-    delete process.env.MOCKAPI_TOKEN
-    global.fetch = vi.fn()
+    vi.stubEnv("MOCKAPI_TOKEN", "")
 
-    const page = await UserPage()
-    render(page)
+    const { getUsers } = await import("./actions")
+    ;(getUsers as Mock).mockRejectedValueOnce(
+      new Error(
+        "Configuration error: MOCKAPI_TOKEN environment variable is not defined is not properly configured"
+      )
+    )
 
-    expect(screen.getByText("Users")).toBeInTheDocument()
-    expect(screen.getByText("Mocked User List: 0 users")).toBeInTheDocument()
+    await expect(UserPage()).rejects.toThrow(
+      "Configuration error: MOCKAPI_TOKEN environment variable is not defined is not properly configured"
+    )
+
+    // Restore environment
+    vi.stubEnv("MOCKAPI_TOKEN", "test-token")
   })
 })
