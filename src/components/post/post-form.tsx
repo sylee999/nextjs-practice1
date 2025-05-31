@@ -1,7 +1,6 @@
 "use client"
 
-import { useActionState, useEffect, useState } from "react"
-import { useRouter } from "next/navigation"
+import { useActionState } from "react"
 import { useFormStatus } from "react-dom"
 
 import { createPostAction, updatePostAction } from "@/app/post/actions"
@@ -10,37 +9,38 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
+import {
+  useFormCancelNavigation,
+  useFormNavigation,
+} from "@/hooks/use-form-navigation"
+import { useFormState } from "@/hooks/use-form-state"
+import type {
+  PostFormData,
+  PostFormProps,
+  SubmitButtonProps,
+} from "@/types/components"
 
-type PostFormMode = "create" | "edit"
-
-type PostFormData = {
-  id?: string // Required for edit mode
-  title: string
-  content: string
-}
-
-type PostFormProps = {
-  mode: PostFormMode
-  initialData: PostFormData
-} & React.ComponentProps<"form">
-
+/**
+ * Submit button component for post forms
+ * Handles different states based on form mode and pending status
+ */
 function SubmitButton({
   mode,
   hasChanges,
-}: {
-  mode: PostFormMode
-  hasChanges: boolean
-}) {
-  const { pending } = useFormStatus()
+  pending = false,
+}: SubmitButtonProps): React.JSX.Element {
+  const { pending: formPending } = useFormStatus()
+  const isActuallyPending = pending || formPending
 
   const buttonText = {
-    create: pending ? "Creating post..." : "Create Post",
-    edit: pending ? "Updating post..." : "Update Post",
+    create: isActuallyPending ? "Creating post..." : "Create Post",
+    edit: isActuallyPending ? "Updating post..." : "Update Post",
   }
 
   // In edit mode, disable if no changes or pending
   // In create mode, only disable if pending
-  const isDisabled = mode === "edit" ? !hasChanges || pending : pending
+  const isDisabled =
+    mode === "edit" ? !hasChanges || isActuallyPending : isActuallyPending
 
   return (
     <Button type="submit" className="w-full" disabled={isDisabled}>
@@ -49,31 +49,30 @@ function SubmitButton({
   )
 }
 
+/**
+ * PostForm component for creating and editing posts
+ * Supports both create and edit modes with proper validation and state management
+ *
+ * @param mode - Form operation mode ('create' or 'edit')
+ * @param initialData - Initial form data
+ * @param props - Additional form props
+ */
 export function PostForm({
   mode,
   initialData,
   ...props
 }: PostFormProps): React.JSX.Element {
   // Initialize form data with defaults for missing fields
-  const getInitialFormData = () => {
-    return {
-      title: initialData.title || "",
-      content: initialData.content || "",
-    }
+  const normalizedInitialData: PostFormData = {
+    title: initialData.title || "",
+    content: initialData.content || "",
   }
 
-  const [formData, setFormData] = useState(getInitialFormData)
-
-  // Check if form data has changed from initial data (for edit mode)
-  const hasChanges = () => {
-    if (mode === "create") return true // Always allow submission in create mode
-
-    // In edit mode, check if editable fields have changed
-    return (
-      formData.title !== initialData.title ||
-      formData.content !== initialData.content
-    )
-  }
+  // Use custom hooks for form state and navigation
+  const { formData, hasChanges, updateField } = useFormState(
+    normalizedInitialData,
+    mode
+  )
 
   // Use appropriate action based on mode
   const action = mode === "create" ? createPostAction : updatePostAction
@@ -81,20 +80,10 @@ export function PostForm({
     mode === "create" ? { message: "", id: "" } : { message: "" }
 
   const [state, formAction, pending] = useActionState(action, initialState)
-  const router = useRouter()
 
-  // Handle success navigation based on mode
-  useEffect(() => {
-    if (state.message === "success") {
-      router.refresh()
-
-      if (mode === "create" && "id" in state && state.id) {
-        router.push(`/post/${state.id}`)
-      } else if (mode === "edit" && initialData.id) {
-        router.push(`/post/${initialData.id}`)
-      }
-    }
-  }, [state, router, mode, initialData.id])
+  // Handle navigation
+  useFormNavigation(state, mode, initialData.id, "post")
+  const handleCancel = useFormCancelNavigation(mode, initialData.id, "post")
 
   // Content configuration based on mode
   const content = {
@@ -139,9 +128,7 @@ export function PostForm({
             required
             disabled={pending}
             value={formData.title}
-            onChange={(e) =>
-              setFormData({ ...formData, title: e.target.value })
-            }
+            onChange={(e) => updateField("title", e.target.value)}
           />
         </div>
 
@@ -155,7 +142,7 @@ export function PostForm({
             disabled={pending}
             value={formData.content}
             onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) =>
-              setFormData({ ...formData, content: e.target.value })
+              updateField("content", e.target.value)
             }
             rows={8}
             className="resize-none"
@@ -163,18 +150,16 @@ export function PostForm({
         </div>
 
         <div className="grid gap-3">
-          <SubmitButton mode={mode} hasChanges={hasChanges()} />
+          <SubmitButton
+            mode={mode}
+            hasChanges={hasChanges()}
+            pending={pending}
+          />
           <Button
             type="button"
             variant="outline"
             className="w-full"
-            onClick={() =>
-              router.push(
-                mode === "edit" && initialData.id
-                  ? `/post/${initialData.id}`
-                  : "/post"
-              )
-            }
+            onClick={handleCancel}
             disabled={pending}
           >
             Cancel

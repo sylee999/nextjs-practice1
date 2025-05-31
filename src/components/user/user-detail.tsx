@@ -1,27 +1,30 @@
-import { User } from "@/types/user"
+import { memo } from "react"
 
-interface UserDetailProps {
-  user: User | null
-}
+import { UserAvatar } from "@/components/user/user-avatar"
+import type { UserComponentProps } from "@/types/components"
 
-export async function UserDetail({
+/**
+ * UserDetail component for displaying user information
+ * Optimized with React.memo for performance
+ *
+ * @param user - User object to display
+ */
+export const UserDetail = memo(function UserDetail({
   user,
-}: UserDetailProps): Promise<React.JSX.Element> {
+}: UserComponentProps): React.JSX.Element {
   if (!user) {
     return <div>User not found</div>
   }
 
   return (
-    <div className="rounded border p-4">
-      <h2 className="text-xl font-bold">{user.name}</h2>
-      <p className="text-gray-600">{user.email}</p>
-      {user.avatar && (
-        <img
-          src={user.avatar}
-          alt={user.name}
-          className="mt-2 h-16 w-16 rounded-full"
-        />
-      )}
+    <div className="hover:bg-muted/50 flex items-center gap-3 rounded-lg p-3 transition-colors">
+      <UserAvatar user={user} size="md" />
+      <div className="flex flex-col">
+        <span className="font-medium">{user.name}</span>
+        <span className="text-muted-foreground text-sm">{user.email}</span>
+      </div>
     </div>
   )
-}
+})
+
+UserDetail.displayName = "UserDetail"

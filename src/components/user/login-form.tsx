@@ -1,7 +1,7 @@
 "use client"
 
-import { useRouter, useSearchParams } from "next/navigation"
 import { useActionState, useEffect, useState } from "react"
+import { useRouter, useSearchParams } from "next/navigation"
 
 import { loginAction } from "@/app/auth/actions"
 import { Button } from "@/components/ui/button"
@@ -10,19 +10,14 @@ import { Label } from "@/components/ui/label"
 
 import { Alert, AlertDescription } from "../ui/alert"
 
-interface LoginFormProps extends React.ComponentProps<"form"> {
-  from?: string
-}
-
 export function LoginForm({
-  from = "/user",
   className,
   ...props
-}: LoginFormProps): React.JSX.Element {
+}: React.ComponentProps<"form">): React.JSX.Element {
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
   const searchParams = useSearchParams()
-  const from = searchParams.get("from")
+  const from = searchParams.get("from") || ""
   const router = useRouter()
 
   const [state, formAction, pending] = useActionState(loginAction, {

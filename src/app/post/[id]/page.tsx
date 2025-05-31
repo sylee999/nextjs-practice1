@@ -26,7 +26,8 @@ export default async function PostDetailPage({
   const authUser = await checkAuth()
 
   // Fetch author information
-  const author = await getUser(post.userId)
+  const authorResult = await getUser(post.userId)
+  const author = authorResult || undefined
 
   return (
     <div className="mx-auto max-w-4xl px-4 py-6 sm:px-6 lg:px-8">

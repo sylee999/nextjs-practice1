@@ -1,7 +1,6 @@
 "use client"
 
-import { useActionState, useEffect, useState } from "react"
-import { useRouter } from "next/navigation"
+import { useActionState } from "react"
 import { useFormStatus } from "react-dom"
 
 import { createUserAction, updateUserAction } from "@/app/user/actions"
@@ -10,39 +9,38 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
+import {
+  useFormCancelNavigation,
+  useFormNavigation,
+} from "@/hooks/use-form-navigation"
+import { useFormState } from "@/hooks/use-form-state"
+import type {
+  SubmitButtonProps,
+  UserFormData,
+  UserFormProps,
+} from "@/types/components"
 
-type UserFormMode = "create" | "edit"
-
-type UserFormData = {
-  id?: string // Required for edit mode
-  avatar: string
-  name: string
-  email: string
-  password?: string // Used in both create and edit modes
-}
-
-type UserFormProps = {
-  mode: UserFormMode
-  initialData: UserFormData
-} & React.ComponentProps<"form">
-
+/**
+ * Submit button component for user forms
+ * Handles different states based on form mode and pending status
+ */
 function SubmitButton({
   mode,
   hasChanges,
-}: {
-  mode: UserFormMode
-  hasChanges: boolean
-}) {
-  const { pending } = useFormStatus()
+  pending = false,
+}: SubmitButtonProps): React.JSX.Element {
+  const { pending: formPending } = useFormStatus()
+  const isActuallyPending = pending || formPending
 
   const buttonText = {
-    create: pending ? "Creating account..." : "Sign up",
-    edit: pending ? "Updating profile..." : "Update Profile",
+    create: isActuallyPending ? "Creating account..." : "Sign up",
+    edit: isActuallyPending ? "Updating profile..." : "Update Profile",
   }
 
   // In edit mode, disable if no changes or pending
   // In create mode, only disable if pending
-  const isDisabled = mode === "edit" ? !hasChanges || pending : pending
+  const isDisabled =
+    mode === "edit" ? !hasChanges || isActuallyPending : isActuallyPending
 
   return (
     <Button type="submit" className="w-full" disabled={isDisabled}>
@@ -51,35 +49,32 @@ function SubmitButton({
   )
 }
 
+/**
+ * UserForm component for creating and editing user profiles
+ * Supports both create and edit modes with proper validation and state management
+ *
+ * @param mode - Form operation mode ('create' or 'edit')
+ * @param initialData - Initial form data
+ * @param props - Additional form props
+ */
 export function UserForm({
   mode,
   initialData,
   ...props
 }: UserFormProps): React.JSX.Element {
   // Initialize form data with defaults for missing fields
-  const getInitialFormData = () => {
-    return {
-      avatar: initialData.avatar,
-      name: initialData.name,
-      email: initialData.email,
-      password: initialData.password || "",
-    }
+  const normalizedInitialData: UserFormData = {
+    avatar: initialData.avatar,
+    name: initialData.name,
+    email: initialData.email,
+    password: initialData.password || "",
   }
 
-  const [formData, setFormData] = useState(getInitialFormData)
-
-  // Check if form data has changed from initial data (for edit mode)
-  const hasChanges = () => {
-    if (mode === "create") return true // Always allow submission in create mode
-
-    // In edit mode, check if editable fields have changed
-    return (
-      formData.name !== initialData.name ||
-      formData.avatar !== initialData.avatar ||
-      (formData.password !== "" &&
-        formData.password !== (initialData.password || ""))
-    )
-  }
+  // Use custom hooks for form state and navigation
+  const { formData, hasChanges, updateField, updateFields } = useFormState(
+    normalizedInitialData,
+    mode
+  )
 
   // Use appropriate action based on mode
   const action = mode === "create" ? createUserAction : updateUserAction
@@ -87,20 +82,10 @@ export function UserForm({
     mode === "create" ? { message: "", id: "" } : { message: "" }
 
   const [state, formAction, pending] = useActionState(action, initialState)
-  const router = useRouter()
 
-  // Handle success navigation based on mode
-  useEffect(() => {
-    if (state.message === "success") {
-      router.refresh()
-
-      if (mode === "create" && "id" in state && state.id) {
-        router.push(`/user/${state.id}`)
-      } else if (mode === "edit" && initialData.id) {
-        router.push(`/user/${initialData.id}`)
-      }
-    }
-  }, [state, router, mode, initialData.id])
+  // Handle navigation
+  useFormNavigation(state, mode, initialData.id, "user")
+  const handleCancel = useFormCancelNavigation(mode, initialData.id, "user")
 
   // Content configuration based on mode
   const content = {
@@ -163,7 +148,7 @@ export function UserForm({
             required
             disabled={pending}
             value={formData.name}
-            onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+            onChange={(e) => updateField("name", e.target.value)}
           />
         </div>
 
@@ -179,8 +164,7 @@ export function UserForm({
             disabled={mode === "edit" || pending}
             value={formData.email}
             onChange={(e) =>
-              setFormData({
-                ...formData,
+              updateFields({
                 email: e.target.value,
                 avatar: `https://i.pravatar.cc/150?u=${e.target.value}`,
               })
@@ -209,20 +193,22 @@ export function UserForm({
             minLength={8}
             disabled={pending}
             value={formData.password}
-            onChange={(e) =>
-              setFormData({ ...formData, password: e.target.value })
-            }
+            onChange={(e) => updateField("password", e.target.value)}
           />
         </div>
 
         <div className="grid gap-3">
-          <SubmitButton mode={mode} hasChanges={hasChanges()} />
+          <SubmitButton
+            mode={mode}
+            hasChanges={hasChanges()}
+            pending={pending}
+          />
           {mode === "edit" && initialData.id && (
             <Button
               type="button"
               variant="outline"
               className="w-full"
-              onClick={() => router.push(`/user/${initialData.id}`)}
+              onClick={handleCancel}
               disabled={pending}
             >
               Cancel
