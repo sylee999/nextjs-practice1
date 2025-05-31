@@ -4,11 +4,14 @@ import { Post } from "@/types/post"
 import { User } from "@/types/user"
 
 interface PostDetailProps {
-  post: Post | null
-  author?: User | null
+  post: Post
+  author?: User
 }
 
-export function PostDetail({ post, author }: PostDetailProps) {
+export function PostDetail({
+  post,
+  author,
+}: PostDetailProps): React.JSX.Element {
   if (!post) {
     return (
       <Card>

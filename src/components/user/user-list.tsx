@@ -3,7 +3,11 @@ import Link from "next/link"
 import { UserDetail } from "@/components/user/user-detail"
 import { User } from "@/types/user"
 
-export function UserList({ users }: { users: User[] }) {
+interface UserListProps {
+  users: User[]
+}
+
+export function UserList({ users }: UserListProps): React.JSX.Element {
   if (!users || users.length === 0) {
     return <p>No users found.</p>
   }

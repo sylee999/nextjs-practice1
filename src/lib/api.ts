@@ -1,8 +1,12 @@
+import { ConfigurationError } from "@/types/errors"
+
 export function getApiBaseUrl(): string {
   const MOCKAPI_TOKEN = process.env.MOCKAPI_TOKEN
 
   if (!MOCKAPI_TOKEN) {
-    throw new Error("MOCKAPI_TOKEN environment variable is not defined.")
+    throw new ConfigurationError(
+      "MOCKAPI_TOKEN environment variable is not defined"
+    )
   }
 
   return `https://${MOCKAPI_TOKEN}.mockapi.io/api/v1`

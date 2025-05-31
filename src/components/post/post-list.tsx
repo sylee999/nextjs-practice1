@@ -9,7 +9,10 @@ interface PostListProps {
   authors?: User[]
 }
 
-export function PostList({ posts, authors = [] }: PostListProps) {
+export function PostList({
+  posts,
+  authors = [],
+}: PostListProps): React.JSX.Element {
   if (!posts || posts.length === 0) {
     return (
       <div className="py-8 text-center">

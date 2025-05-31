@@ -1,33 +1,27 @@
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { User } from "@/types/user"
 
-export async function UserDetail({ user }: { user: User | null }) {
+interface UserDetailProps {
+  user: User | null
+}
+
+export async function UserDetail({
+  user,
+}: UserDetailProps): Promise<React.JSX.Element> {
+  if (!user) {
+    return <div>User not found</div>
+  }
+
   return (
-    <div>
-      <div className="flex items-center space-x-4">
-        <Avatar className="size-14">
-          <AvatarImage
-            src={user?.avatar || "/default-avatar.png"}
-            alt={user?.name || "Unknown"}
-          />
-          <AvatarFallback>{user?.name.charAt(0) || "U"}</AvatarFallback>
-        </Avatar>
-        <div>
-          <p className="text-lg font-bold">
-            {user?.name || "Non-existent User"}
-          </p>
-          {user ? (
-            <>
-              <p className="text-md text-gray-800">{user?.email}</p>
-              <p className="pt-1 text-sm text-gray-500">
-                Joined: {new Date(user.createdAt).toLocaleDateString()}
-              </p>
-            </>
-          ) : (
-            <p className="text-md text-gray-800">Could not find user</p>
-          )}
-        </div>
-      </div>
+    <div className="rounded border p-4">
+      <h2 className="text-xl font-bold">{user.name}</h2>
+      <p className="text-gray-600">{user.email}</p>
+      {user.avatar && (
+        <img
+          src={user.avatar}
+          alt={user.name}
+          className="mt-2 h-16 w-16 rounded-full"
+        />
+      )}
     </div>
   )
 }
