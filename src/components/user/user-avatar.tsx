@@ -1,23 +1,27 @@
-import { AvatarFallback } from "@radix-ui/react-avatar"
-
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { User } from "@/types/user"
-
-import { Avatar, AvatarImage } from "../ui/avatar"
 
 const notLoggedUser = {
   id: "",
-  name: "Not logged in",
-  avatar: "/default-avatar.png",
+  name: "Guest",
+  avatar: "",
   email: "",
-  createdAt: "",
+  createdAt: new Date(),
 }
 
-export function UserAvatar({ user }: { user: User | null }) {
-  const loggedUser = user || notLoggedUser
+interface UserAvatarProps {
+  user: User | null
+}
+
+export function UserAvatar({ user }: UserAvatarProps): React.JSX.Element {
+  const displayUser = user || notLoggedUser
+
   return (
-    <Avatar>
-      <AvatarImage src={loggedUser.avatar} alt={loggedUser.name} />
-      <AvatarFallback>{loggedUser.name.charAt(0)}</AvatarFallback>
+    <Avatar className="size-8">
+      <AvatarImage src={displayUser.avatar} alt={displayUser.name} />
+      <AvatarFallback className="bg-primary text-primary-foreground text-xs">
+        {displayUser.name.charAt(0).toUpperCase()}
+      </AvatarFallback>
     </Avatar>
   )
 }

@@ -1,137 +1,174 @@
 "use server"
 
 import { revalidatePath } from "next/cache"
-import { cookies } from "next/headers"
 
 import { getUserApiUrl } from "@/lib/api"
-import { User } from "@/types/user"
+import {
+  APIError,
+  AuthenticationError,
+  isAPIError,
+  NotFoundError,
+} from "@/types/errors"
+import { CreateUserData, UpdateUserData, User } from "@/types/user"
 
-import { checkAuth, fetchLoginUser, logout } from "../auth/actions"
+import { checkAuth } from "../auth/actions"
 
-type State = {
+type UserActionState = {
   message: string
 }
 
 export async function getUsers(): Promise<User[]> {
   try {
-    const apiUrl = getUserApiUrl()
-
-    const response = await fetch(apiUrl, { cache: "no-store" })
+    const response = await fetch(getUserApiUrl(), {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+      },
+    })
 
     if (!response.ok) {
-      throw new Error(
-        `Failed to fetch users: ${response.status} ${response.statusText}`
+      throw new APIError(
+        `Failed to fetch users: ${response.statusText}`,
+        response.status,
+        getUserApiUrl()
       )
     }
 
-    return response.json()
+    const users = await response.json()
+
+    // Ensure likeUsers is always an array
+    return users.map((user: User) => ({
+      ...user,
+      likeUsers: user.likeUsers || [],
+    }))
   } catch (error) {
     console.error("Error fetching users:", error)
-    return []
+    throw error
   }
 }
 
 export async function getUser(id: string): Promise<User | null> {
   try {
-    const apiUrl = getUserApiUrl(id)
-    const response = await fetch(apiUrl, { cache: "no-store" })
-    if (!response.ok) {
+    const response = await fetch(getUserApiUrl(id), {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+      },
+    })
+
+    if (response.status === 404) {
       return null
     }
 
-    return await response.json()
+    if (!response.ok) {
+      throw new APIError(
+        `Failed to fetch user: ${response.statusText}`,
+        response.status,
+        getUserApiUrl(id)
+      )
+    }
+
+    const user = await response.json()
+    return {
+      ...user,
+      likeUsers: user.likeUsers || [],
+    }
   } catch (error) {
     console.error("Error fetching user:", error)
     throw error
   }
 }
 
-export async function createUserAction(prevState: State, formData: FormData) {
-  const avatar = formData.get("avatar") as string
-  const name = formData.get("name") as string
-  const email = formData.get("email") as string
-  const password = formData.get("password") as string
-  if (!email || !password) {
-    return { message: "Email and password are required.", id: "" }
-  }
-
+export async function createUserAction(
+  prevState: UserActionState,
+  formData: FormData
+): Promise<UserActionState> {
   try {
-    const apiUrl = getUserApiUrl()
-    const response = await fetch(apiUrl, {
+    const name = formData.get("name")?.toString()
+    const email = formData.get("email")?.toString()
+    const password = formData.get("password")?.toString()
+    const avatar = formData.get("avatar")?.toString()
+
+    if (!name || !email || !password) {
+      return {
+        message: "Name, email, and password are required",
+      }
+    }
+
+    const createData: CreateUserData = {
+      name,
+      email,
+      password,
+      avatar: avatar || "",
+    }
+
+    const response = await fetch(getUserApiUrl(), {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
       },
-      body: JSON.stringify({
-        avatar,
-        name,
-        email,
-        password, // In a real app, this should be hashed before sending
-        createdAt: new Date().toISOString(),
-      }),
+      body: JSON.stringify(createData),
     })
+
     if (!response.ok) {
-      throw new Error(
-        `Failed to create user: ${response.status} ${response.statusText}`
+      throw new APIError(
+        `Failed to create user: ${response.statusText}`,
+        response.status,
+        getUserApiUrl()
       )
     }
-    const result = await response.json()
-    const user = await fetchLoginUser(email, password)
-    const cookieStore = await cookies()
-    cookieStore.set({
-      name: "session",
-      value: JSON.stringify(user),
-      httpOnly: true,
-      path: "/",
-      secure: process.env.NODE_ENV === "production",
-      maxAge: 60 * 60 * 24 * 7, // 1 week
-      sameSite: "lax",
-    })
+
     revalidatePath("/user")
-    return { message: "success", id: String(result.id) }
+    return { message: "User created successfully" }
   } catch (error: unknown) {
     console.error("Error creating user:", error)
     return {
-      message:
-        error instanceof Error
-          ? error.message
-          : "Failed to create user. Please try again.",
-      id: "",
+      message: isAPIError(error) ? error.message : "Failed to create user",
     }
   }
 }
 
-export async function updateUserAction(prevState: State, formData: FormData) {
-  const id = formData.get("id") as string
-  const avatar = formData.get("avatar") as string
-  const name = formData.get("name") as string
-  const password = formData.get("password") as string
-
-  if (!id || !name) {
-    return { message: "ID and name are required." }
-  }
-
-  // Check authentication
-  const authUser = await checkAuth()
-  if (!authUser || authUser.id !== id) {
-    return { message: "You are not authorized to update this user." }
-  }
-
+export async function updateUserAction(
+  prevState: UserActionState,
+  formData: FormData
+): Promise<UserActionState> {
   try {
-    const apiUrl = getUserApiUrl(id)
-
-    // Prepare update data - only include password if it's provided
-    const updateData: { avatar: string; name: string; password?: string } = {
-      avatar,
-      name,
+    const authUser = await checkAuth()
+    if (!authUser) {
+      throw new AuthenticationError("You must be logged in to update a user")
     }
 
-    // Only include password in update if a new password is provided
-    if (password && password.trim() !== "") {
-      updateData.password = password
+    const id = formData.get("id")?.toString()
+    const name = formData.get("name")?.toString()
+    const email = formData.get("email")?.toString()
+    const password = formData.get("password")?.toString()
+    const avatar = formData.get("avatar")?.toString()
+
+    if (!id) {
+      return { message: "User ID is required" }
     }
 
-    const response = await fetch(apiUrl, {
+    // Check if user exists and user owns it
+    const existingUser = await getUser(id)
+    if (!existingUser) {
+      throw new NotFoundError("User", id)
+    }
+
+    if (existingUser.id !== authUser.id) {
+      throw new AuthenticationError("You can only update your own profile")
+    }
+
+    const updateData: UpdateUserData = {}
+    if (name) updateData.name = name
+    if (email) updateData.email = email
+    if (password) updateData.password = password
+    if (avatar !== undefined) updateData.avatar = avatar
+
+    if (Object.keys(updateData).length === 0) {
+      return { message: "No changes provided" }
+    }
+
+    const response = await fetch(getUserApiUrl(id), {
       method: "PUT",
       headers: {
         "Content-Type": "application/json",
@@ -140,73 +177,84 @@ export async function updateUserAction(prevState: State, formData: FormData) {
     })
 
     if (!response.ok) {
-      throw new Error(
-        `Failed to update user: ${response.status} ${response.statusText}`
+      throw new APIError(
+        `Failed to update user: ${response.statusText}`,
+        response.status,
+        getUserApiUrl(id)
       )
     }
 
-    const updatedUser = await response.json()
-
-    // Update session cookie with new user data
-    const cookieStore = await cookies()
-    const sessionData = {
-      ...authUser,
-      avatar: updatedUser.avatar,
-      name: updatedUser.name,
-      // Update password in session if it was changed
-      ...(updateData.password && { password: updatedUser.password }),
-    }
-    cookieStore.set({
-      name: "session",
-      value: JSON.stringify(sessionData),
-      httpOnly: true,
-      path: "/",
-      secure: process.env.NODE_ENV === "production",
-      maxAge: 60 * 60 * 24 * 7, // 1 week
-      sameSite: "lax",
-    })
-
-    revalidatePath("/user")
     revalidatePath(`/user/${id}`)
-    return { message: "success" }
+    revalidatePath("/user")
+    return { message: "User updated successfully" }
   } catch (error) {
     console.error("Error updating user:", error)
     return {
       message:
-        error instanceof Error
+        isAPIError(error) ||
+        error instanceof AuthenticationError ||
+        error instanceof NotFoundError
           ? error.message
-          : "Failed to update user. Please try again.",
+          : "Failed to update user",
     }
   }
 }
 
-export async function deleteUserAction(prevState: State, formData: FormData) {
-  const id = formData.get("id") as string
-  const authUser = await checkAuth()
-  if (!authUser || authUser.id !== id) {
-    return { message: "You are not authorized to delete this user." }
-  }
-  await logout()
-
+export async function deleteUserAction(
+  prevState: UserActionState,
+  formData: FormData
+): Promise<UserActionState> {
   try {
-    const apiUrl = getUserApiUrl(id)
-    const response = await fetch(apiUrl, {
+    const authUser = await checkAuth()
+    if (!authUser) {
+      throw new AuthenticationError("You must be logged in to delete a user")
+    }
+
+    const id = formData.get("id")?.toString()
+    if (!id) {
+      return { message: "User ID is required" }
+    }
+
+    // Check if user exists and user owns it
+    const existingUser = await getUser(id)
+    if (!existingUser) {
+      throw new NotFoundError("User", id)
+    }
+
+    if (existingUser.id !== authUser.id) {
+      throw new AuthenticationError("You can only delete your own account")
+    }
+
+    const response = await fetch(getUserApiUrl(id), {
       method: "DELETE",
+      headers: {
+        "Content-Type": "application/json",
+      },
     })
+
+    if (response.status === 404) {
+      throw new NotFoundError("User", id)
+    }
+
     if (!response.ok) {
-      throw new Error(
-        `Failed to delete user: ${response.status} ${response.statusText}`
+      throw new APIError(
+        `Failed to delete user: ${response.statusText}`,
+        response.status,
+        getUserApiUrl(id)
       )
     }
+
     revalidatePath("/user")
-    return { message: "success" }
+    return { message: "User deleted successfully" }
   } catch (error) {
     console.error("Error deleting user:", error)
     return {
       message:
-        error instanceof Error
+        isAPIError(error) ||
+        error instanceof AuthenticationError ||
+        error instanceof NotFoundError
           ? error.message
-          : "Failed to delete user. Please try again.",
+          : "Failed to delete user",
     }
   }
 }

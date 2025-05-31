@@ -51,7 +51,11 @@ function SubmitButton({
   )
 }
 
-export function UserForm({ mode, initialData, ...props }: UserFormProps) {
+export function UserForm({
+  mode,
+  initialData,
+  ...props
+}: UserFormProps): React.JSX.Element {
   // Initialize form data with defaults for missing fields
   const getInitialFormData = () => {
     return {

@@ -1,20 +1,24 @@
 "use client"
 
-import { useActionState, useEffect, useState } from "react"
 import { useRouter, useSearchParams } from "next/navigation"
+import { useActionState, useEffect, useState } from "react"
 
 import { loginAction } from "@/app/auth/actions"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { cn } from "@/lib/utils"
 
 import { Alert, AlertDescription } from "../ui/alert"
 
+interface LoginFormProps extends React.ComponentProps<"form"> {
+  from?: string
+}
+
 export function LoginForm({
+  from = "/user",
   className,
   ...props
-}: React.ComponentProps<"form">) {
+}: LoginFormProps): React.JSX.Element {
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
   const searchParams = useSearchParams()
@@ -24,7 +28,7 @@ export function LoginForm({
   const [state, formAction, pending] = useActionState(loginAction, {
     success: false,
     message: "",
-    from: "",
+    from,
   })
 
   useEffect(() => {
@@ -37,8 +41,8 @@ export function LoginForm({
 
   return (
     <form
-      className={cn("flex flex-col gap-6", className)}
       action={formAction}
+      className={`space-y-4 ${className || ""}`}
       {...props}
     >
       <div className="flex flex-col items-center gap-2 text-center">

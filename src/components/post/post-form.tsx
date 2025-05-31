@@ -49,7 +49,11 @@ function SubmitButton({
   )
 }
 
-export function PostForm({ mode, initialData, ...props }: PostFormProps) {
+export function PostForm({
+  mode,
+  initialData,
+  ...props
+}: PostFormProps): React.JSX.Element {
   // Initialize form data with defaults for missing fields
   const getInitialFormData = () => {
     return {
