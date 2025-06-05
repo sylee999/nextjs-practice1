@@ -37,7 +37,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       <Sidebar
         className={cn(
           isMobile ? "w-[3rem] transition-all duration-300" : "",
-          "fixed inset-y-0 left-0 z-10"
+          "fixed top-[var(--header-height)] bottom-0 left-0 z-10"
         )}
         collapsible="none"
         {...props}
