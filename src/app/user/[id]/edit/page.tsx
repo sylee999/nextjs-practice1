@@ -7,9 +7,9 @@ import { UserForm } from "@/components/user/user-form"
 export default async function UserEditPage({
   params,
 }: {
-  params: Promise<{ id: string }>
+  params: { id: string }
 }) {
-  const { id } = await params
+  const { id } = params
 
   // Check if user is authenticated
   const authUser = await checkAuth()

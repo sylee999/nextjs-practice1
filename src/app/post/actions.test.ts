@@ -27,12 +27,19 @@ describe("Post Actions", () => {
   describe("getPosts", () => {
     test("fetches posts successfully", async () => {
       const mockPosts = [
-        { id: "1", title: "Test Post", content: "Test content", userId: "1" },
+        {
+          id: "1",
+          title: "Test Post",
+          content: "Test content",
+          userId: "1",
+          likeUsers: [],
+        },
         {
           id: "2",
           title: "Another Post",
           content: "More content",
           userId: "2",
+          likeUsers: [],
         },
       ]
 
@@ -73,6 +80,7 @@ describe("Post Actions", () => {
         title: "Test Post",
         content: "Test content",
         userId: "1",
+        likeUsers: [],
       }
 
       global.fetch = vi.fn().mockResolvedValueOnce({

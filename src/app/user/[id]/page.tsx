@@ -11,9 +11,9 @@ import { getUser } from "../actions"
 export default async function UserDetailPage({
   params,
 }: {
-  params: Promise<{ id: string }>
+  params: { id: string }
 }) {
-  const { id } = await params
+  const { id } = params
   const user = await getUser(id)
   const authUser = await checkAuth()
 

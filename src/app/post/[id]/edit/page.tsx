@@ -8,9 +8,9 @@ import { getPost } from "../../actions"
 export default async function PostEditPage({
   params,
 }: {
-  params: Promise<{ id: string }>
+  params: { id: string }
 }) {
-  const { id } = await params
+  const { id } = params
 
   // Check if user is authenticated
   const authUser = await checkAuth()

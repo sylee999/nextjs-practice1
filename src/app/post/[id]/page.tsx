@@ -13,9 +13,9 @@ import { getPost } from "../actions"
 export default async function PostDetailPage({
   params,
 }: {
-  params: Promise<{ id: string }>
+  params: { id: string }
 }) {
-  const { id } = await params
+  const { id } = params
   const post = await getPost(id)
 
   // If post doesn't exist, show 404 page
