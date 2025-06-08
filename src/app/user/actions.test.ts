@@ -35,7 +35,10 @@ describe("createUser", () => {
     mockFormData.append("password", "password")
     mockFormData.append("avatar", "https://example.com/avatar.jpg")
 
-    const result = await createUserAction(mockState, mockFormData)
+    // Should throw NEXT_REDIRECT error
+    await expect(createUserAction(mockState, mockFormData)).rejects.toThrow(
+      "NEXT_REDIRECT"
+    )
 
     const fetchCall = (fetch as Mock).mock.calls[0]
     const [url, options] = fetchCall
@@ -53,10 +56,6 @@ describe("createUser", () => {
       email: "test@example.com",
       name: "Test User",
       password: "password",
-    })
-
-    expect(result).toEqual({
-      message: "User created successfully",
     })
   })
 
@@ -136,7 +135,10 @@ describe("updateUserAction", () => {
     mockFormData.append("password", "newpassword")
     mockFormData.append("avatar", "https://example.com/new-avatar.jpg")
 
-    const result = await updateUserAction(mockState, mockFormData)
+    // Should throw NEXT_REDIRECT error
+    await expect(updateUserAction(mockState, mockFormData)).rejects.toThrow(
+      "NEXT_REDIRECT"
+    )
 
     // Check the second fetch call (the PUT request)
     const putCall = (fetch as Mock).mock.calls[1]
@@ -146,10 +148,6 @@ describe("updateUserAction", () => {
     expect(options.method).toBe("PUT")
     expect(options.headers).toEqual({
       "Content-Type": "application/json",
-    })
-
-    expect(result).toEqual({
-      message: "User updated successfully",
     })
   })
 
@@ -175,7 +173,10 @@ describe("updateUserAction", () => {
     mockFormData.append("email", "updated@example.com")
     mockFormData.append("avatar", "https://example.com/new-avatar.jpg")
 
-    const result = await updateUserAction(mockState, mockFormData)
+    // Should throw NEXT_REDIRECT error
+    await expect(updateUserAction(mockState, mockFormData)).rejects.toThrow(
+      "NEXT_REDIRECT"
+    )
 
     // Check the second fetch call (the PUT request)
     const putCall = (fetch as Mock).mock.calls[1]
@@ -185,10 +186,6 @@ describe("updateUserAction", () => {
     expect(options.method).toBe("PUT")
     expect(options.headers).toEqual({
       "Content-Type": "application/json",
-    })
-
-    expect(result).toEqual({
-      message: "User updated successfully",
     })
   })
 

@@ -1,6 +1,7 @@
 "use server"
 
 import { revalidatePath } from "next/cache"
+import { redirect } from "next/navigation"
 
 import { checkAuth } from "@/app/auth/actions"
 import { getPostApiUrl } from "@/lib/api"
@@ -14,6 +15,7 @@ import { CreatePostData, Post, UpdatePostData } from "@/types/post"
 
 type PostActionState = {
   message: string
+  id?: string
 }
 
 export async function getPosts(): Promise<Post[]> {
@@ -81,7 +83,8 @@ export async function getPost(id: string): Promise<Post | null> {
 export async function createPostAction(
   prevState: PostActionState,
   formData: FormData
-): Promise<PostActionState> {
+): Promise<PostActionState | void> {
+  let createdId: string | undefined
   try {
     const authUser = await checkAuth()
     if (!authUser) {
@@ -119,8 +122,9 @@ export async function createPostAction(
       )
     }
 
+    const createdPost = await response.json()
     revalidatePath("/post")
-    return { message: "Post created successfully" }
+    createdId = createdPost.id
   } catch (error: unknown) {
     console.error("Error creating post:", error)
     return {
@@ -130,12 +134,16 @@ export async function createPostAction(
           : "Failed to create post",
     }
   }
+  if (createdId) {
+    redirect(`/post/${createdId}`)
+  }
 }
 
 export async function updatePostAction(
   prevState: PostActionState,
   formData: FormData
-): Promise<PostActionState> {
+): Promise<PostActionState | void> {
+  let updatedId: string | undefined
   try {
     const authUser = await checkAuth()
     if (!authUser) {
@@ -186,7 +194,7 @@ export async function updatePostAction(
 
     revalidatePath(`/post/${id}`)
     revalidatePath("/post")
-    return { message: "Post updated successfully" }
+    updatedId = id
   } catch (error) {
     console.error("Error updating post:", error)
     return {
@@ -197,6 +205,9 @@ export async function updatePostAction(
           ? error.message
           : "Failed to update post",
     }
+  }
+  if (updatedId) {
+    redirect(`/post/${updatedId}`)
   }
 }
 

@@ -136,7 +136,10 @@ describe("Post Actions", () => {
         json: () => Promise.resolve({ id: "1" }),
       })
 
-      const result = await createPostAction(mockState, mockFormData)
+      // Should throw NEXT_REDIRECT error
+      await expect(createPostAction(mockState, mockFormData)).rejects.toThrow(
+        "NEXT_REDIRECT"
+      )
 
       const fetchCall = (fetch as Mock).mock.calls[0]
       const [url, options] = fetchCall
@@ -152,10 +155,6 @@ describe("Post Actions", () => {
         userId: "1",
         title: "Test Post",
         content: "Test content",
-      })
-
-      expect(result).toEqual({
-        message: "Post created successfully",
       })
     })
 
@@ -207,6 +206,23 @@ describe("Post Actions", () => {
         message: "Failed to create post: Bad Request",
       })
     })
+
+    test("handles NEXT_REDIRECT error", async () => {
+      const mockUser = { id: "1", name: "Test User", email: "test@example.com" }
+
+      const { checkAuth } = await import("../auth/actions")
+      ;(checkAuth as Mock).mockResolvedValueOnce(mockUser)
+
+      global.fetch = vi.fn().mockResolvedValueOnce({
+        ok: true,
+        json: () => Promise.resolve({ id: "1" }),
+      })
+
+      // Should throw NEXT_REDIRECT error
+      await expect(createPostAction(mockState, mockFormData)).rejects.toThrow(
+        "NEXT_REDIRECT"
+      )
+    })
   })
 
   describe("updatePostAction", () => {
@@ -241,11 +257,10 @@ describe("Post Actions", () => {
           json: () => Promise.resolve({ id: "1" }),
         })
 
-      const result = await updatePostAction(mockState, mockFormData)
-
-      expect(result).toEqual({
-        message: "Post updated successfully",
-      })
+      // Should throw NEXT_REDIRECT error
+      await expect(updatePostAction(mockState, mockFormData)).rejects.toThrow(
+        "NEXT_REDIRECT"
+      )
     })
 
     test("handles unauthenticated user", async () => {

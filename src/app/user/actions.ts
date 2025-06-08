@@ -1,6 +1,8 @@
 "use server"
 
 import { revalidatePath } from "next/cache"
+import { cookies } from "next/headers"
+import { redirect } from "next/navigation"
 
 import { getUserApiUrl } from "@/lib/api"
 import {
@@ -15,6 +17,7 @@ import { checkAuth } from "../auth/actions"
 
 type UserActionState = {
   message: string
+  id?: string
 }
 
 export async function getUsers(): Promise<User[]> {
@@ -82,7 +85,8 @@ export async function getUser(id: string): Promise<User | null> {
 export async function createUserAction(
   prevState: UserActionState,
   formData: FormData
-): Promise<UserActionState> {
+): Promise<UserActionState | void> {
+  let createdId: string | undefined
   try {
     const name = formData.get("name")?.toString()
     const email = formData.get("email")?.toString()
@@ -118,20 +122,37 @@ export async function createUserAction(
       )
     }
 
+    const createdUser = await response.json()
     revalidatePath("/user")
-    return { message: "User created successfully" }
+    createdId = createdUser.id
+
+    // Set session cookie so user is logged in after signup
+    const cookieStore = await cookies()
+    cookieStore.set({
+      name: "session",
+      value: JSON.stringify(createdUser),
+      httpOnly: true,
+      path: "/",
+      secure: process.env.NODE_ENV === "production",
+      maxAge: 60 * 60 * 24 * 7, // 1 week
+      sameSite: "lax",
+    })
   } catch (error: unknown) {
     console.error("Error creating user:", error)
     return {
       message: isAPIError(error) ? error.message : "Failed to create user",
     }
   }
+  if (createdId) {
+    redirect(`/user/${createdId}`)
+  }
 }
 
 export async function updateUserAction(
   prevState: UserActionState,
   formData: FormData
-): Promise<UserActionState> {
+): Promise<UserActionState | void> {
+  let updatedId: string | undefined
   try {
     const authUser = await checkAuth()
     if (!authUser) {
@@ -186,7 +207,7 @@ export async function updateUserAction(
 
     revalidatePath(`/user/${id}`)
     revalidatePath("/user")
-    return { message: "User updated successfully" }
+    updatedId = id
   } catch (error) {
     console.error("Error updating user:", error)
     return {
@@ -197,6 +218,9 @@ export async function updateUserAction(
           ? error.message
           : "Failed to update user",
     }
+  }
+  if (updatedId) {
+    redirect(`/user/${updatedId}`)
   }
 }
 
