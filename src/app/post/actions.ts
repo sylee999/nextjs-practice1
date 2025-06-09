@@ -16,6 +16,7 @@ import { CreatePostData, Post, UpdatePostData } from "@/types/post"
 type PostActionState = {
   message: string
   id?: string
+  success: boolean
 }
 
 export async function getPosts(): Promise<Post[]> {
@@ -97,6 +98,7 @@ export async function createPostAction(
     if (!title || !content) {
       return {
         message: "Title and content are required",
+        success: false,
       }
     }
 
@@ -132,11 +134,13 @@ export async function createPostAction(
         isAPIError(error) || error instanceof AuthenticationError
           ? error.message
           : "Failed to create post",
+      success: false,
     }
   }
   if (createdId) {
     redirect(`/post/${createdId}`)
   }
+  return { message: "", success: false }
 }
 
 export async function updatePostAction(
@@ -155,7 +159,7 @@ export async function updatePostAction(
     const content = formData.get("content")?.toString()
 
     if (!id) {
-      return { message: "Post ID is required" }
+      return { message: "Post ID is required", success: false }
     }
 
     // Check if post exists and user owns it
@@ -173,7 +177,7 @@ export async function updatePostAction(
     if (content) updateData.content = content
 
     if (Object.keys(updateData).length === 0) {
-      return { message: "No changes provided" }
+      return { message: "No changes provided", success: false }
     }
 
     const response = await fetch(getPostApiUrl(id), {
@@ -204,11 +208,13 @@ export async function updatePostAction(
         error instanceof NotFoundError
           ? error.message
           : "Failed to update post",
+      success: false,
     }
   }
   if (updatedId) {
     redirect(`/post/${updatedId}`)
   }
+  return { message: "", success: false }
 }
 
 export async function deletePostAction(
@@ -223,7 +229,7 @@ export async function deletePostAction(
 
     const id = formData.get("id")?.toString()
     if (!id) {
-      return { message: "Post ID is required" }
+      return { message: "Post ID is required", success: false }
     }
 
     // Check if post exists and user owns it
@@ -257,7 +263,7 @@ export async function deletePostAction(
     }
 
     revalidatePath("/post")
-    return { message: "Post deleted successfully" }
+    return { message: "Post deleted successfully", success: true }
   } catch (error) {
     console.error("Error deleting post:", error)
     return {
@@ -267,6 +273,7 @@ export async function deletePostAction(
         error instanceof NotFoundError
           ? error.message
           : "Failed to delete post",
+      success: false,
     }
   }
 }

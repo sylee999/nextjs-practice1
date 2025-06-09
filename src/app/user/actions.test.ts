@@ -15,8 +15,15 @@ vi.mock("next/cache", () => ({
 // Mock environment
 vi.stubEnv("MOCKAPI_TOKEN", "test-token")
 
+// Mock Next.js headers (cookies)
+vi.mock("next/headers", () => ({
+  cookies: vi.fn().mockResolvedValue({
+    set: vi.fn(),
+  }),
+}))
+
 describe("createUser", () => {
-  const mockState = { message: "" }
+  const mockState = { message: "", success: false }
 
   beforeEach(() => {
     vi.clearAllMocks()
@@ -75,6 +82,7 @@ describe("createUser", () => {
 
     expect(result).toEqual({
       message: "Failed to create user: Bad Request",
+      success: false,
     })
   })
 
@@ -90,6 +98,7 @@ describe("createUser", () => {
 
     expect(result).toEqual({
       message: "Failed to create user",
+      success: false,
     })
 
     // Restore environment
@@ -98,7 +107,7 @@ describe("createUser", () => {
 })
 
 describe("updateUserAction", () => {
-  const mockState = { message: "" }
+  const mockState = { message: "", success: false }
   const mockUser = { id: "1", name: "Test User", email: "test@example.com" }
   const mockExistingUser = {
     id: "1",
@@ -213,6 +222,7 @@ describe("updateUserAction", () => {
 
     expect(result).toEqual({
       message: "You can only update your own profile",
+      success: false,
     })
   })
 
@@ -228,6 +238,7 @@ describe("updateUserAction", () => {
 
     expect(result).toEqual({
       message: "You must be logged in to update a user",
+      success: false,
     })
   })
 
@@ -243,6 +254,7 @@ describe("updateUserAction", () => {
 
     expect(result).toEqual({
       message: "User ID is required",
+      success: false,
     })
   })
 
@@ -265,6 +277,7 @@ describe("updateUserAction", () => {
 
     expect(result).toEqual({
       message: "Failed to fetch user: Bad Request",
+      success: false,
     })
   })
 
@@ -282,6 +295,7 @@ describe("updateUserAction", () => {
 
     expect(result).toEqual({
       message: "Failed to update user",
+      success: false,
     })
 
     // Restore environment
@@ -303,6 +317,7 @@ describe("updateUserAction", () => {
 
     expect(result).toEqual({
       message: "Failed to update user",
+      success: false,
     })
   })
 
@@ -321,6 +336,7 @@ describe("updateUserAction", () => {
 
     expect(result).toEqual({
       message: "Failed to update user",
+      success: false,
     })
   })
 })

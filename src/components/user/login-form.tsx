@@ -47,7 +47,7 @@ export function LoginForm({
         </p>
       </div>
       <div className="grid gap-6">
-        {state.message && !state.success && (
+        {state.message && state.success === false && (
           <Alert variant="destructive">
             <AlertDescription>{state.message}</AlertDescription>
           </Alert>

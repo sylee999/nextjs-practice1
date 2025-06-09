@@ -79,9 +79,12 @@ export function UserForm({
   // Use appropriate action based on mode
   const action = mode === "create" ? createUserAction : updateUserAction
   const initialState =
-    mode === "create" ? { message: "", id: "" } : { message: "" }
+    mode === "create"
+      ? { message: "", id: "", success: false }
+      : { message: "", success: false }
 
-  const [state, formAction, pending] = useActionState(action, initialState)
+  const [rawState, formAction, pending] = useActionState(action, initialState)
+  const state = rawState || initialState
 
   // Handle navigation
   useFormNavigation(state, mode, initialData.id, "user")
@@ -110,7 +113,7 @@ export function UserForm({
       </div>
 
       <div className="grid gap-6">
-        {state.message && state.message !== "success" && (
+        {state.message && state.success === false && (
           <Alert variant="destructive">
             <AlertDescription>{state.message}</AlertDescription>
           </Alert>

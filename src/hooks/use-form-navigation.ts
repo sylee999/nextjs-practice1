@@ -21,7 +21,7 @@ export function useFormNavigation(
   const router = useRouter()
 
   useEffect(() => {
-    if (state.message === "success") {
+    if (state.success === true) {
       router.refresh()
 
       if (mode === "create" && "id" in state && state.id) {

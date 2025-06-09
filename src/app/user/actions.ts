@@ -18,6 +18,7 @@ import { checkAuth } from "../auth/actions"
 type UserActionState = {
   message: string
   id?: string
+  success: boolean
 }
 
 export async function getUsers(): Promise<User[]> {
@@ -83,7 +84,7 @@ export async function getUser(id: string): Promise<User | null> {
 }
 
 export async function createUserAction(
-  prevState: UserActionState,
+  prevState: UserActionState | void,
   formData: FormData
 ): Promise<UserActionState | void> {
   let createdId: string | undefined
@@ -96,6 +97,7 @@ export async function createUserAction(
     if (!name || !email || !password) {
       return {
         message: "Name, email, and password are required",
+        success: false,
       }
     }
 
@@ -141,6 +143,7 @@ export async function createUserAction(
     console.error("Error creating user:", error)
     return {
       message: isAPIError(error) ? error.message : "Failed to create user",
+      success: false,
     }
   }
   if (createdId) {
@@ -149,7 +152,7 @@ export async function createUserAction(
 }
 
 export async function updateUserAction(
-  prevState: UserActionState,
+  prevState: UserActionState | void,
   formData: FormData
 ): Promise<UserActionState | void> {
   let updatedId: string | undefined
@@ -166,7 +169,7 @@ export async function updateUserAction(
     const avatar = formData.get("avatar")?.toString()
 
     if (!id) {
-      return { message: "User ID is required" }
+      return { message: "User ID is required", success: false }
     }
 
     // Check if user exists and user owns it
@@ -186,7 +189,7 @@ export async function updateUserAction(
     if (avatar !== undefined) updateData.avatar = avatar
 
     if (Object.keys(updateData).length === 0) {
-      return { message: "No changes provided" }
+      return { message: "No changes provided", success: false }
     }
 
     const response = await fetch(getUserApiUrl(id), {
@@ -217,6 +220,7 @@ export async function updateUserAction(
         error instanceof NotFoundError
           ? error.message
           : "Failed to update user",
+      success: false,
     }
   }
   if (updatedId) {
@@ -225,7 +229,7 @@ export async function updateUserAction(
 }
 
 export async function deleteUserAction(
-  prevState: UserActionState,
+  prevState: UserActionState | void,
   formData: FormData
 ): Promise<UserActionState> {
   try {
@@ -236,7 +240,7 @@ export async function deleteUserAction(
 
     const id = formData.get("id")?.toString()
     if (!id) {
-      return { message: "User ID is required" }
+      return { message: "User ID is required", success: false }
     }
 
     // Check if user exists and user owns it
@@ -269,7 +273,7 @@ export async function deleteUserAction(
     }
 
     revalidatePath("/user")
-    return { message: "User deleted successfully" }
+    return { message: "User deleted successfully", success: true }
   } catch (error) {
     console.error("Error deleting user:", error)
     return {
@@ -279,6 +283,7 @@ export async function deleteUserAction(
         error instanceof NotFoundError
           ? error.message
           : "Failed to delete user",
+      success: false,
     }
   }
 }

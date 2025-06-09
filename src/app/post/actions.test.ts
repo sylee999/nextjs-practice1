@@ -121,7 +121,7 @@ describe("Post Actions", () => {
     mockFormData.append("title", "Test Post")
     mockFormData.append("content", "Test content")
 
-    const mockState = { message: "" }
+    const mockState = { message: "", success: false }
 
     test("creates post successfully", async () => {
       const mockUser = { id: "1", name: "Test User", email: "test@example.com" }
@@ -172,6 +172,7 @@ describe("Post Actions", () => {
 
       expect(result).toEqual({
         message: "Title and content are required",
+        success: false,
       })
       expect(fetch).not.toHaveBeenCalled()
     })
@@ -184,6 +185,7 @@ describe("Post Actions", () => {
 
       expect(result).toEqual({
         message: "You must be logged in to create a post",
+        success: false,
       })
       expect(fetch).not.toHaveBeenCalled()
     })
@@ -204,6 +206,7 @@ describe("Post Actions", () => {
 
       expect(result).toEqual({
         message: "Failed to create post: Bad Request",
+        success: false,
       })
     })
 
@@ -231,7 +234,7 @@ describe("Post Actions", () => {
     mockFormData.append("title", "Updated Post")
     mockFormData.append("content", "Updated content")
 
-    const mockState = { message: "" }
+    const mockState = { message: "", success: false }
     const mockUser = { id: "1", name: "Test User", email: "test@example.com" }
     const mockPost = {
       id: "1",
@@ -271,6 +274,7 @@ describe("Post Actions", () => {
 
       expect(result).toEqual({
         message: "You must be logged in to update a post",
+        success: false,
       })
     })
 
@@ -294,6 +298,7 @@ describe("Post Actions", () => {
 
       expect(result).toEqual({
         message: "You can only update your own posts",
+        success: false,
       })
     })
   })
@@ -302,7 +307,7 @@ describe("Post Actions", () => {
     const mockFormData = new FormData()
     mockFormData.append("id", "1")
 
-    const mockState = { message: "" }
+    const mockState = { message: "", success: false }
     const mockUser = { id: "1", name: "Test User", email: "test@example.com" }
     const mockPost = {
       id: "1",
@@ -331,6 +336,7 @@ describe("Post Actions", () => {
 
       expect(result).toEqual({
         message: "Post deleted successfully",
+        success: true,
       })
     })
 
@@ -342,6 +348,7 @@ describe("Post Actions", () => {
 
       expect(result).toEqual({
         message: "You must be logged in to delete a post",
+        success: false,
       })
     })
 
@@ -365,6 +372,7 @@ describe("Post Actions", () => {
 
       expect(result).toEqual({
         message: "You can only delete your own posts",
+        success: false,
       })
     })
   })

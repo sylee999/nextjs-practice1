@@ -22,17 +22,18 @@ import { Post } from "@/types/post"
 export default function PostDeleteDialog({ post }: { post: Post }) {
   const [state, formAction, pending] = useActionState(deletePostAction, {
     message: "",
+    success: false,
   })
   const [isOpen, setIsOpen] = useState(false)
   const router = useRouter()
 
   // Handle successful deletion or errors
   useEffect(() => {
-    if (state.message === "success") {
+    if (state.success === true) {
       setIsOpen(false) // Close dialog
       router.push("/post")
     }
-  }, [state.message, router])
+  }, [state.success, router])
 
   return (
     <form action={formAction} id="delete-post-form">
@@ -53,7 +54,7 @@ export default function PostDeleteDialog({ post }: { post: Post }) {
             </DialogDescription>
           </DialogHeader>
 
-          {state.message && state.message !== "success" && (
+          {state.message && state.success === false && (
             <Alert variant="destructive">
               <AlertDescription>{state.message}</AlertDescription>
             </Alert>
