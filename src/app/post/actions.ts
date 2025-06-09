@@ -218,9 +218,9 @@ export async function updatePostAction(
 }
 
 export async function deletePostAction(
-  prevState: PostActionState,
+  prevState: PostActionState | void,
   formData: FormData
-): Promise<PostActionState> {
+): Promise<PostActionState | void> {
   try {
     const authUser = await checkAuth()
     if (!authUser) {
@@ -242,7 +242,7 @@ export async function deletePostAction(
       throw new AuthenticationError("You can only delete your own posts")
     }
 
-    const response = await fetch(getPostApiUrl(id), {
+    const response = await fetch(getPostApiUrl(id, authUser.id), {
       method: "DELETE",
       headers: {
         "Content-Type": "application/json",
@@ -263,7 +263,6 @@ export async function deletePostAction(
     }
 
     revalidatePath("/post")
-    return { message: "Post deleted successfully", success: true }
   } catch (error) {
     console.error("Error deleting post:", error)
     return {
@@ -276,4 +275,7 @@ export async function deletePostAction(
       success: false,
     }
   }
+
+  // Redirect to post list page after successful deletion
+  redirect("/post")
 }

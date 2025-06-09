@@ -332,11 +332,19 @@ describe("Post Actions", () => {
           ok: true,
         })
 
-      const result = await deletePostAction(mockState, mockFormData)
+      // Should throw NEXT_REDIRECT error (redirect to /post)
+      await expect(deletePostAction(mockState, mockFormData)).rejects.toThrow(
+        "NEXT_REDIRECT"
+      )
 
-      expect(result).toEqual({
-        message: "Post deleted successfully",
-        success: true,
+      // Check the second fetch call (the DELETE request)
+      const deleteCall = (fetch as Mock).mock.calls[1]
+      const [url, options] = deleteCall
+
+      expect(url).toBe("https://test-token.mockapi.io/api/v1/posts/1")
+      expect(options.method).toBe("DELETE")
+      expect(options.headers).toEqual({
+        "Content-Type": "application/json",
       })
     })
 

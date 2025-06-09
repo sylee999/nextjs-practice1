@@ -1,7 +1,6 @@
 "use client"
 
-import { useActionState, useEffect, useState } from "react"
-import { useRouter } from "next/navigation"
+import { useActionState, useState } from "react"
 import { Trash2 } from "lucide-react"
 
 import { deletePostAction } from "@/app/post/actions"
@@ -25,15 +24,6 @@ export default function PostDeleteDialog({ post }: { post: Post }) {
     success: false,
   })
   const [isOpen, setIsOpen] = useState(false)
-  const router = useRouter()
-
-  // Handle successful deletion or errors
-  useEffect(() => {
-    if (state.success === true) {
-      setIsOpen(false) // Close dialog
-      router.push("/post")
-    }
-  }, [state.success, router])
 
   return (
     <form action={formAction} id="delete-post-form">
@@ -54,7 +44,7 @@ export default function PostDeleteDialog({ post }: { post: Post }) {
             </DialogDescription>
           </DialogHeader>
 
-          {state.message && state.success === false && (
+          {state?.message && state.success === false && (
             <Alert variant="destructive">
               <AlertDescription>{state.message}</AlertDescription>
             </Alert>

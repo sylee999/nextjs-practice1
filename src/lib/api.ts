@@ -17,9 +17,13 @@ export function getUserApiUrl(id?: string): string {
   return id ? `${baseUrl}/users/${id}` : `${baseUrl}/users`
 }
 
-export function getPostApiUrl(id?: string): string {
+export function getPostApiUrl(postId?: string, userId?: string): string {
   const baseUrl = getApiBaseUrl()
-  return id ? `${baseUrl}/posts/${id}` : `${baseUrl}/posts`
+  return userId
+    ? `${baseUrl}/users/${userId}/posts/${postId}`
+    : postId
+      ? `${baseUrl}/posts/${postId}`
+      : `${baseUrl}/posts`
 }
 
 // Add more functions for other entities as needed
