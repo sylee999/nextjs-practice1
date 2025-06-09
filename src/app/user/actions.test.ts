@@ -128,6 +128,16 @@ describe("updateUserAction", () => {
     const { checkAuth } = await import("../auth/actions")
     ;(checkAuth as Mock).mockResolvedValueOnce(mockUser)
 
+    // Mock updated user data that will be returned from API
+    const mockUpdatedUser = {
+      id: "1",
+      name: "Updated Name",
+      email: "updated@example.com",
+      avatar: "https://example.com/new-avatar.jpg",
+      password: "newpassword",
+      likeUsers: [],
+    }
+
     // Mock getUser and then updateUser
     global.fetch = vi
       .fn()
@@ -137,7 +147,7 @@ describe("updateUserAction", () => {
       })
       .mockResolvedValueOnce({
         ok: true,
-        json: () => Promise.resolve({ id: "1" }),
+        json: () => Promise.resolve(mockUpdatedUser),
       })
 
     const mockFormData = new FormData()
@@ -167,6 +177,15 @@ describe("updateUserAction", () => {
     const { checkAuth } = await import("../auth/actions")
     ;(checkAuth as Mock).mockResolvedValueOnce(mockUser)
 
+    // Mock updated user data that will be returned from API (without password)
+    const mockUpdatedUserNoPassword = {
+      id: "1",
+      name: "Updated Name",
+      email: "updated@example.com",
+      avatar: "https://example.com/new-avatar.jpg",
+      likeUsers: [],
+    }
+
     // Mock getUser and then updateUser
     global.fetch = vi
       .fn()
@@ -176,7 +195,7 @@ describe("updateUserAction", () => {
       })
       .mockResolvedValueOnce({
         ok: true,
-        json: () => Promise.resolve({ id: "1" }),
+        json: () => Promise.resolve(mockUpdatedUserNoPassword),
       })
 
     const mockFormData = new FormData()
@@ -198,6 +217,69 @@ describe("updateUserAction", () => {
     expect(options.method).toBe("PUT")
     expect(options.headers).toEqual({
       "Content-Type": "application/json",
+    })
+  })
+
+  test("updates session cookie with new user data", async () => {
+    const { checkAuth } = await import("../auth/actions")
+    ;(checkAuth as Mock).mockResolvedValueOnce(mockUser)
+
+    // Mock cookies
+    const mockCookieStore = {
+      set: vi.fn(),
+    }
+    const { cookies } = await import("next/headers")
+    ;(cookies as Mock).mockResolvedValueOnce(mockCookieStore)
+
+    // Mock updated user data
+    const mockUpdatedUser = {
+      id: "1",
+      name: "New Name",
+      email: "newemail@example.com",
+      avatar: "https://example.com/new.jpg",
+      password: "newpass123",
+      likeUsers: [],
+    }
+
+    // Mock getUser and then updateUser
+    global.fetch = vi
+      .fn()
+      .mockResolvedValueOnce({
+        ok: true,
+        json: () => Promise.resolve(mockExistingUser),
+      })
+      .mockResolvedValueOnce({
+        ok: true,
+        json: () => Promise.resolve(mockUpdatedUser),
+      })
+
+    const mockFormData = new FormData()
+    mockFormData.append("id", "1")
+    mockFormData.append("name", "New Name")
+    mockFormData.append("email", "newemail@example.com")
+    mockFormData.append("password", "newpass123")
+    mockFormData.append("avatar", "https://example.com/new.jpg")
+
+    // Should throw NEXT_REDIRECT error
+    await expect(updateUserAction(mockState, mockFormData)).rejects.toThrow(
+      "NEXT_REDIRECT"
+    )
+
+    // Verify session cookie was updated with new user data
+    expect(mockCookieStore.set).toHaveBeenCalledWith({
+      name: "session",
+      value: JSON.stringify({
+        ...mockUser,
+        name: "New Name",
+        email: "newemail@example.com",
+        avatar: "https://example.com/new.jpg",
+        password: "newpass123",
+      }),
+      httpOnly: true,
+      path: "/",
+      secure: process.env.NODE_ENV === "production",
+      maxAge: 60 * 60 * 24 * 7, // 1 week
+      sameSite: "lax",
     })
   })
 

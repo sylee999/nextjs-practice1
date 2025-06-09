@@ -208,8 +208,31 @@ export async function updateUserAction(
       )
     }
 
+    const updatedUser = await response.json()
+
+    // Update session cookie with new user data to keep UI in sync
+    const cookieStore = await cookies()
+    const sessionData = {
+      ...authUser,
+      // Update with new values from the API response
+      name: updatedUser.name,
+      email: updatedUser.email,
+      avatar: updatedUser.avatar,
+      // Only include password in session if it was actually updated
+      ...(updateData.password && { password: updatedUser.password }),
+    }
+
+    cookieStore.set({
+      name: "session",
+      value: JSON.stringify(sessionData),
+      httpOnly: true,
+      path: "/",
+      secure: process.env.NODE_ENV === "production",
+      maxAge: 60 * 60 * 24 * 7, // 1 week
+      sameSite: "lax",
+    })
+
     revalidatePath(`/user/${id}`)
-    revalidatePath("/user")
     updatedId = id
   } catch (error) {
     console.error("Error updating user:", error)
