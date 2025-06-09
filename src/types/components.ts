@@ -126,14 +126,6 @@ export interface AvatarComponentProps {
 }
 
 /**
- * Search form props
- */
-export interface SearchFormProps extends React.ComponentProps<"form"> {
-  placeholder?: string
-  defaultValue?: string
-}
-
-/**
  * Dialog/Modal component props
  */
 export interface DialogComponentProps {
