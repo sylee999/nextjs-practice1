@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, test, vi, type Mock } from "vitest"
 
-import { createUserAction, updateUserAction } from "./actions"
+import { createUserAction, deleteUserAction, updateUserAction } from "./actions"
 
 // Mock the auth actions
 vi.mock("../auth/actions", () => ({
@@ -17,9 +17,12 @@ vi.stubEnv("MOCKAPI_TOKEN", "test-token")
 
 // Mock Next.js headers (cookies)
 vi.mock("next/headers", () => ({
-  cookies: vi.fn().mockResolvedValue({
-    set: vi.fn(),
-  }),
+  cookies: vi.fn(() =>
+    Promise.resolve({
+      set: vi.fn(),
+      delete: vi.fn(),
+    })
+  ),
 }))
 
 describe("createUser", () => {
@@ -336,6 +339,210 @@ describe("updateUserAction", () => {
 
     expect(result).toEqual({
       message: "Failed to update user",
+      success: false,
+    })
+  })
+})
+
+describe("deleteUserAction", () => {
+  const mockState = { message: "", success: false }
+  const mockUser = { id: "1", name: "Test User", email: "test@example.com" }
+  const mockExistingUser = {
+    id: "1",
+    name: "Test User",
+    email: "test@example.com",
+    likeUsers: [],
+  }
+
+  beforeEach(() => {
+    vi.clearAllMocks()
+    global.fetch = vi.fn()
+  })
+
+  test("deletes user successfully and redirects", async () => {
+    const { checkAuth } = await import("../auth/actions")
+    ;(checkAuth as Mock).mockResolvedValueOnce(mockUser)
+
+    // Mock getUser and then deleteUser
+    global.fetch = vi
+      .fn()
+      .mockResolvedValueOnce({
+        ok: true,
+        json: () => Promise.resolve(mockExistingUser),
+      })
+      .mockResolvedValueOnce({
+        ok: true,
+      })
+
+    const mockFormData = new FormData()
+    mockFormData.append("id", "1")
+
+    // Should throw NEXT_REDIRECT error (redirect to /user)
+    await expect(deleteUserAction(mockState, mockFormData)).rejects.toThrow(
+      "NEXT_REDIRECT"
+    )
+
+    // Check the second fetch call (the DELETE request)
+    const deleteCall = (fetch as Mock).mock.calls[1]
+    const [url, options] = deleteCall
+
+    expect(url).toBe("https://test-token.mockapi.io/api/v1/users/1")
+    expect(options.method).toBe("DELETE")
+    expect(options.headers).toEqual({
+      "Content-Type": "application/json",
+    })
+
+    // Cookie logout is handled automatically in the action
+  })
+
+  test("handles unauthorized user", async () => {
+    const otherUser = {
+      id: "2",
+      name: "Other User",
+      email: "other@example.com",
+    }
+
+    const { checkAuth } = await import("../auth/actions")
+    ;(checkAuth as Mock).mockResolvedValueOnce(otherUser)
+
+    // Mock getUser
+    global.fetch = vi.fn().mockResolvedValueOnce({
+      ok: true,
+      json: () => Promise.resolve(mockExistingUser),
+    })
+
+    const mockFormData = new FormData()
+    mockFormData.append("id", "1")
+
+    const result = await deleteUserAction(mockState, mockFormData)
+
+    expect(result).toEqual({
+      message: "You can only delete your own account",
+      success: false,
+    })
+  })
+
+  test("handles unauthenticated user", async () => {
+    const { checkAuth } = await import("../auth/actions")
+    ;(checkAuth as Mock).mockResolvedValueOnce(null)
+
+    const mockFormData = new FormData()
+    mockFormData.append("id", "1")
+
+    const result = await deleteUserAction(mockState, mockFormData)
+
+    expect(result).toEqual({
+      message: "You must be logged in to delete a user",
+      success: false,
+    })
+  })
+
+  test("handles missing user ID", async () => {
+    const { checkAuth } = await import("../auth/actions")
+    ;(checkAuth as Mock).mockResolvedValueOnce(mockUser)
+
+    const mockFormData = new FormData()
+    // Missing ID
+
+    const result = await deleteUserAction(mockState, mockFormData)
+
+    expect(result).toEqual({
+      message: "User ID is required",
+      success: false,
+    })
+  })
+
+  test("handles user not found", async () => {
+    const { checkAuth } = await import("../auth/actions")
+    ;(checkAuth as Mock).mockResolvedValueOnce(mockUser)
+
+    // Mock getUser to return 404 (user not found)
+    global.fetch = vi.fn().mockResolvedValueOnce({
+      ok: false,
+      status: 404,
+    })
+
+    const mockFormData = new FormData()
+    mockFormData.append("id", "1")
+
+    const result = await deleteUserAction(mockState, mockFormData)
+
+    expect(result).toEqual({
+      message: "User with id '1' not found",
+      success: false,
+    })
+  })
+
+  test("handles API error on delete", async () => {
+    const { checkAuth } = await import("../auth/actions")
+    ;(checkAuth as Mock).mockResolvedValueOnce(mockUser)
+
+    // Mock getUser and then deleteUser with error
+    global.fetch = vi
+      .fn()
+      .mockResolvedValueOnce({
+        ok: true,
+        json: () => Promise.resolve(mockExistingUser),
+      })
+      .mockResolvedValueOnce({
+        ok: false,
+        status: 500,
+        statusText: "Internal Server Error",
+      })
+
+    const mockFormData = new FormData()
+    mockFormData.append("id", "1")
+
+    const result = await deleteUserAction(mockState, mockFormData)
+
+    expect(result).toEqual({
+      message: "Failed to delete user: Internal Server Error",
+      success: false,
+    })
+  })
+
+  test("handles API 404 error on delete", async () => {
+    const { checkAuth } = await import("../auth/actions")
+    ;(checkAuth as Mock).mockResolvedValueOnce(mockUser)
+
+    // Mock getUser and then deleteUser with 404
+    global.fetch = vi
+      .fn()
+      .mockResolvedValueOnce({
+        ok: true,
+        json: () => Promise.resolve(mockExistingUser),
+      })
+      .mockResolvedValueOnce({
+        ok: false,
+        status: 404,
+        statusText: "Not Found",
+      })
+
+    const mockFormData = new FormData()
+    mockFormData.append("id", "1")
+
+    const result = await deleteUserAction(mockState, mockFormData)
+
+    expect(result).toEqual({
+      message: "User with id '1' not found",
+      success: false,
+    })
+  })
+
+  test("handles network error", async () => {
+    const { checkAuth } = await import("../auth/actions")
+    ;(checkAuth as Mock).mockResolvedValueOnce(mockUser)
+
+    // Mock fetch to throw a network error
+    global.fetch = vi.fn().mockRejectedValueOnce(new Error("Network error"))
+
+    const mockFormData = new FormData()
+    mockFormData.append("id", "1")
+
+    const result = await deleteUserAction(mockState, mockFormData)
+
+    expect(result).toEqual({
+      message: "Failed to delete user",
       success: false,
     })
   })

@@ -231,7 +231,7 @@ export async function updateUserAction(
 export async function deleteUserAction(
   prevState: UserActionState | void,
   formData: FormData
-): Promise<UserActionState> {
+): Promise<UserActionState | void> {
   try {
     const authUser = await checkAuth()
     if (!authUser) {
@@ -272,8 +272,11 @@ export async function deleteUserAction(
       )
     }
 
+    // Clear session cookie to log out the user
+    const cookieStore = await cookies()
+    cookieStore.delete("session")
+
     revalidatePath("/user")
-    return { message: "User deleted successfully", success: true }
   } catch (error) {
     console.error("Error deleting user:", error)
     return {
@@ -286,4 +289,7 @@ export async function deleteUserAction(
       success: false,
     }
   }
+
+  // Redirect to user list page after successful deletion and logout
+  redirect("/user")
 }
