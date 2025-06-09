@@ -341,7 +341,7 @@ describe("Post Actions", () => {
       const deleteCall = (fetch as Mock).mock.calls[1]
       const [url, options] = deleteCall
 
-      expect(url).toBe("https://test-token.mockapi.io/api/v1/posts/1")
+      expect(url).toBe("https://test-token.mockapi.io/api/v1/users/1/posts/1")
       expect(options.method).toBe("DELETE")
       expect(options.headers).toEqual({
         "Content-Type": "application/json",
