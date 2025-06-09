@@ -8,7 +8,7 @@ import type { User } from "@/types/user"
 const DEFAULT_GUEST_USER: Partial<User> = {
   id: "",
   name: "Guest",
-  avatar: "",
+  avatar: "/default-avatar.png",
   email: "",
 } as const
 
