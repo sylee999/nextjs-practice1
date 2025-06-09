@@ -4,9 +4,8 @@ import { useRouter } from "next/navigation"
 
 import { logout } from "@/app/auth/actions"
 
-export function LogoutLabel() {
+export function LogoutLabel(): React.JSX.Element {
   const router = useRouter()
-
   return (
     <button
       onClick={async () => {

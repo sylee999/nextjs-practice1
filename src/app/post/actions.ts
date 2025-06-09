@@ -1,51 +1,76 @@
 "use server"
 
 import { revalidatePath } from "next/cache"
+import { redirect } from "next/navigation"
 
 import { checkAuth } from "@/app/auth/actions"
 import { getPostApiUrl } from "@/lib/api"
+import {
+  APIError,
+  AuthenticationError,
+  isAPIError,
+  NotFoundError,
+} from "@/types/errors"
 import { CreatePostData, Post, UpdatePostData } from "@/types/post"
 
-type State = {
+type PostActionState = {
   message: string
+  id?: string
+  success: boolean
 }
 
 export async function getPosts(): Promise<Post[]> {
   try {
-    const apiUrl = getPostApiUrl()
-
-    const response = await fetch(apiUrl, { cache: "no-store" })
+    const response = await fetch(getPostApiUrl(), {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+      },
+    })
 
     if (!response.ok) {
-      throw new Error(
-        `Failed to fetch posts: ${response.status} ${response.statusText}`
+      throw new APIError(
+        `Failed to fetch posts: ${response.statusText}`,
+        response.status,
+        getPostApiUrl()
       )
     }
 
-    const posts: Post[] = await response.json()
+    const posts = await response.json()
 
     // Ensure likeUsers is always an array
-    return posts.map((post) => ({
+    return posts.map((post: Post) => ({
       ...post,
       likeUsers: post.likeUsers || [],
     }))
   } catch (error) {
     console.error("Error fetching posts:", error)
-    return []
+    throw error
   }
 }
 
 export async function getPost(id: string): Promise<Post | null> {
   try {
-    const apiUrl = getPostApiUrl(id)
-    const response = await fetch(apiUrl, { cache: "no-store" })
-    if (!response.ok) {
+    const response = await fetch(getPostApiUrl(id), {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+      },
+    })
+
+    if (response.status === 404) {
       return null
     }
 
-    const post: Post = await response.json()
+    if (!response.ok) {
+      throw new APIError(
+        `Failed to fetch post: ${response.statusText}`,
+        response.status,
+        getPostApiUrl(id)
+      )
+    }
 
-    // Ensure likeUsers is always an array
+    const post = await response.json()
     return {
       ...post,
       likeUsers: post.likeUsers || [],
@@ -56,179 +81,201 @@ export async function getPost(id: string): Promise<Post | null> {
   }
 }
 
-export async function createPostAction(prevState: State, formData: FormData) {
-  const title = formData.get("title") as string
-  const content = formData.get("content") as string
-
-  if (!title || !content) {
-    return { message: "Title and content are required.", id: "" }
-  }
-
-  // Check authentication
-  const authUser = await checkAuth()
-  if (!authUser) {
-    return { message: "You must be logged in to create a post.", id: "" }
-  }
-
+export async function createPostAction(
+  prevState: PostActionState,
+  formData: FormData
+): Promise<PostActionState | void> {
+  let createdId: string | undefined
   try {
-    const apiUrl = getPostApiUrl()
-    const postData: CreatePostData = {
+    const authUser = await checkAuth()
+    if (!authUser) {
+      throw new AuthenticationError("You must be logged in to create a post")
+    }
+
+    const title = formData.get("title")?.toString()
+    const content = formData.get("content")?.toString()
+
+    if (!title || !content) {
+      return {
+        message: "Title and content are required",
+        success: false,
+      }
+    }
+
+    const createData: CreatePostData = {
       userId: authUser.id,
       title,
       content,
     }
 
-    const response = await fetch(apiUrl, {
+    const response = await fetch(getPostApiUrl(), {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
       },
-      body: JSON.stringify({
-        ...postData,
-        likeUsers: [], // Always initialize as empty array
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
-      }),
+      body: JSON.stringify(createData),
     })
 
     if (!response.ok) {
-      throw new Error(
-        `Failed to create post: ${response.status} ${response.statusText}`
+      throw new APIError(
+        `Failed to create post: ${response.statusText}`,
+        response.status,
+        getPostApiUrl()
       )
     }
 
-    const result = await response.json()
+    const createdPost = await response.json()
     revalidatePath("/post")
-    return { message: "success", id: String(result.id) }
+    createdId = createdPost.id
   } catch (error: unknown) {
     console.error("Error creating post:", error)
     return {
       message:
-        error instanceof Error
+        isAPIError(error) || error instanceof AuthenticationError
           ? error.message
-          : "Failed to create post. Please try again.",
-      id: "",
+          : "Failed to create post",
+      success: false,
     }
   }
+  if (createdId) {
+    redirect(`/post/${createdId}`)
+  }
+  return { message: "", success: false }
 }
 
-export async function updatePostAction(prevState: State, formData: FormData) {
-  const id = formData.get("id") as string
-  const title = formData.get("title") as string
-  const content = formData.get("content") as string
-
-  if (!id || !title || !content) {
-    return { message: "ID, title, and content are required." }
-  }
-
-  // Check authentication
-  const authUser = await checkAuth()
-  if (!authUser) {
-    return { message: "You must be logged in to update a post." }
-  }
-
-  // Check if user owns the post
-  const existingPost = await getPost(id)
-  if (!existingPost) {
-    return { message: "Post not found." }
-  }
-
-  if (existingPost.userId !== authUser.id) {
-    return { message: "You are not authorized to update this post." }
-  }
-
+export async function updatePostAction(
+  prevState: PostActionState,
+  formData: FormData
+): Promise<PostActionState | void> {
+  let updatedId: string | undefined
   try {
-    const apiUrl = getPostApiUrl(id)
-    const updateData: UpdatePostData = {
-      title,
-      content,
+    const authUser = await checkAuth()
+    if (!authUser) {
+      throw new AuthenticationError("You must be logged in to update a post")
     }
 
-    const response = await fetch(apiUrl, {
+    const id = formData.get("id")?.toString()
+    const title = formData.get("title")?.toString()
+    const content = formData.get("content")?.toString()
+
+    if (!id) {
+      return { message: "Post ID is required", success: false }
+    }
+
+    // Check if post exists and user owns it
+    const existingPost = await getPost(id)
+    if (!existingPost) {
+      throw new NotFoundError("Post", id)
+    }
+
+    if (existingPost.userId !== authUser.id) {
+      throw new AuthenticationError("You can only update your own posts")
+    }
+
+    const updateData: UpdatePostData = {}
+    if (title) updateData.title = title
+    if (content) updateData.content = content
+
+    if (Object.keys(updateData).length === 0) {
+      return { message: "No changes provided", success: false }
+    }
+
+    const response = await fetch(getPostApiUrl(id), {
       method: "PUT",
       headers: {
         "Content-Type": "application/json",
       },
-      body: JSON.stringify({
-        ...updateData,
-        updatedAt: new Date().toISOString(),
-      }),
+      body: JSON.stringify(updateData),
     })
 
     if (!response.ok) {
-      throw new Error(
-        `Failed to update post: ${response.status} ${response.statusText}`
+      throw new APIError(
+        `Failed to update post: ${response.statusText}`,
+        response.status,
+        getPostApiUrl(id)
       )
     }
 
-    revalidatePath("/post")
     revalidatePath(`/post/${id}`)
-    return { message: "success" }
+    revalidatePath("/post")
+    updatedId = id
   } catch (error) {
     console.error("Error updating post:", error)
     return {
       message:
-        error instanceof Error
+        isAPIError(error) ||
+        error instanceof AuthenticationError ||
+        error instanceof NotFoundError
           ? error.message
-          : "Failed to update post. Please try again.",
+          : "Failed to update post",
+      success: false,
     }
   }
+  if (updatedId) {
+    redirect(`/post/${updatedId}`)
+  }
+  return { message: "", success: false }
 }
 
-export async function deletePostAction(prevState: State, formData: FormData) {
-  const id = formData.get("id") as string
-
-  if (!id) {
-    return { message: "Post ID is required." }
-  }
-
-  // Check authentication
-  const authUser = await checkAuth()
-  if (!authUser) {
-    return { message: "You must be logged in to delete a post." }
-  }
-
-  // Check if user owns the post - this also verifies the post exists
-  const existingPost = await getPost(id)
-  if (!existingPost) {
-    return { message: "Post not found or has already been deleted." }
-  }
-
-  if (existingPost.userId !== authUser.id) {
-    return { message: "You are not authorized to delete this post." }
-  }
-
+export async function deletePostAction(
+  prevState: PostActionState | void,
+  formData: FormData
+): Promise<PostActionState | void> {
   try {
-    const apiUrl = getPostApiUrl(id)
-    const response = await fetch(apiUrl, {
+    const authUser = await checkAuth()
+    if (!authUser) {
+      throw new AuthenticationError("You must be logged in to delete a post")
+    }
+
+    const id = formData.get("id")?.toString()
+    if (!id) {
+      return { message: "Post ID is required", success: false }
+    }
+
+    // Check if post exists and user owns it
+    const existingPost = await getPost(id)
+    if (!existingPost) {
+      throw new NotFoundError("Post", id)
+    }
+
+    if (existingPost.userId !== authUser.id) {
+      throw new AuthenticationError("You can only delete your own posts")
+    }
+
+    const response = await fetch(getPostApiUrl(id, authUser.id), {
       method: "DELETE",
+      headers: {
+        "Content-Type": "application/json",
+      },
     })
 
-    if (!response.ok) {
-      // Handle specific error cases
-      if (response.status === 404) {
-        // Post was already deleted or doesn't exist
-        console.warn(
-          `Post ${id} not found during deletion, may have been already deleted`
-        )
-        revalidatePath("/post")
-        return { message: "success" } // Treat as success since the goal (post deletion) is achieved
-      }
+    // Handle specific error cases
+    if (response.status === 404) {
+      throw new NotFoundError("Post", id)
+    }
 
-      throw new Error(
-        `Failed to delete post: ${response.status} ${response.statusText}`
+    if (!response.ok) {
+      throw new APIError(
+        `Failed to delete post: ${response.statusText}`,
+        response.status,
+        getPostApiUrl(id)
       )
     }
 
     revalidatePath("/post")
-    return { message: "success" }
   } catch (error) {
     console.error("Error deleting post:", error)
     return {
       message:
-        error instanceof Error
+        isAPIError(error) ||
+        error instanceof AuthenticationError ||
+        error instanceof NotFoundError
           ? error.message
-          : "Failed to delete post. Please try again.",
+          : "Failed to delete post",
+      success: false,
     }
   }
+
+  // Redirect to post list page after successful deletion
+  redirect("/post")
 }

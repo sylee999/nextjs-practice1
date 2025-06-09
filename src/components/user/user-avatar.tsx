@@ -1,23 +1,52 @@
-import { AvatarFallback } from "@radix-ui/react-avatar"
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+import type { AvatarComponentProps } from "@/types/components"
+import type { User } from "@/types/user"
 
-import { User } from "@/types/user"
-
-import { Avatar, AvatarImage } from "../ui/avatar"
-
-const notLoggedUser = {
+/**
+ * Default user data for non-authenticated users
+ */
+const DEFAULT_GUEST_USER: Partial<User> = {
   id: "",
-  name: "Not logged in",
+  name: "Guest",
   avatar: "/default-avatar.png",
   email: "",
-  createdAt: "",
-}
+} as const
 
-export function UserAvatar({ user }: { user: User | null }) {
-  const loggedUser = user || notLoggedUser
+/**
+ * Size configuration for avatar component
+ */
+const AVATAR_SIZES = {
+  sm: "size-6",
+  md: "size-8",
+  lg: "size-12",
+  xl: "size-16",
+} as const
+
+/**
+ * UserAvatar component for displaying user profile pictures
+ * Handles both authenticated and guest users with proper fallbacks
+ *
+ * @param user - User object or null for guest users
+ * @param size - Avatar size variant
+ * @param className - Additional CSS classes
+ */
+export function UserAvatar({
+  user,
+  size = "md",
+  className = "",
+}: AvatarComponentProps): React.JSX.Element {
+  const displayUser = user || DEFAULT_GUEST_USER
+  const sizeClass = AVATAR_SIZES[size]
+
   return (
-    <Avatar>
-      <AvatarImage src={loggedUser.avatar} alt={loggedUser.name} />
-      <AvatarFallback>{loggedUser.name.charAt(0)}</AvatarFallback>
+    <Avatar className={`${sizeClass} ${className}`.trim()}>
+      <AvatarImage
+        src={displayUser.avatar || ""}
+        alt={`${displayUser.name || "Guest"} avatar`}
+      />
+      <AvatarFallback className="bg-primary text-primary-foreground text-xs">
+        {(displayUser.name || "G").charAt(0).toUpperCase()}
+      </AvatarFallback>
     </Avatar>
   )
 }

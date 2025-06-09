@@ -15,7 +15,11 @@ import { UserAvatar } from "./user/user-avatar"
 
 export const dynamic = "force-dynamic"
 
-export async function Header() {
+/**
+ * Header component for the main application layout
+ * Provides navigation, search functionality, and user authentication controls
+ */
+export async function Header(): Promise<React.JSX.Element> {
   const user = await checkAuth()
 
   return (
@@ -33,7 +37,7 @@ export async function Header() {
         <SearchForm className="ml-auto w-auto" />
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <UserAvatar user={user} />
+            <UserAvatar user={user} size="md" />
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
             {user?.id ? (

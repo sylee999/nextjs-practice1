@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, Mock, test, vi } from "vitest"
+import { beforeEach, describe, expect, test, vi, type Mock } from "vitest"
 
 import {
   createPostAction,
@@ -8,31 +8,34 @@ import {
   updatePostAction,
 } from "./actions"
 
-// Mock Next.js server functions
-vi.mock("next/cache", () => ({
-  revalidatePath: vi.fn(),
-}))
-
 // Mock the auth actions
 vi.mock("../auth/actions", () => ({
   checkAuth: vi.fn(),
 }))
 
+// Mock revalidatePath
+vi.mock("next/cache", () => ({
+  revalidatePath: vi.fn(),
+}))
+
+// Mock environment
+vi.stubEnv("MOCKAPI_TOKEN", "test-token")
+
 describe("Post Actions", () => {
   beforeEach(() => {
-    vi.resetAllMocks()
-    process.env.MOCKAPI_TOKEN = "test-token"
+    vi.clearAllMocks()
+    global.fetch = vi.fn()
   })
 
   describe("getPosts", () => {
     test("fetches posts successfully", async () => {
       const mockPosts = [
-        { id: "1", title: "Test Post", content: "Test content", userId: "1" },
         {
-          id: "2",
-          title: "Another Post",
-          content: "More content",
-          userId: "2",
+          id: "1",
+          title: "Test Post",
+          content: "Test content",
+          userId: "1",
+          likeUsers: [],
         },
       ]
 
@@ -45,7 +48,12 @@ describe("Post Actions", () => {
 
       expect(fetch).toHaveBeenCalledWith(
         "https://test-token.mockapi.io/api/v1/posts",
-        { cache: "no-store" }
+        {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+          },
+        }
       )
       expect(result).toEqual(mockPosts)
     })
@@ -58,9 +66,11 @@ describe("Post Actions", () => {
       })
 
       const consoleSpy = vi.spyOn(console, "error").mockImplementation(() => {})
-      const result = await getPosts()
 
-      expect(result).toEqual([])
+      await expect(getPosts()).rejects.toThrow(
+        "Failed to fetch posts: Internal Server Error"
+      )
+
       expect(consoleSpy).toHaveBeenCalled()
       consoleSpy.mockRestore()
     })
@@ -73,6 +83,7 @@ describe("Post Actions", () => {
         title: "Test Post",
         content: "Test content",
         userId: "1",
+        likeUsers: [],
       }
 
       global.fetch = vi.fn().mockResolvedValueOnce({
@@ -84,7 +95,12 @@ describe("Post Actions", () => {
 
       expect(fetch).toHaveBeenCalledWith(
         "https://test-token.mockapi.io/api/v1/posts/1",
-        { cache: "no-store" }
+        {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+          },
+        }
       )
       expect(result).toEqual(mockPost)
     })
@@ -105,7 +121,7 @@ describe("Post Actions", () => {
     mockFormData.append("title", "Test Post")
     mockFormData.append("content", "Test content")
 
-    const mockState = { message: "" }
+    const mockState = { message: "", success: false }
 
     test("creates post successfully", async () => {
       const mockUser = { id: "1", name: "Test User", email: "test@example.com" }
@@ -120,7 +136,10 @@ describe("Post Actions", () => {
         json: () => Promise.resolve({ id: "1" }),
       })
 
-      const result = await createPostAction(mockState, mockFormData)
+      // Should throw NEXT_REDIRECT error
+      await expect(createPostAction(mockState, mockFormData)).rejects.toThrow(
+        "NEXT_REDIRECT"
+      )
 
       const fetchCall = (fetch as Mock).mock.calls[0]
       const [url, options] = fetchCall
@@ -132,24 +151,19 @@ describe("Post Actions", () => {
       })
 
       const body = JSON.parse(options.body)
-      expect(body).toEqual(
-        expect.objectContaining({
-          userId: "1",
-          title: "Test Post",
-          content: "Test content",
-          likeUsers: [],
-          createdAt: expect.any(String),
-          updatedAt: expect.any(String),
-        })
-      )
-
-      expect(result).toEqual({
-        message: "success",
-        id: "1",
+      expect(body).toEqual({
+        userId: "1",
+        title: "Test Post",
+        content: "Test content",
       })
     })
 
     test("handles missing title and content", async () => {
+      // Mock authentication first
+      const mockUser = { id: "1", name: "Test User", email: "test@example.com" }
+      const { checkAuth } = await import("../auth/actions")
+      ;(checkAuth as Mock).mockResolvedValueOnce(mockUser)
+
       const incompleteFormData = new FormData()
       incompleteFormData.append("title", "")
       incompleteFormData.append("content", "")
@@ -157,8 +171,8 @@ describe("Post Actions", () => {
       const result = await createPostAction(mockState, incompleteFormData)
 
       expect(result).toEqual({
-        message: "Title and content are required.",
-        id: "",
+        message: "Title and content are required",
+        success: false,
       })
       expect(fetch).not.toHaveBeenCalled()
     })
@@ -170,8 +184,8 @@ describe("Post Actions", () => {
       const result = await createPostAction(mockState, mockFormData)
 
       expect(result).toEqual({
-        message: "You must be logged in to create a post.",
-        id: "",
+        message: "You must be logged in to create a post",
+        success: false,
       })
       expect(fetch).not.toHaveBeenCalled()
     })
@@ -191,9 +205,26 @@ describe("Post Actions", () => {
       const result = await createPostAction(mockState, mockFormData)
 
       expect(result).toEqual({
-        message: "Failed to create post: 400 Bad Request",
-        id: "",
+        message: "Failed to create post: Bad Request",
+        success: false,
       })
+    })
+
+    test("handles NEXT_REDIRECT error", async () => {
+      const mockUser = { id: "1", name: "Test User", email: "test@example.com" }
+
+      const { checkAuth } = await import("../auth/actions")
+      ;(checkAuth as Mock).mockResolvedValueOnce(mockUser)
+
+      global.fetch = vi.fn().mockResolvedValueOnce({
+        ok: true,
+        json: () => Promise.resolve({ id: "1" }),
+      })
+
+      // Should throw NEXT_REDIRECT error
+      await expect(createPostAction(mockState, mockFormData)).rejects.toThrow(
+        "NEXT_REDIRECT"
+      )
     })
   })
 
@@ -203,20 +234,21 @@ describe("Post Actions", () => {
     mockFormData.append("title", "Updated Post")
     mockFormData.append("content", "Updated content")
 
-    const mockState = { message: "" }
+    const mockState = { message: "", success: false }
     const mockUser = { id: "1", name: "Test User", email: "test@example.com" }
     const mockPost = {
       id: "1",
       title: "Original Post",
       content: "Original content",
       userId: "1",
+      likeUsers: [],
     }
 
     test("updates post successfully", async () => {
       const { checkAuth } = await import("../auth/actions")
       ;(checkAuth as Mock).mockResolvedValueOnce(mockUser)
 
-      // Mock getPost
+      // Mock getPost and then updatePost
       global.fetch = vi
         .fn()
         .mockResolvedValueOnce({
@@ -228,11 +260,10 @@ describe("Post Actions", () => {
           json: () => Promise.resolve({ id: "1" }),
         })
 
-      const result = await updatePostAction(mockState, mockFormData)
-
-      expect(result).toEqual({
-        message: "success",
-      })
+      // Should throw NEXT_REDIRECT error
+      await expect(updatePostAction(mockState, mockFormData)).rejects.toThrow(
+        "NEXT_REDIRECT"
+      )
     })
 
     test("handles unauthenticated user", async () => {
@@ -242,19 +273,20 @@ describe("Post Actions", () => {
       const result = await updatePostAction(mockState, mockFormData)
 
       expect(result).toEqual({
-        message: "You must be logged in to update a post.",
+        message: "You must be logged in to update a post",
+        success: false,
       })
     })
 
     test("handles unauthorized user (not post owner)", async () => {
-      const unauthorizedUser = {
+      const otherUser = {
         id: "2",
         name: "Other User",
         email: "other@example.com",
       }
 
       const { checkAuth } = await import("../auth/actions")
-      ;(checkAuth as Mock).mockResolvedValueOnce(unauthorizedUser)
+      ;(checkAuth as Mock).mockResolvedValueOnce(otherUser)
 
       // Mock getPost
       global.fetch = vi.fn().mockResolvedValueOnce({
@@ -265,7 +297,8 @@ describe("Post Actions", () => {
       const result = await updatePostAction(mockState, mockFormData)
 
       expect(result).toEqual({
-        message: "You are not authorized to update this post.",
+        message: "You can only update your own posts",
+        success: false,
       })
     })
   })
@@ -274,20 +307,21 @@ describe("Post Actions", () => {
     const mockFormData = new FormData()
     mockFormData.append("id", "1")
 
-    const mockState = { message: "" }
+    const mockState = { message: "", success: false }
     const mockUser = { id: "1", name: "Test User", email: "test@example.com" }
     const mockPost = {
       id: "1",
       title: "Test Post",
       content: "Test content",
       userId: "1",
+      likeUsers: [],
     }
 
     test("deletes post successfully", async () => {
       const { checkAuth } = await import("../auth/actions")
       ;(checkAuth as Mock).mockResolvedValueOnce(mockUser)
 
-      // Mock getPost and delete
+      // Mock getPost and then deletePost
       global.fetch = vi
         .fn()
         .mockResolvedValueOnce({
@@ -298,10 +332,19 @@ describe("Post Actions", () => {
           ok: true,
         })
 
-      const result = await deletePostAction(mockState, mockFormData)
+      // Should throw NEXT_REDIRECT error (redirect to /post)
+      await expect(deletePostAction(mockState, mockFormData)).rejects.toThrow(
+        "NEXT_REDIRECT"
+      )
 
-      expect(result).toEqual({
-        message: "success",
+      // Check the second fetch call (the DELETE request)
+      const deleteCall = (fetch as Mock).mock.calls[1]
+      const [url, options] = deleteCall
+
+      expect(url).toBe("https://test-token.mockapi.io/api/v1/users/1/posts/1")
+      expect(options.method).toBe("DELETE")
+      expect(options.headers).toEqual({
+        "Content-Type": "application/json",
       })
     })
 
@@ -312,19 +355,20 @@ describe("Post Actions", () => {
       const result = await deletePostAction(mockState, mockFormData)
 
       expect(result).toEqual({
-        message: "You must be logged in to delete a post.",
+        message: "You must be logged in to delete a post",
+        success: false,
       })
     })
 
     test("handles unauthorized user (not post owner)", async () => {
-      const unauthorizedUser = {
+      const otherUser = {
         id: "2",
         name: "Other User",
         email: "other@example.com",
       }
 
       const { checkAuth } = await import("../auth/actions")
-      ;(checkAuth as Mock).mockResolvedValueOnce(unauthorizedUser)
+      ;(checkAuth as Mock).mockResolvedValueOnce(otherUser)
 
       // Mock getPost
       global.fetch = vi.fn().mockResolvedValueOnce({
@@ -335,7 +379,8 @@ describe("Post Actions", () => {
       const result = await deletePostAction(mockState, mockFormData)
 
       expect(result).toEqual({
-        message: "You are not authorized to delete this post.",
+        message: "You can only delete your own posts",
+        success: false,
       })
     })
   })

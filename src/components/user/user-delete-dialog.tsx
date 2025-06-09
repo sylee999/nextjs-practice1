@@ -21,6 +21,7 @@ import { User } from "@/types/user"
 export default function UserDeleteDialog({ user }: { user: User }) {
   const [state, formAction, pending] = useActionState(deleteUserAction, {
     message: "",
+    success: false,
   })
   return (
     <form action={formAction} id="delete-form">
@@ -40,7 +41,7 @@ export default function UserDeleteDialog({ user }: { user: User }) {
             <DialogDescription>
               This action cannot be undone. This will permanently delete your
               account and remove your data from our servers.
-              {state.message && state.message !== "success" && (
+              {state.message && state.success === false && (
                 <Alert variant="destructive">
                   <AlertDescription>{state.message}</AlertDescription>
                 </Alert>

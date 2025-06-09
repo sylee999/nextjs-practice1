@@ -7,24 +7,23 @@ import { loginAction } from "@/app/auth/actions"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { cn } from "@/lib/utils"
 
 import { Alert, AlertDescription } from "../ui/alert"
 
 export function LoginForm({
   className,
   ...props
-}: React.ComponentProps<"form">) {
+}: React.ComponentProps<"form">): React.JSX.Element {
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
   const searchParams = useSearchParams()
-  const from = searchParams.get("from")
+  const from = searchParams.get("from") || ""
   const router = useRouter()
 
   const [state, formAction, pending] = useActionState(loginAction, {
     success: false,
     message: "",
-    from: "",
+    from,
   })
 
   useEffect(() => {
@@ -37,8 +36,8 @@ export function LoginForm({
 
   return (
     <form
-      className={cn("flex flex-col gap-6", className)}
       action={formAction}
+      className={`space-y-4 ${className || ""}`}
       {...props}
     >
       <div className="flex flex-col items-center gap-2 text-center">
@@ -48,7 +47,7 @@ export function LoginForm({
         </p>
       </div>
       <div className="grid gap-6">
-        {state.message && !state.success && (
+        {state.message && state.success === false && (
           <Alert variant="destructive">
             <AlertDescription>{state.message}</AlertDescription>
           </Alert>

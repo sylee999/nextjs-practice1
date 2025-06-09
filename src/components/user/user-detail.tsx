@@ -1,33 +1,30 @@
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { User } from "@/types/user"
+import { memo } from "react"
 
-export async function UserDetail({ user }: { user: User | null }) {
+import { UserAvatar } from "@/components/user/user-avatar"
+import type { UserComponentProps } from "@/types/components"
+
+/**
+ * UserDetail component for displaying user information
+ * Optimized with React.memo for performance
+ *
+ * @param user - User object to display
+ */
+export const UserDetail = memo(function UserDetail({
+  user,
+}: UserComponentProps): React.JSX.Element {
+  if (!user) {
+    return <div>User not found</div>
+  }
+
   return (
-    <div>
-      <div className="flex items-center space-x-4">
-        <Avatar className="size-14">
-          <AvatarImage
-            src={user?.avatar || "/default-avatar.png"}
-            alt={user?.name || "Unknown"}
-          />
-          <AvatarFallback>{user?.name.charAt(0) || "U"}</AvatarFallback>
-        </Avatar>
-        <div>
-          <p className="text-lg font-bold">
-            {user?.name || "Non-existent User"}
-          </p>
-          {user ? (
-            <>
-              <p className="text-md text-gray-800">{user?.email}</p>
-              <p className="pt-1 text-sm text-gray-500">
-                Joined: {new Date(user.createdAt).toLocaleDateString()}
-              </p>
-            </>
-          ) : (
-            <p className="text-md text-gray-800">Could not find user</p>
-          )}
-        </div>
+    <div className="hover:bg-muted/50 flex items-center gap-3 rounded-lg p-3 transition-colors">
+      <UserAvatar user={user} size="md" />
+      <div className="flex flex-col">
+        <span className="font-medium">{user.name}</span>
+        <span className="text-muted-foreground text-sm">{user.email}</span>
       </div>
     </div>
   )
-}
+})
+
+UserDetail.displayName = "UserDetail"
