@@ -181,7 +181,7 @@ export interface User {
   avatar: string
   email: string
   password?: string
-  likeUsers?: string[]
+  bookmarkedPosts?: string[]
 }
 
 export interface CreateUserData {

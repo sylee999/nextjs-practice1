@@ -174,7 +174,7 @@ describe("auth actions", () => {
         name: "Test User",
         createdAt: new Date().toISOString(),
         avatar: "https://example.com/avatar.png",
-        likeUsers: [],
+        bookmarkedPosts: [],
       }
 
       // Mock global fetch to return a valid user
@@ -281,7 +281,7 @@ describe("auth actions", () => {
         name: "Test User",
         createdAt: new Date().toISOString(),
         avatar: "https://example.com/avatar.png",
-        likeUsers: [],
+        bookmarkedPosts: [],
       }
 
       // Mock cookie store to return valid session

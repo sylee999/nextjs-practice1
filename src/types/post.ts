@@ -3,7 +3,6 @@ export interface Post {
   userId: string
   title: string
   content: string
-  likeUsers?: string[] // Array of user IDs who liked this post - optional since API might not return it
   bookmarkedBy?: string[] // Array of user IDs who bookmarked this post - optional since API might not return it
   createdAt: string | Date
   updatedAt: string | Date

@@ -35,7 +35,7 @@ describe("Post Actions", () => {
           title: "Test Post",
           content: "Test content",
           userId: "1",
-          likeUsers: [],
+          bookmarkedBy: [],
         },
       ]
 
@@ -83,7 +83,7 @@ describe("Post Actions", () => {
         title: "Test Post",
         content: "Test content",
         userId: "1",
-        likeUsers: [],
+        bookmarkedBy: [],
       }
 
       global.fetch = vi.fn().mockResolvedValueOnce({
@@ -241,7 +241,7 @@ describe("Post Actions", () => {
       title: "Original Post",
       content: "Original content",
       userId: "1",
-      likeUsers: [],
+      bookmarkedBy: [],
     }
 
     test("updates post successfully", async () => {
@@ -314,7 +314,7 @@ describe("Post Actions", () => {
       title: "Test Post",
       content: "Test content",
       userId: "1",
-      likeUsers: [],
+      bookmarkedBy: [],
     }
 
     test("deletes post successfully", async () => {

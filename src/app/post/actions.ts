@@ -38,10 +38,10 @@ export async function getPosts(): Promise<Post[]> {
 
     const posts = await response.json()
 
-    // Ensure likeUsers is always an array
+    // Ensure bookmarkedBy is always an array
     return posts.map((post: Post) => ({
       ...post,
-      likeUsers: post.likeUsers || [],
+      bookmarkedBy: post.bookmarkedBy || [],
     }))
   } catch (error) {
     console.error("Error fetching posts:", error)
@@ -73,7 +73,7 @@ export async function getPost(id: string): Promise<Post | null> {
     const post = await response.json()
     return {
       ...post,
-      likeUsers: post.likeUsers || [],
+      bookmarkedBy: post.bookmarkedBy || [],
     }
   } catch (error) {
     console.error("Error fetching post:", error)

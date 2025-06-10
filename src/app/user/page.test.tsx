@@ -31,7 +31,7 @@ describe("UserPage", () => {
         email: "test@example.com",
         avatar: "https://example.com/avatar.jpg",
         createdAt: "2023-01-01T00:00:00.000Z",
-        likeUsers: [],
+        bookmarkedPosts: [],
       },
     ]
 
