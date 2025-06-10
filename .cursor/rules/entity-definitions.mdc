@@ -6,41 +6,65 @@ alwaysApply: true
 # Entity Definitions
 
 ## User Entity
-| Column    | Type     | Description                               |
-|-----------|----------|-------------------------------------------|
-| id        | ObjectID | Unique identifier                         |
-| createdAt | Date     | Timestamp when user was created           |
-| name      | String   | User's display name                       |
-| avatar    | String   | URL to user's profile image               |
-| email     | String   | User's email address                      |
-| password  | String   | User's password                           |
-| likeUsers | Array    | Array of user IDs who liked this user     |
+| Column         | Type     | Description                               |
+|----------------|----------|-------------------------------------------|
+| id             | ObjectID | Unique identifier                         |
+| createdAt      | Date     | Timestamp when user was created           |
+| name           | String   | User's display name                       |
+| avatar         | String   | URL to user's profile image               |
+| email          | String   | User's email address                      |
+| password       | String   | User's password                           |
+| followers      | Array    | Array of user IDs who follow this user    |
+| following      | Array    | Array of user IDs this user is following  |
+| bookmarkedPosts| Array    | Array of post IDs bookmarked by this user |
 
 ## Post Entity
-| Column    | Type     | Description                               |
-|-----------|----------|-------------------------------------------|
-| id        | ObjectID | Unique identifier                         |
-| userId    | ObjectID | Reference to the user who created the post|
-| title     | String   | Post title                                |
-| content   | String   | Post content                              |
-| likeUsers | Array    | Array of user IDs who liked this post     |
-| createdAt | Date     | Timestamp when post was created           |
-| updatedAt | Date     | Timestamp when post was last updated      |
+| Column       | Type     | Description                               |
+|--------------|----------|-------------------------------------------|
+| id           | ObjectID | Unique identifier                         |
+| userId       | ObjectID | Reference to the user who created the post|
+| title        | String   | Post title                                |
+| content      | String   | Post content                              |
+| bookmarkedBy | Array    | Array of user IDs who bookmarked this post|
+| createdAt    | Date     | Timestamp when post was created           |
+| updatedAt    | Date     | Timestamp when post was last updated      |
 
 ## Entity Relationships
 - A User can have multiple Posts (one-to-many)
-- A User can like multiple Users (many-to-many)
-- A User can like multiple Posts (many-to-many)
+- A User can follow multiple Users (many-to-many)
+- A User can bookmark multiple Posts (many-to-many)
 - A Post belongs to a User (many-to-one)
+- A Post can be bookmarked by multiple Users (many-to-many)
 
 ## API Operations
 ### User Operations
 - Create, Read, Update, Delete users
 - View all posts by a user
-- Like/unlike users
-- View all users who liked a user
+- Follow/unfollow users
+- View followers of a user
+- View users that a user is following
+- View bookmarked posts by a user
 
 ### Post Operations
 - Create, Read, Update, Delete posts
-- Like/unlike posts
-- View all users who liked a post 
+- Bookmark/unbookmark posts
+- View all users who bookmarked a post
+
+## Data Storage Constraints
+- **REST API Limitations**: No additional entities can be created beyond User and Post
+- **No Transactions**: All related data updates must be handled sequentially
+- **Array-based Relationships**: All many-to-many relationships stored as arrays in both entities
+- **Dual Updates Required**: Follow/bookmark operations require updating both related entities
+
+## Implementation Notes
+### Follow Functionality
+- When User A follows User B:
+  - Add User B's ID to User A's `following` array
+  - Add User A's ID to User B's `followers` array
+- Both updates must be performed in sequence with proper error handling
+
+### Bookmark Functionality  
+- When User bookmarks Post:
+  - Add Post ID to User's `bookmarkedPosts` array
+  - Add User ID to Post's `bookmarkedBy` array
+- Both updates must be performed in sequence with proper error handling 
