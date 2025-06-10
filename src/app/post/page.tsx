@@ -1,6 +1,7 @@
 import Link from "next/link"
 import { Plus } from "lucide-react"
 
+import { checkAuth } from "@/app/auth/actions"
 import { getUsers } from "@/app/user/actions"
 import { PostList } from "@/components/post/post-list"
 import { Button } from "@/components/ui/button"
@@ -8,7 +9,11 @@ import { Button } from "@/components/ui/button"
 import { getPosts } from "./actions"
 
 export default async function PostPage() {
-  const [posts, users] = await Promise.all([getPosts(), getUsers()])
+  const [posts, users, authUser] = await Promise.all([
+    getPosts(),
+    getUsers(),
+    checkAuth(),
+  ])
 
   return (
     <div className="mx-auto max-w-4xl space-y-6 p-4">
@@ -21,7 +26,7 @@ export default async function PostPage() {
           </Button>
         </Link>
       </div>
-      <PostList posts={posts} authors={users} />
+      <PostList posts={posts} authors={users} currentUserId={authUser?.id} />
     </div>
   )
 }

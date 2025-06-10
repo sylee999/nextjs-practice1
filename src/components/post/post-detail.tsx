@@ -3,14 +3,18 @@ import { Card, CardContent, CardHeader } from "@/components/ui/card"
 import { Post } from "@/types/post"
 import { User } from "@/types/user"
 
+import { BookmarkButton } from "./bookmark-button"
+
 interface PostDetailProps {
   post: Post
   author?: User
+  currentUserId?: string
 }
 
 export function PostDetail({
   post,
   author,
+  currentUserId,
 }: PostDetailProps): React.JSX.Element {
   if (!post) {
     return (
@@ -21,6 +25,11 @@ export function PostDetail({
       </Card>
     )
   }
+
+  const bookmarkCount = (post.bookmarkedBy || []).length
+  const isBookmarked = currentUserId
+    ? (post.bookmarkedBy || []).includes(currentUserId)
+    : false
 
   return (
     <Card className="w-full">
@@ -49,13 +58,22 @@ export function PostDetail({
         <div className="prose prose-sm max-w-none">
           <p className="whitespace-pre-wrap text-gray-700">{post.content}</p>
         </div>
-        <div className="mt-4 flex items-center justify-between text-sm text-gray-500">
-          <span>{(post.bookmarkedBy || []).length} bookmarks</span>
-          {post.updatedAt !== post.createdAt && (
-            <span>
-              Updated: {new Date(post.updatedAt).toLocaleDateString()}
+        <div className="mt-4 flex items-center justify-between">
+          <div className="flex items-center gap-4">
+            <span className="text-sm text-gray-500">
+              {bookmarkCount} {bookmarkCount === 1 ? "bookmark" : "bookmarks"}
             </span>
-          )}
+            {post.updatedAt !== post.createdAt && (
+              <span className="text-sm text-gray-500">
+                Updated: {new Date(post.updatedAt).toLocaleDateString()}
+              </span>
+            )}
+          </div>
+          <BookmarkButton
+            postId={post.id}
+            initialBookmarked={isBookmarked}
+            userId={currentUserId}
+          />
         </div>
       </CardContent>
     </Card>
