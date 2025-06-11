@@ -44,9 +44,11 @@ alwaysApply: true
 - Use GitHub MCP when committing to ensure proper linking and formatting
 
 ## Pull Requests
-- Title: same as the main commit message
+- **Title: Reflect the main purpose of the PR based on the related issue title**
+  - Use the same format as the related issue title (e.g., `feat: implement post bookmark functionality`)
+  - Should represent the primary feature/fix being delivered, not individual commit messages
+  - For multi-commit PRs, focus on the overall outcome rather than specific implementation details
 - Follow this PR template:
-
   ```markdown
   ### Summary
   - Key changes introduced
@@ -57,8 +59,7 @@ alwaysApply: true
   ### Related Issue
   - Closes #<issue-number>
   ```
-
-- Compose PR message based on the related issue’s description and commit history
+- Compose PR message based on the related issue's description and commit history
 - Do **not** merge PRs directly  
 - Always wait for **reviewer confirmation** (e.g., team lead or requestor), even if CI passes
 - Use draft PRs for large or ongoing changes
