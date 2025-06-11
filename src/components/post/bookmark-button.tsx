@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useTransition } from "react"
-import { useRouter } from "next/navigation"
+import { usePathname, useRouter } from "next/navigation"
 import { Bookmark } from "lucide-react"
 
 import { toggleBookmarkAction } from "@/app/post/bookmark-actions"
@@ -23,6 +23,7 @@ export function BookmarkButton({
   const [isBookmarked, setIsBookmarked] = useState(initialBookmarked)
   const [isPending, startTransition] = useTransition()
   const router = useRouter()
+  const pathname = usePathname()
 
   const handleToggle = () => {
     if (!userId) return // Not authenticated
@@ -59,7 +60,8 @@ export function BookmarkButton({
   const handleUnauthenticatedClick = (event: React.MouseEvent) => {
     event.preventDefault()
     event.stopPropagation()
-    router.push("/login")
+    const loginUrl = `/login?from=${encodeURIComponent(pathname)}`
+    router.push(loginUrl)
   }
 
   if (!userId) {
