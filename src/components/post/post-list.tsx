@@ -7,11 +7,13 @@ import { User } from "@/types/user"
 interface PostListProps {
   posts: Post[]
   authors?: User[]
+  currentUserId?: string
 }
 
 export function PostList({
   posts,
   authors = [],
+  currentUserId,
 }: PostListProps): React.JSX.Element {
   if (!posts || posts.length === 0) {
     return (
@@ -34,7 +36,11 @@ export function PostList({
             href={`/post/${post.id}`}
             className="block transition-opacity hover:opacity-80"
           >
-            <PostDetail post={post} author={getAuthor(post.userId)} />
+            <PostDetail
+              post={post}
+              author={getAuthor(post.userId)}
+              currentUserId={currentUserId}
+            />
           </Link>
         </div>
       ))}

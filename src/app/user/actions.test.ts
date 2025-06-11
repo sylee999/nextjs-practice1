@@ -116,7 +116,7 @@ describe("updateUserAction", () => {
     id: "1",
     name: "Original Name",
     email: "test@example.com",
-    likeUsers: [],
+    bookmarkedPosts: [],
   }
 
   beforeEach(() => {
@@ -135,7 +135,7 @@ describe("updateUserAction", () => {
       email: "updated@example.com",
       avatar: "https://example.com/new-avatar.jpg",
       password: "newpassword",
-      likeUsers: [],
+      bookmarkedPosts: [],
     }
 
     // Mock getUser and then updateUser
@@ -183,7 +183,7 @@ describe("updateUserAction", () => {
       name: "Updated Name",
       email: "updated@example.com",
       avatar: "https://example.com/new-avatar.jpg",
-      likeUsers: [],
+      bookmarkedPosts: [],
     }
 
     // Mock getUser and then updateUser
@@ -238,7 +238,7 @@ describe("updateUserAction", () => {
       email: "newemail@example.com",
       avatar: "https://example.com/new.jpg",
       password: "newpass123",
-      likeUsers: [],
+      bookmarkedPosts: [],
     }
 
     // Mock getUser and then updateUser
@@ -433,7 +433,7 @@ describe("deleteUserAction", () => {
     id: "1",
     name: "Test User",
     email: "test@example.com",
-    likeUsers: [],
+    bookmarkedPosts: [],
   }
 
   beforeEach(() => {

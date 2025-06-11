@@ -40,7 +40,7 @@ export default async function PostDetailPage({
         </Button>
       </div>
 
-      <PostDetail post={post} author={author} />
+      <PostDetail post={post} author={author} currentUserId={authUser?.id} />
 
       {authUser?.id === post.userId && (
         <div className="mt-6 flex space-x-2">

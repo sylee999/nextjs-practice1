@@ -149,26 +149,28 @@
 
 ### User
 
-| column    | type     |
-| --------- | -------- |
-| id        | ObjectID |
-| createdAt | Date     |
-| name      | String   |
-| avatar    | String   |
-| email     | String   |
-| likeUsers | Array    |
+| column          | type     |
+| --------------- | -------- |
+| id              | ObjectID |
+| createdAt       | Date     |
+| name            | String   |
+| avatar          | String   |
+| email           | String   |
+| followers       | Array    |
+| following       | Array    |
+| bookmarkedPosts | Array    |
 
 ### Post
 
-| column    | type     |
-| --------- | -------- |
-| id        | ObjectID |
-| userId    | ObjectID |
-| title     | String   |
-| content   | String   |
-| likeUsers | Array    |
-| createdAt | Date     |
-| updatedAt | Date     |
+| column       | type     |
+| ------------ | -------- |
+| id           | ObjectID |
+| userId       | ObjectID |
+| title        | String   |
+| content      | String   |
+| bookmarkedBy | Array    |
+| createdAt    | Date     |
+| updatedAt    | Date     |
 
 # Next.js Best Practices
 

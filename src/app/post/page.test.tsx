@@ -40,7 +40,7 @@ describe("PostPage", () => {
         title: "Test Post",
         content: "Test content",
         userId: "1",
-        likeUsers: [],
+        bookmarkedBy: [],
         createdAt: "2024-01-01T00:00:00.000Z",
         updatedAt: "2024-01-01T00:00:00.000Z",
       },
@@ -52,7 +52,7 @@ describe("PostPage", () => {
         email: "test@example.com",
         password: "password",
         avatar: "https://example.com/avatar.jpg",
-        likeUsers: [],
+        bookmarkedPosts: [],
         createdAt: "2024-01-01T00:00:00.000Z",
       },
     ]
