@@ -1,6 +1,7 @@
 "use client"
 
 import { useState, useTransition } from "react"
+import { useRouter } from "next/navigation"
 import { Bookmark } from "lucide-react"
 
 import { toggleBookmarkAction } from "@/app/post/bookmark-actions"
@@ -21,6 +22,7 @@ export function BookmarkButton({
 }: BookmarkButtonProps) {
   const [isBookmarked, setIsBookmarked] = useState(initialBookmarked)
   const [isPending, startTransition] = useTransition()
+  const router = useRouter()
 
   const handleToggle = () => {
     if (!userId) return // Not authenticated
@@ -48,13 +50,25 @@ export function BookmarkButton({
     })
   }
 
+  const handleClick = (event: React.MouseEvent) => {
+    event.preventDefault()
+    event.stopPropagation()
+    handleToggle()
+  }
+
+  const handleUnauthenticatedClick = (event: React.MouseEvent) => {
+    event.preventDefault()
+    event.stopPropagation()
+    router.push("/login")
+  }
+
   if (!userId) {
-    // Show disabled button for unauthenticated users
+    // Show button that redirects to login for unauthenticated users
     return (
       <Button
         variant="ghost"
         size="sm"
-        disabled
+        onClick={handleUnauthenticatedClick}
         className={`flex items-center gap-1 ${className}`}
         title="Login to bookmark posts"
       >
@@ -68,7 +82,7 @@ export function BookmarkButton({
     <Button
       variant="ghost"
       size="sm"
-      onClick={handleToggle}
+      onClick={handleClick}
       disabled={isPending}
       className={`flex items-center gap-1 transition-colors ${
         isBookmarked
