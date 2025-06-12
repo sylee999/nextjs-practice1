@@ -1,7 +1,9 @@
+"use client"
+
 import { memo, useEffect, useState } from "react"
 import Link from "next/link"
 
-import { getUsers, isFollowing } from "@/app/user/actions"
+import { getUser, getUsers } from "@/app/user/actions"
 import { ErrorBoundary } from "@/components/ui/error-boundary"
 import { ListSkeleton } from "@/components/ui/loading"
 import { FollowButton } from "@/components/user/follow-button"
@@ -13,7 +15,7 @@ import type { User } from "@/types/user"
 /**
  * UserList component for displaying a list of users with follow functionality
  * Renders user details with navigation links, follow buttons, and followers avatars
- * Optimized with React.memo for performance
+ * Optimized with React.memo for performance and efficient API calls
  *
  * @param users - Array of user objects to display
  * @param currentUserId - ID of current authenticated user
@@ -26,7 +28,7 @@ export const UserList = memo(function UserList({
   const [followersData, setFollowersData] = useState<Record<string, User[]>>({})
   const [loading, setLoading] = useState(true)
 
-  // Load follow states and followers data on mount
+  // Load follow states and followers data on mount with optimized API calls
   useEffect(() => {
     const loadFollowData = async () => {
       if (!currentUserId || !users.length) {
@@ -35,27 +37,31 @@ export const UserList = memo(function UserList({
       }
 
       try {
-        // Get all users to populate followers data
-        const allUsers = await getUsers()
+        // Get all users data and current user data in parallel
+        const [allUsers, currentUser] = await Promise.all([
+          getUsers(),
+          getUser(currentUserId),
+        ])
 
-        // Check follow status for each user
-        const followPromises = users.map(async (user) => {
-          if (user.id === currentUserId)
-            return { userId: user.id, isFollowing: false }
-          const following = await isFollowing(currentUserId, user.id)
-          return { userId: user.id, isFollowing: following }
-        })
+        if (!currentUser) {
+          setLoading(false)
+          return
+        }
 
-        const followResults = await Promise.all(followPromises)
-        const followStatesMap = followResults.reduce(
-          (acc, { userId, isFollowing }) => {
-            acc[userId] = isFollowing
+        // Compute follow states from current user's following list (no additional API calls)
+        const followStatesMap = users.reduce(
+          (acc, user) => {
+            if (user.id === currentUserId) {
+              acc[user.id] = false // Can't follow yourself
+            } else {
+              acc[user.id] = currentUser.following?.includes(user.id) ?? false
+            }
             return acc
           },
           {} as Record<string, boolean>
         )
 
-        // Create followers data map
+        // Create followers data map from all users data
         const followersMap = users.reduce(
           (acc, user) => {
             if (user.followers && user.followers.length > 0) {
@@ -90,8 +96,7 @@ export const UserList = memo(function UserList({
       [targetUserId]: !prev[targetUserId],
     }))
 
-    // Reload followers data to reflect changes
-    // In a real app, you might want to update this more efficiently
+    // Reload followers data to reflect changes after a short delay
     setTimeout(() => {
       const loadUpdatedData = async () => {
         try {
