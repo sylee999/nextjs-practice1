@@ -322,3 +322,363 @@ export async function deleteUserAction(
   // Redirect to user list page after successful deletion and logout
   redirect("/user")
 }
+
+// ==================================================
+// FOLLOW FUNCTIONALITY - Phase 2: API Integration
+// ==================================================
+
+/**
+ * Helper function to check if current user is following target user
+ */
+export async function isFollowing(
+  currentUserId: string,
+  targetUserId: string
+): Promise<boolean> {
+  try {
+    const currentUser = await getUser(currentUserId)
+    if (!currentUser) {
+      return false
+    }
+
+    return currentUser.following?.includes(targetUserId) ?? false
+  } catch (error) {
+    console.error("Error checking follow status:", error)
+    return false
+  }
+}
+
+/**
+ * Helper function to get followers count for a user
+ */
+export async function getFollowersCount(userId: string): Promise<number> {
+  try {
+    const user = await getUser(userId)
+    if (!user) {
+      return 0
+    }
+
+    return user.followers?.length ?? 0
+  } catch (error) {
+    console.error("Error getting followers count:", error)
+    return 0
+  }
+}
+
+/**
+ * Helper function to get following count for a user
+ */
+export async function getFollowingCount(userId: string): Promise<number> {
+  try {
+    const user = await getUser(userId)
+    if (!user) {
+      return 0
+    }
+
+    return user.following?.length ?? 0
+  } catch (error) {
+    console.error("Error getting following count:", error)
+    return 0
+  }
+}
+
+/**
+ * Follow a user - performs dual entity updates with error rollback
+ */
+export async function followUser(
+  currentUserId: string,
+  targetUserId: string
+): Promise<UserActionState> {
+  try {
+    // Authentication check
+    const authUser = await checkAuth()
+    if (!authUser) {
+      throw new AuthenticationError("You must be logged in to follow users")
+    }
+
+    if (authUser.id !== currentUserId) {
+      throw new AuthenticationError(
+        "You can only perform follow actions for your own account"
+      )
+    }
+
+    // Validation checks
+    if (currentUserId === targetUserId) {
+      return {
+        message: "You cannot follow yourself",
+        success: false,
+      }
+    }
+
+    // Get both users to ensure they exist
+    const [currentUser, targetUser] = await Promise.all([
+      getUser(currentUserId),
+      getUser(targetUserId),
+    ])
+
+    if (!currentUser) {
+      throw new NotFoundError("Current user", currentUserId)
+    }
+
+    if (!targetUser) {
+      throw new NotFoundError("Target user", targetUserId)
+    }
+
+    // Check if already following
+    if (currentUser.following?.includes(targetUserId)) {
+      return {
+        message: "You are already following this user",
+        success: false,
+      }
+    }
+
+    // Prepare update data
+    const updatedCurrentUserFollowing = [
+      ...(currentUser.following || []),
+      targetUserId,
+    ]
+    const updatedTargetUserFollowers = [
+      ...(targetUser.followers || []),
+      currentUserId,
+    ]
+
+    // Perform dual updates with error handling
+    let currentUserUpdated = false
+
+    try {
+      // Update current user's following list
+      const currentUserResponse = await fetch(getUserApiUrl(currentUserId), {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          ...currentUser,
+          following: updatedCurrentUserFollowing,
+        }),
+      })
+
+      if (!currentUserResponse.ok) {
+        throw new APIError(
+          `Failed to update current user following: ${currentUserResponse.statusText}`,
+          currentUserResponse.status,
+          getUserApiUrl(currentUserId)
+        )
+      }
+
+      currentUserUpdated = true
+
+      // Update target user's followers list
+      const targetUserResponse = await fetch(getUserApiUrl(targetUserId), {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          ...targetUser,
+          followers: updatedTargetUserFollowers,
+        }),
+      })
+
+      if (!targetUserResponse.ok) {
+        throw new APIError(
+          `Failed to update target user followers: ${targetUserResponse.statusText}`,
+          targetUserResponse.status,
+          getUserApiUrl(targetUserId)
+        )
+      }
+
+      // Revalidate relevant paths
+      revalidatePath("/user")
+      revalidatePath(`/user/${currentUserId}`)
+      revalidatePath(`/user/${targetUserId}`)
+
+      return {
+        message: "Successfully followed user",
+        success: true,
+      }
+    } catch (error) {
+      // Rollback if current user was updated but target user update failed
+      if (currentUserUpdated) {
+        try {
+          await fetch(getUserApiUrl(currentUserId), {
+            method: "PUT",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              ...currentUser,
+              following: currentUser.following || [],
+            }),
+          })
+        } catch (rollbackError) {
+          console.error(
+            "Failed to rollback current user update:",
+            rollbackError
+          )
+        }
+      }
+      throw error
+    }
+  } catch (error) {
+    console.error("Error following user:", error)
+    return {
+      message:
+        isAPIError(error) ||
+        error instanceof AuthenticationError ||
+        error instanceof NotFoundError
+          ? error.message
+          : "Failed to follow user",
+      success: false,
+    }
+  }
+}
+
+/**
+ * Unfollow a user - performs dual entity updates with error rollback
+ */
+export async function unfollowUser(
+  currentUserId: string,
+  targetUserId: string
+): Promise<UserActionState> {
+  try {
+    // Authentication check
+    const authUser = await checkAuth()
+    if (!authUser) {
+      throw new AuthenticationError("You must be logged in to unfollow users")
+    }
+
+    if (authUser.id !== currentUserId) {
+      throw new AuthenticationError(
+        "You can only perform unfollow actions for your own account"
+      )
+    }
+
+    // Validation checks
+    if (currentUserId === targetUserId) {
+      return {
+        message: "You cannot unfollow yourself",
+        success: false,
+      }
+    }
+
+    // Get both users to ensure they exist
+    const [currentUser, targetUser] = await Promise.all([
+      getUser(currentUserId),
+      getUser(targetUserId),
+    ])
+
+    if (!currentUser) {
+      throw new NotFoundError("Current user", currentUserId)
+    }
+
+    if (!targetUser) {
+      throw new NotFoundError("Target user", targetUserId)
+    }
+
+    // Check if currently following
+    if (!currentUser.following?.includes(targetUserId)) {
+      return {
+        message: "You are not following this user",
+        success: false,
+      }
+    }
+
+    // Prepare update data
+    const updatedCurrentUserFollowing = (currentUser.following || []).filter(
+      (id) => id !== targetUserId
+    )
+    const updatedTargetUserFollowers = (targetUser.followers || []).filter(
+      (id) => id !== currentUserId
+    )
+
+    // Perform dual updates with error handling
+    let currentUserUpdated = false
+
+    try {
+      // Update current user's following list
+      const currentUserResponse = await fetch(getUserApiUrl(currentUserId), {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          ...currentUser,
+          following: updatedCurrentUserFollowing,
+        }),
+      })
+
+      if (!currentUserResponse.ok) {
+        throw new APIError(
+          `Failed to update current user following: ${currentUserResponse.statusText}`,
+          currentUserResponse.status,
+          getUserApiUrl(currentUserId)
+        )
+      }
+
+      currentUserUpdated = true
+
+      // Update target user's followers list
+      const targetUserResponse = await fetch(getUserApiUrl(targetUserId), {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          ...targetUser,
+          followers: updatedTargetUserFollowers,
+        }),
+      })
+
+      if (!targetUserResponse.ok) {
+        throw new APIError(
+          `Failed to update target user followers: ${targetUserResponse.statusText}`,
+          targetUserResponse.status,
+          getUserApiUrl(targetUserId)
+        )
+      }
+
+      // Revalidate relevant paths
+      revalidatePath("/user")
+      revalidatePath(`/user/${currentUserId}`)
+      revalidatePath(`/user/${targetUserId}`)
+
+      return {
+        message: "Successfully unfollowed user",
+        success: true,
+      }
+    } catch (error) {
+      // Rollback if current user was updated but target user update failed
+      if (currentUserUpdated) {
+        try {
+          await fetch(getUserApiUrl(currentUserId), {
+            method: "PUT",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              ...currentUser,
+              following: currentUser.following || [],
+            }),
+          })
+        } catch (rollbackError) {
+          console.error(
+            "Failed to rollback current user update:",
+            rollbackError
+          )
+        }
+      }
+      throw error
+    }
+  } catch (error) {
+    console.error("Error unfollowing user:", error)
+    return {
+      message:
+        isAPIError(error) ||
+        error instanceof AuthenticationError ||
+        error instanceof NotFoundError
+          ? error.message
+          : "Failed to unfollow user",
+      success: false,
+    }
+  }
+}
