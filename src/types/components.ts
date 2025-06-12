@@ -90,6 +90,11 @@ export interface FollowersListProps {
   className?: string
 }
 
+export interface FollowingListProps {
+  followingUsers: User[]
+  className?: string
+}
+
 /**
  * Post-related component props
  */
