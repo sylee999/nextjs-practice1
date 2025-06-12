@@ -31,6 +31,24 @@ alwaysApply: true
 - Create one branch per issue
 - Use GitHub MCP to link branches with issues automatically
 
+## Implementation Preparation Workflow
+When preparing to implement a feature or fix based on an issue number, follow this workflow:
+
+1. **Create and Switch to Branch**
+   - Create a new branch following the naming convention: `feature/{issue-number}-{short-title}` or `bugfix/{issue-number}-{short-title}`
+   - Switch to the newly created branch
+   - Use GitHub MCP to ensure proper syncing with GitHub
+
+2. **Add Implementation Plan**
+   - Analyze the issue requirements and create a detailed implementation plan
+   - Add the implementation plan as a comment to the GitHub issue
+   - Include:
+     - Technical approach and architecture decisions
+     - File changes required
+     - Key implementation steps
+     - Testing strategy
+     - Any dependencies or considerations
+
 ## Commit Messages
 - Format: `<type>: <subject>`
 - Types: `feat`, `fix`, `docs`, `chore`

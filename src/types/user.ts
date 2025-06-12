@@ -6,6 +6,8 @@ export interface User {
   email: string
   password?: string // Optional as it's sensitive and not always needed on client
   bookmarkedPosts?: string[] // Optional, array of post IDs bookmarked by this user
+  followers?: string[] // Optional, array of user IDs who follow this user
+  following?: string[] // Optional, array of user IDs this user is following
 }
 
 export interface CreateUserData {
@@ -13,6 +15,8 @@ export interface CreateUserData {
   email: string
   password: string
   avatar?: string
+  followers?: string[]
+  following?: string[]
 }
 
 export interface UpdateUserData {
@@ -20,4 +24,6 @@ export interface UpdateUserData {
   email?: string
   password?: string
   avatar?: string
+  followers?: string[]
+  following?: string[]
 }

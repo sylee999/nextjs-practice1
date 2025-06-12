@@ -40,10 +40,12 @@ export async function getUsers(): Promise<User[]> {
 
     const users = await response.json()
 
-    // Ensure bookmarkedPosts is always an array
+    // Ensure bookmarkedPosts, followers, and following are always arrays
     return users.map((user: User) => ({
       ...user,
       bookmarkedPosts: user.bookmarkedPosts || [],
+      followers: user.followers || [],
+      following: user.following || [],
     }))
   } catch (error) {
     console.error("Error fetching users:", error)
@@ -76,6 +78,8 @@ export async function getUser(id: string): Promise<User | null> {
     return {
       ...user,
       bookmarkedPosts: user.bookmarkedPosts || [],
+      followers: user.followers || [],
+      following: user.following || [],
     }
   } catch (error) {
     console.error("Error fetching user:", error)
@@ -106,6 +110,8 @@ export async function createUserAction(
       email,
       password,
       avatar: avatar || "",
+      followers: [],
+      following: [],
     }
 
     const response = await fetch(getUserApiUrl(), {

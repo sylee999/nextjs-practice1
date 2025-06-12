@@ -66,6 +66,8 @@ describe("createUser", () => {
       email: "test@example.com",
       name: "Test User",
       password: "password",
+      followers: [],
+      following: [],
     })
   })
 
