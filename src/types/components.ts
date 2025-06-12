@@ -54,6 +54,7 @@ export interface UserComponentProps {
 
 export interface UserListProps {
   users: User[]
+  currentUserId?: string | null | undefined
 }
 
 export interface UserFormData {
@@ -68,6 +69,26 @@ export interface UserFormData {
 export interface UserFormProps
   extends FormModeProps<UserFormData>,
     React.ComponentProps<"form"> {}
+
+/**
+ * Follow functionality component props
+ */
+export interface FollowButtonProps {
+  currentUserId: string | null | undefined
+  targetUserId: string
+  isFollowing: boolean
+  onToggle?: () => void
+  size?: "sm" | "default" | "lg" | "icon"
+  variant?: "default" | "outline" | "ghost"
+  className?: string
+}
+
+export interface FollowersListProps {
+  followers: User[]
+  maxDisplay?: number
+  size?: "sm" | "md" | "lg" | "xl"
+  className?: string
+}
 
 /**
  * Post-related component props
