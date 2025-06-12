@@ -90,38 +90,54 @@ export const UserList = memo(function UserList({
   }, [users, currentUserId])
 
   const handleFollowToggle = (targetUserId: string) => {
+    if (!currentUserId) return
+
+    const isCurrentlyFollowing = followStates[targetUserId] || false
+
     // Optimistically update follow state
     setFollowStates((prev) => ({
       ...prev,
       [targetUserId]: !prev[targetUserId],
     }))
 
-    // Reload followers data to reflect changes after a short delay
-    setTimeout(() => {
-      const loadUpdatedData = async () => {
-        try {
-          const allUsers = await getUsers()
-          const followersMap = users.reduce(
-            (acc, user) => {
-              if (user.followers && user.followers.length > 0) {
-                const userFollowers = allUsers.filter((u) =>
-                  user.followers!.includes(u.id)
-                )
-                acc[user.id] = userFollowers
-              } else {
-                acc[user.id] = []
-              }
-              return acc
-            },
-            {} as Record<string, User[]>
+    // Optimistically update followers data
+    setFollowersData((prev) => {
+      const updatedData = { ...prev }
+
+      // Update the target user's followers list
+      if (updatedData[targetUserId]) {
+        if (isCurrentlyFollowing) {
+          // Remove current user from target user's followers
+          updatedData[targetUserId] = updatedData[targetUserId].filter(
+            (user) => user.id !== currentUserId
           )
-          setFollowersData(followersMap)
-        } catch (error) {
-          console.error("Error updating followers data:", error)
+        } else {
+          // Add current user to target user's followers
+          // Find current user data from the users prop
+          const currentUser = users.find((u) => u.id === currentUserId)
+          if (
+            currentUser &&
+            !updatedData[targetUserId].some((u) => u.id === currentUserId)
+          ) {
+            updatedData[targetUserId] = [
+              ...updatedData[targetUserId],
+              currentUser,
+            ]
+          }
+        }
+      } else if (!isCurrentlyFollowing) {
+        // If no followers data exists, create it with current user
+        const currentUser = users.find((u) => u.id === currentUserId)
+        if (currentUser) {
+          updatedData[targetUserId] = [currentUser]
         }
       }
-      loadUpdatedData()
-    }, 100)
+
+      return updatedData
+    })
+
+    // No need to reload data - the server actions handle data persistence
+    // and we're handling UI updates optimistically above
   }
 
   if (!users || users.length === 0) {

@@ -487,10 +487,10 @@ export async function followUser(
         )
       }
 
-      // Revalidate relevant paths
-      revalidatePath("/user")
-      revalidatePath(`/user/${currentUserId}`)
-      revalidatePath(`/user/${targetUserId}`)
+      // Revalidate relevant paths - only revalidate individual profile pages, not lists
+      // Commenting out to prevent page reloads in user list view
+      // revalidatePath(`/user/${currentUserId}`)
+      // revalidatePath(`/user/${targetUserId}`)
 
       return {
         message: "Successfully followed user",
@@ -637,10 +637,10 @@ export async function unfollowUser(
         )
       }
 
-      // Revalidate relevant paths
-      revalidatePath("/user")
-      revalidatePath(`/user/${currentUserId}`)
-      revalidatePath(`/user/${targetUserId}`)
+      // Revalidate relevant paths - only revalidate individual profile pages, not lists
+      // Commenting out to prevent page reloads in user list view
+      // revalidatePath(`/user/${currentUserId}`)
+      // revalidatePath(`/user/${targetUserId}`)
 
       return {
         message: "Successfully unfollowed user",
