@@ -653,6 +653,14 @@ describe("Follow Helper Functions", () => {
 
   describe("isFollowing", () => {
     test("returns true when user is following target", async () => {
+      const { checkAuth } = await import("../auth/actions")
+      const mockAuthUser = {
+        id: "1",
+        name: "Current User",
+        email: "user@example.com",
+      }
+      ;(checkAuth as Mock).mockResolvedValueOnce(mockAuthUser)
+
       const mockUser = {
         id: "1",
         name: "Current User",
@@ -671,6 +679,14 @@ describe("Follow Helper Functions", () => {
     })
 
     test("returns false when user is not following target", async () => {
+      const { checkAuth } = await import("../auth/actions")
+      const mockAuthUser = {
+        id: "1",
+        name: "Current User",
+        email: "user@example.com",
+      }
+      ;(checkAuth as Mock).mockResolvedValueOnce(mockAuthUser)
+
       const mockUser = {
         id: "1",
         name: "Current User",
@@ -689,6 +705,14 @@ describe("Follow Helper Functions", () => {
     })
 
     test("returns false when user not found", async () => {
+      const { checkAuth } = await import("../auth/actions")
+      const mockAuthUser = {
+        id: "1",
+        name: "Current User",
+        email: "user@example.com",
+      }
+      ;(checkAuth as Mock).mockResolvedValueOnce(mockAuthUser)
+
       global.fetch = vi.fn().mockResolvedValueOnce({
         ok: false,
         status: 404,
@@ -699,7 +723,36 @@ describe("Follow Helper Functions", () => {
     })
 
     test("returns false on error", async () => {
+      const { checkAuth } = await import("../auth/actions")
+      const mockAuthUser = {
+        id: "1",
+        name: "Current User",
+        email: "user@example.com",
+      }
+      ;(checkAuth as Mock).mockResolvedValueOnce(mockAuthUser)
+
       global.fetch = vi.fn().mockRejectedValueOnce(new Error("API Error"))
+
+      const result = await isFollowing("1", "2")
+      expect(result).toBe(false)
+    })
+
+    test("returns false when user is not authenticated", async () => {
+      const { checkAuth } = await import("../auth/actions")
+      ;(checkAuth as Mock).mockResolvedValueOnce(null)
+
+      const result = await isFollowing("1", "2")
+      expect(result).toBe(false)
+    })
+
+    test("returns false when user tries to check different user's follow status", async () => {
+      const { checkAuth } = await import("../auth/actions")
+      const mockAuthUser = {
+        id: "3",
+        name: "Different User",
+        email: "different@example.com",
+      }
+      ;(checkAuth as Mock).mockResolvedValueOnce(mockAuthUser)
 
       const result = await isFollowing("1", "2")
       expect(result).toBe(false)

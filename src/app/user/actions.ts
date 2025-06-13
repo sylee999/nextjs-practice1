@@ -329,12 +329,33 @@ export async function deleteUserAction(
 
 /**
  * Helper function to check if current user is following target user
+ * Requires authentication to prevent unauthorized access
  */
 export async function isFollowing(
   currentUserId: string,
   targetUserId: string
 ): Promise<boolean> {
   try {
+    // Authentication check - ensure user is logged in
+    const authUser = await checkAuth()
+    if (!authUser) {
+      return false // Return false instead of throwing error for helper function
+    }
+
+    // Authorization check - user can only check their own follow status
+    if (authUser.id !== currentUserId) {
+      return false // Return false for unauthorized access
+    }
+
+    // Input validation
+    if (!currentUserId || !targetUserId) {
+      return false
+    }
+
+    if (currentUserId === targetUserId) {
+      return false // Cannot follow yourself
+    }
+
     const currentUser = await getUser(currentUserId)
     if (!currentUser) {
       return false
@@ -349,9 +370,15 @@ export async function isFollowing(
 
 /**
  * Helper function to get followers count for a user
+ * Public function - no authentication required for reading follower counts
  */
 export async function getFollowersCount(userId: string): Promise<number> {
   try {
+    // Input validation
+    if (!userId) {
+      return 0
+    }
+
     const user = await getUser(userId)
     if (!user) {
       return 0
@@ -366,9 +393,15 @@ export async function getFollowersCount(userId: string): Promise<number> {
 
 /**
  * Helper function to get following count for a user
+ * Public function - no authentication required for reading following counts
  */
 export async function getFollowingCount(userId: string): Promise<number> {
   try {
+    // Input validation
+    if (!userId) {
+      return 0
+    }
+
     const user = await getUser(userId)
     if (!user) {
       return 0
@@ -383,25 +416,22 @@ export async function getFollowingCount(userId: string): Promise<number> {
 
 /**
  * Follow a user - performs dual entity updates with error rollback
+ * Implements comprehensive authentication, authorization, and input validation
  */
 export async function followUser(
   currentUserId: string,
   targetUserId: string
 ): Promise<UserActionState> {
   try {
-    // Authentication check
-    const authUser = await checkAuth()
-    if (!authUser) {
-      throw new AuthenticationError("You must be logged in to follow users")
+    // Input validation - check for required parameters
+    if (!currentUserId || !targetUserId) {
+      return {
+        message: "User IDs are required",
+        success: false,
+      }
     }
 
-    if (authUser.id !== currentUserId) {
-      throw new AuthenticationError(
-        "You can only perform follow actions for your own account"
-      )
-    }
-
-    // Validation checks
+    // Validation - prevent self-follow
     if (currentUserId === targetUserId) {
       return {
         message: "You cannot follow yourself",
@@ -409,7 +439,20 @@ export async function followUser(
       }
     }
 
-    // Get both users to ensure they exist
+    // Authentication check - same pattern as other actions
+    const authUser = await checkAuth()
+    if (!authUser) {
+      throw new AuthenticationError("You must be logged in to follow users")
+    }
+
+    // Authorization check - ensure user can only follow for their own account
+    if (authUser.id !== currentUserId) {
+      throw new AuthenticationError(
+        "You can only perform follow actions for your own account"
+      )
+    }
+
+    // Get both users to validate they exist
     const [currentUser, targetUser] = await Promise.all([
       getUser(currentUserId),
       getUser(targetUserId),
@@ -423,7 +466,7 @@ export async function followUser(
       throw new NotFoundError("Target user", targetUserId)
     }
 
-    // Check if already following
+    // Business logic validation - check if already following
     if (currentUser.following?.includes(targetUserId)) {
       return {
         message: "You are already following this user",
@@ -431,7 +474,7 @@ export async function followUser(
       }
     }
 
-    // Prepare update data
+    // Prepare update data with safe array handling
     const updatedCurrentUserFollowing = [
       ...(currentUser.following || []),
       targetUserId,
@@ -441,7 +484,7 @@ export async function followUser(
       currentUserId,
     ]
 
-    // Perform dual updates with error handling
+    // Perform dual updates with comprehensive error handling and rollback
     let currentUserUpdated = false
 
     try {
@@ -487,17 +530,13 @@ export async function followUser(
         )
       }
 
-      // Revalidate relevant paths - only revalidate individual profile pages, not lists
-      // Commenting out to prevent page reloads in user list view
-      // revalidatePath(`/user/${currentUserId}`)
-      // revalidatePath(`/user/${targetUserId}`)
-
+      // Success - no revalidation to prevent page reloads in list views
       return {
         message: "Successfully followed user",
         success: true,
       }
     } catch (error) {
-      // Rollback if current user was updated but target user update failed
+      // Rollback mechanism - if current user was updated but target user update failed
       if (currentUserUpdated) {
         try {
           await fetch(getUserApiUrl(currentUserId), {
@@ -535,25 +574,22 @@ export async function followUser(
 
 /**
  * Unfollow a user - performs dual entity updates with error rollback
+ * Implements comprehensive authentication, authorization, and input validation
  */
 export async function unfollowUser(
   currentUserId: string,
   targetUserId: string
 ): Promise<UserActionState> {
   try {
-    // Authentication check
-    const authUser = await checkAuth()
-    if (!authUser) {
-      throw new AuthenticationError("You must be logged in to unfollow users")
+    // Input validation - check for required parameters
+    if (!currentUserId || !targetUserId) {
+      return {
+        message: "User IDs are required",
+        success: false,
+      }
     }
 
-    if (authUser.id !== currentUserId) {
-      throw new AuthenticationError(
-        "You can only perform unfollow actions for your own account"
-      )
-    }
-
-    // Validation checks
+    // Validation - prevent self-unfollow
     if (currentUserId === targetUserId) {
       return {
         message: "You cannot unfollow yourself",
@@ -561,7 +597,20 @@ export async function unfollowUser(
       }
     }
 
-    // Get both users to ensure they exist
+    // Authentication check - same pattern as other actions
+    const authUser = await checkAuth()
+    if (!authUser) {
+      throw new AuthenticationError("You must be logged in to unfollow users")
+    }
+
+    // Authorization check - ensure user can only unfollow for their own account
+    if (authUser.id !== currentUserId) {
+      throw new AuthenticationError(
+        "You can only perform unfollow actions for your own account"
+      )
+    }
+
+    // Get both users to validate they exist
     const [currentUser, targetUser] = await Promise.all([
       getUser(currentUserId),
       getUser(targetUserId),
@@ -575,7 +624,7 @@ export async function unfollowUser(
       throw new NotFoundError("Target user", targetUserId)
     }
 
-    // Check if currently following
+    // Business logic validation - check if currently following
     if (!currentUser.following?.includes(targetUserId)) {
       return {
         message: "You are not following this user",
@@ -583,7 +632,7 @@ export async function unfollowUser(
       }
     }
 
-    // Prepare update data
+    // Prepare update data with safe array handling
     const updatedCurrentUserFollowing = (currentUser.following || []).filter(
       (id) => id !== targetUserId
     )
@@ -591,7 +640,7 @@ export async function unfollowUser(
       (id) => id !== currentUserId
     )
 
-    // Perform dual updates with error handling
+    // Perform dual updates with comprehensive error handling and rollback
     let currentUserUpdated = false
 
     try {
@@ -637,17 +686,13 @@ export async function unfollowUser(
         )
       }
 
-      // Revalidate relevant paths - only revalidate individual profile pages, not lists
-      // Commenting out to prevent page reloads in user list view
-      // revalidatePath(`/user/${currentUserId}`)
-      // revalidatePath(`/user/${targetUserId}`)
-
+      // Success - no revalidation to prevent page reloads in list views
       return {
         message: "Successfully unfollowed user",
         success: true,
       }
     } catch (error) {
-      // Rollback if current user was updated but target user update failed
+      // Rollback mechanism - if current user was updated but target user update failed
       if (currentUserUpdated) {
         try {
           await fetch(getUserApiUrl(currentUserId), {
