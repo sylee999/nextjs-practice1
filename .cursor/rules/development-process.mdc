@@ -91,4 +91,34 @@ When preparing to implement a feature or fix based on an issue number, follow th
 - All tests must pass before merging into `main`
 
 ## Implementation Workflow
-TBD (including Preparation)
+1. **Create and Switch to Branch**
+   - Create a new branch following the naming convention
+   - Switch to the newly created branch
+   - Use GitHub MCP to ensure proper syncing with GitHub
+
+2. **Add Implementation Plan**
+   - Analyze the issue requirements and create a detailed implementation plan
+   - Add the implementation plan as a comment to the GitHub issue
+   - Include:
+     - Technical approach and architecture decisions
+     - File changes required
+     - Key implementation steps
+     - Testing strategy
+     - Any dependencies or considerations
+
+3. **Implement Following the Plan**
+   - Follow the implementation plan step by step
+   - Test each component as you build it
+   - Show implementation progress and any deviations from the original plan
+
+4. **Commit and Document Progress**
+   - Make regular commits with proper commit message format
+   - Add progress updates as comments to the GitHub issue
+   - Include any challenges encountered and solutions implemented
+   - Document any deviations from the original plan with reasoning
+
+5. **Final Review and PR Creation**
+   - Ensure all tests pass
+   - Review code for quality and adherence to guidelines
+   - Create pull request following the PR template
+   - Link PR to the related issue
