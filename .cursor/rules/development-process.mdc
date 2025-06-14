@@ -15,6 +15,7 @@ alwaysApply: true
 
 ## Issue Management
 - Use labels: `feature` for new features, `bug` for bugs
+- Issue titles should be brief and descriptive without prefixes (use labels instead)
 - Follow this issue template:
 
   ```markdown
