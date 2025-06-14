@@ -1,31 +1,19 @@
 import Link from "next/link"
 
-import { getUsers } from "@/app/user/actions"
 import { FollowersList } from "@/components/user/followers-full-list"
 import { User } from "@/types/user"
 
 interface FollowersTabProps {
   user: User
   isOwnProfile?: boolean
+  followers: User[]
 }
 
-export async function FollowersTab({
+export function FollowersTab({
   user,
   isOwnProfile = false,
-}: FollowersTabProps): Promise<React.JSX.Element> {
-  // Get followers users data
-  let followers: User[] = []
-
-  if (user.followers && user.followers.length > 0) {
-    try {
-      const allUsers = await getUsers()
-      followers = allUsers.filter((u) => user.followers!.includes(u.id))
-    } catch (error) {
-      console.error("Error fetching followers:", error)
-      followers = []
-    }
-  }
-
+  followers,
+}: FollowersTabProps): React.JSX.Element {
   // Handle empty state with different messaging
   if (followers.length === 0) {
     return (

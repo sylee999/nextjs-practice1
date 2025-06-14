@@ -2,11 +2,15 @@ import Link from "next/link"
 import { ArrowLeft, Pencil } from "lucide-react"
 
 import { checkAuth } from "@/app/auth/actions"
-import { isFollowing } from "@/app/user/actions"
+import { getUserPosts } from "@/app/post/actions"
+import { getUserBookmarks } from "@/app/post/bookmark-actions"
+import { getUsers, isFollowing } from "@/app/user/actions"
 import { Button } from "@/components/ui/button"
 import UserDeleteDialog from "@/components/user/user-delete-dialog"
 import { UserProfileTabs } from "@/components/user/user-profile-tabs"
 import { UserProfileWithFollow } from "@/components/user/user-profile-with-follow"
+import { Post } from "@/types/post"
+import { User } from "@/types/user"
 
 import { getUser } from "../actions"
 
@@ -16,7 +20,11 @@ export default async function UserDetailPage({
   params: Promise<{ id: string }>
 }) {
   const { id } = await params
-  const [user, authUser] = await Promise.all([getUser(id), checkAuth()])
+  const [user, authUser, allUsers] = await Promise.all([
+    getUser(id),
+    checkAuth(),
+    getUsers(),
+  ])
 
   const isOwnProfile = authUser?.id === user?.id
 
@@ -26,11 +34,35 @@ export default async function UserDetailPage({
     userIsFollowing = await isFollowing(authUser.id, user.id)
   }
 
-  // Get bookmarked posts count for user profile display
-  let bookmarkCount = 0
-  if (user && authUser) {
-    bookmarkCount = user.bookmarkedPosts?.length || 0
+  // Fetch all data for tabs if user exists
+  let userPosts: Post[] = []
+  let bookmarkedPosts: Post[] = []
+  let followers: User[] = []
+  let followingUsers: User[] = []
+
+  if (user) {
+    try {
+      // Fetch posts and bookmarks
+      ;[userPosts, bookmarkedPosts] = await Promise.all([
+        getUserPosts(user.id),
+        getUserBookmarks(user.id),
+      ])
+
+      // Get followers and following users
+      if (user.followers && user.followers.length > 0) {
+        followers = allUsers.filter((u) => user.followers!.includes(u.id))
+      }
+      if (user.following && user.following.length > 0) {
+        followingUsers = allUsers.filter((u) => user.following!.includes(u.id))
+      }
+    } catch (error) {
+      console.error("Error fetching user data:", error)
+      // Keep default empty arrays
+    }
   }
+
+  // Get bookmarked posts count for user profile display
+  const bookmarkCount = bookmarkedPosts.length
 
   return (
     <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
@@ -63,6 +95,11 @@ export default async function UserDetailPage({
             user={user}
             currentUserId={authUser?.id}
             isOwnProfile={isOwnProfile}
+            userPosts={userPosts}
+            bookmarkedPosts={bookmarkedPosts}
+            bookmarkAuthors={allUsers}
+            followers={followers}
+            followingUsers={followingUsers}
           />
         </>
       ) : (
