@@ -1,6 +1,15 @@
 import { beforeEach, describe, expect, test, vi, type Mock } from "vitest"
 
-import { createUserAction, deleteUserAction, updateUserAction } from "./actions"
+import {
+  createUserAction,
+  deleteUserAction,
+  followUser,
+  getFollowersCount,
+  getFollowingCount,
+  isFollowing,
+  unfollowUser,
+  updateUserAction,
+} from "./actions"
 
 // Mock the auth actions
 vi.mock("../auth/actions", () => ({
@@ -66,6 +75,8 @@ describe("createUser", () => {
       email: "test@example.com",
       name: "Test User",
       password: "password",
+      followers: [],
+      following: [],
     })
   })
 
@@ -625,6 +636,554 @@ describe("deleteUserAction", () => {
 
     expect(result).toEqual({
       message: "Failed to delete user",
+      success: false,
+    })
+  })
+})
+
+// ==================================================
+// FOLLOW FUNCTIONALITY TESTS - Phase 2
+// ==================================================
+
+describe("Follow Helper Functions", () => {
+  beforeEach(() => {
+    vi.clearAllMocks()
+    global.fetch = vi.fn()
+  })
+
+  describe("isFollowing", () => {
+    test("returns true when user is following target", async () => {
+      const { checkAuth } = await import("../auth/actions")
+      const mockAuthUser = {
+        id: "1",
+        name: "Current User",
+        email: "user@example.com",
+      }
+      ;(checkAuth as Mock).mockResolvedValueOnce(mockAuthUser)
+
+      const mockUser = {
+        id: "1",
+        name: "Current User",
+        following: ["2", "3"],
+        followers: [],
+        bookmarkedPosts: [],
+      }
+
+      global.fetch = vi.fn().mockResolvedValueOnce({
+        ok: true,
+        json: () => Promise.resolve(mockUser),
+      })
+
+      const result = await isFollowing("1", "2")
+      expect(result).toBe(true)
+    })
+
+    test("returns false when user is not following target", async () => {
+      const { checkAuth } = await import("../auth/actions")
+      const mockAuthUser = {
+        id: "1",
+        name: "Current User",
+        email: "user@example.com",
+      }
+      ;(checkAuth as Mock).mockResolvedValueOnce(mockAuthUser)
+
+      const mockUser = {
+        id: "1",
+        name: "Current User",
+        following: ["3"],
+        followers: [],
+        bookmarkedPosts: [],
+      }
+
+      global.fetch = vi.fn().mockResolvedValueOnce({
+        ok: true,
+        json: () => Promise.resolve(mockUser),
+      })
+
+      const result = await isFollowing("1", "2")
+      expect(result).toBe(false)
+    })
+
+    test("returns false when user not found", async () => {
+      const { checkAuth } = await import("../auth/actions")
+      const mockAuthUser = {
+        id: "1",
+        name: "Current User",
+        email: "user@example.com",
+      }
+      ;(checkAuth as Mock).mockResolvedValueOnce(mockAuthUser)
+
+      global.fetch = vi.fn().mockResolvedValueOnce({
+        ok: false,
+        status: 404,
+      })
+
+      const result = await isFollowing("1", "2")
+      expect(result).toBe(false)
+    })
+
+    test("returns false on error", async () => {
+      const { checkAuth } = await import("../auth/actions")
+      const mockAuthUser = {
+        id: "1",
+        name: "Current User",
+        email: "user@example.com",
+      }
+      ;(checkAuth as Mock).mockResolvedValueOnce(mockAuthUser)
+
+      global.fetch = vi.fn().mockRejectedValueOnce(new Error("API Error"))
+
+      const result = await isFollowing("1", "2")
+      expect(result).toBe(false)
+    })
+
+    test("returns false when user is not authenticated", async () => {
+      const { checkAuth } = await import("../auth/actions")
+      ;(checkAuth as Mock).mockResolvedValueOnce(null)
+
+      const result = await isFollowing("1", "2")
+      expect(result).toBe(false)
+    })
+
+    test("returns false when user tries to check different user's follow status", async () => {
+      const { checkAuth } = await import("../auth/actions")
+      const mockAuthUser = {
+        id: "3",
+        name: "Different User",
+        email: "different@example.com",
+      }
+      ;(checkAuth as Mock).mockResolvedValueOnce(mockAuthUser)
+
+      const result = await isFollowing("1", "2")
+      expect(result).toBe(false)
+    })
+  })
+
+  describe("getFollowersCount", () => {
+    test("returns correct followers count", async () => {
+      const mockUser = {
+        id: "1",
+        name: "User",
+        following: [],
+        followers: ["2", "3", "4"],
+        bookmarkedPosts: [],
+      }
+
+      global.fetch = vi.fn().mockResolvedValueOnce({
+        ok: true,
+        json: () => Promise.resolve(mockUser),
+      })
+
+      const result = await getFollowersCount("1")
+      expect(result).toBe(3)
+    })
+
+    test("returns 0 when user not found", async () => {
+      global.fetch = vi.fn().mockResolvedValueOnce({
+        ok: false,
+        status: 404,
+      })
+
+      const result = await getFollowersCount("1")
+      expect(result).toBe(0)
+    })
+
+    test("returns 0 on error", async () => {
+      global.fetch = vi.fn().mockRejectedValueOnce(new Error("API Error"))
+
+      const result = await getFollowersCount("1")
+      expect(result).toBe(0)
+    })
+  })
+
+  describe("getFollowingCount", () => {
+    test("returns correct following count", async () => {
+      const mockUser = {
+        id: "1",
+        name: "User",
+        following: ["2", "3"],
+        followers: [],
+        bookmarkedPosts: [],
+      }
+
+      global.fetch = vi.fn().mockResolvedValueOnce({
+        ok: true,
+        json: () => Promise.resolve(mockUser),
+      })
+
+      const result = await getFollowingCount("1")
+      expect(result).toBe(2)
+    })
+
+    test("returns 0 when user not found", async () => {
+      global.fetch = vi.fn().mockResolvedValueOnce({
+        ok: false,
+        status: 404,
+      })
+
+      const result = await getFollowingCount("1")
+      expect(result).toBe(0)
+    })
+
+    test("returns 0 on error", async () => {
+      global.fetch = vi.fn().mockRejectedValueOnce(new Error("API Error"))
+
+      const result = await getFollowingCount("1")
+      expect(result).toBe(0)
+    })
+  })
+})
+
+describe("followUser", () => {
+  const mockCurrentUser = {
+    id: "1",
+    name: "Current User",
+    email: "current@example.com",
+    following: [],
+    followers: [],
+    bookmarkedPosts: [],
+  }
+
+  const mockTargetUser = {
+    id: "2",
+    name: "Target User",
+    email: "target@example.com",
+    following: [],
+    followers: [],
+    bookmarkedPosts: [],
+  }
+
+  beforeEach(() => {
+    vi.clearAllMocks()
+    global.fetch = vi.fn()
+  })
+
+  test("follows user successfully", async () => {
+    const { checkAuth } = await import("../auth/actions")
+    ;(checkAuth as Mock).mockResolvedValueOnce(mockCurrentUser)
+
+    // Mock getting both users, then updating both
+    global.fetch = vi
+      .fn()
+      // Get current user
+      .mockResolvedValueOnce({
+        ok: true,
+        json: () => Promise.resolve(mockCurrentUser),
+      })
+      // Get target user
+      .mockResolvedValueOnce({
+        ok: true,
+        json: () => Promise.resolve(mockTargetUser),
+      })
+      // Update current user
+      .mockResolvedValueOnce({
+        ok: true,
+        json: () => Promise.resolve({ ...mockCurrentUser, following: ["2"] }),
+      })
+      // Update target user
+      .mockResolvedValueOnce({
+        ok: true,
+        json: () => Promise.resolve({ ...mockTargetUser, followers: ["1"] }),
+      })
+
+    const result = await followUser("1", "2")
+
+    expect(result).toEqual({
+      message: "Successfully followed user",
+      success: true,
+    })
+
+    // Verify API calls
+    expect(fetch).toHaveBeenCalledTimes(4)
+
+    // Check update calls
+    const currentUserUpdateCall = (fetch as Mock).mock.calls[2]
+    const targetUserUpdateCall = (fetch as Mock).mock.calls[3]
+
+    expect(currentUserUpdateCall[0]).toBe(
+      "https://test-token.mockapi.io/api/v1/users/1"
+    )
+    expect(currentUserUpdateCall[1].method).toBe("PUT")
+
+    expect(targetUserUpdateCall[0]).toBe(
+      "https://test-token.mockapi.io/api/v1/users/2"
+    )
+    expect(targetUserUpdateCall[1].method).toBe("PUT")
+  })
+
+  test("handles already following user", async () => {
+    const { checkAuth } = await import("../auth/actions")
+    ;(checkAuth as Mock).mockResolvedValueOnce(mockCurrentUser)
+
+    const currentUserAlreadyFollowing = {
+      ...mockCurrentUser,
+      following: ["2"],
+    }
+
+    global.fetch = vi
+      .fn()
+      .mockResolvedValueOnce({
+        ok: true,
+        json: () => Promise.resolve(currentUserAlreadyFollowing),
+      })
+      .mockResolvedValueOnce({
+        ok: true,
+        json: () => Promise.resolve(mockTargetUser),
+      })
+
+    const result = await followUser("1", "2")
+
+    expect(result).toEqual({
+      message: "You are already following this user",
+      success: false,
+    })
+
+    // Should only call get functions, not update
+    expect(fetch).toHaveBeenCalledTimes(2)
+  })
+
+  test("handles trying to follow self", async () => {
+    const { checkAuth } = await import("../auth/actions")
+    ;(checkAuth as Mock).mockResolvedValueOnce(mockCurrentUser)
+
+    const result = await followUser("1", "1")
+
+    expect(result).toEqual({
+      message: "You cannot follow yourself",
+      success: false,
+    })
+
+    // Should not make any API calls
+    expect(fetch).not.toHaveBeenCalled()
+  })
+
+  test("handles unauthenticated user", async () => {
+    const { checkAuth } = await import("../auth/actions")
+    ;(checkAuth as Mock).mockResolvedValueOnce(null)
+
+    const result = await followUser("1", "2")
+
+    expect(result).toEqual({
+      message: "You must be logged in to follow users",
+      success: false,
+    })
+  })
+
+  test("handles unauthorized user", async () => {
+    const { checkAuth } = await import("../auth/actions")
+    const otherUser = {
+      id: "3",
+      name: "Other User",
+      email: "other@example.com",
+    }
+    ;(checkAuth as Mock).mockResolvedValueOnce(otherUser)
+
+    const result = await followUser("1", "2")
+
+    expect(result).toEqual({
+      message: "You can only perform follow actions for your own account",
+      success: false,
+    })
+  })
+
+  test("handles target user not found", async () => {
+    const { checkAuth } = await import("../auth/actions")
+    ;(checkAuth as Mock).mockResolvedValueOnce(mockCurrentUser)
+
+    global.fetch = vi
+      .fn()
+      .mockResolvedValueOnce({
+        ok: true,
+        json: () => Promise.resolve(mockCurrentUser),
+      })
+      .mockResolvedValueOnce({
+        ok: false,
+        status: 404,
+      })
+
+    const result = await followUser("1", "2")
+
+    expect(result).toEqual({
+      message: "Target user with id '2' not found",
+      success: false,
+    })
+  })
+
+  test("handles rollback when target user update fails", async () => {
+    const { checkAuth } = await import("../auth/actions")
+    ;(checkAuth as Mock).mockResolvedValueOnce(mockCurrentUser)
+
+    global.fetch = vi
+      .fn()
+      // Get current user
+      .mockResolvedValueOnce({
+        ok: true,
+        json: () => Promise.resolve(mockCurrentUser),
+      })
+      // Get target user
+      .mockResolvedValueOnce({
+        ok: true,
+        json: () => Promise.resolve(mockTargetUser),
+      })
+      // Update current user (success)
+      .mockResolvedValueOnce({
+        ok: true,
+        json: () => Promise.resolve({ ...mockCurrentUser, following: ["2"] }),
+      })
+      // Update target user (failure)
+      .mockResolvedValueOnce({
+        ok: false,
+        status: 500,
+        statusText: "Internal Server Error",
+      })
+      // Rollback current user
+      .mockResolvedValueOnce({
+        ok: true,
+        json: () => Promise.resolve(mockCurrentUser),
+      })
+
+    const result = await followUser("1", "2")
+
+    expect(result).toEqual({
+      message: "Failed to update target user followers: Internal Server Error",
+      success: false,
+    })
+
+    // Verify rollback was attempted
+    expect(fetch).toHaveBeenCalledTimes(5)
+  })
+})
+
+describe("unfollowUser", () => {
+  const mockCurrentUser = {
+    id: "1",
+    name: "Current User",
+    email: "current@example.com",
+    following: ["2"],
+    followers: [],
+    bookmarkedPosts: [],
+  }
+
+  const mockTargetUser = {
+    id: "2",
+    name: "Target User",
+    email: "target@example.com",
+    following: [],
+    followers: ["1"],
+    bookmarkedPosts: [],
+  }
+
+  beforeEach(() => {
+    vi.clearAllMocks()
+    global.fetch = vi.fn()
+  })
+
+  test("unfollows user successfully", async () => {
+    const { checkAuth } = await import("../auth/actions")
+    ;(checkAuth as Mock).mockResolvedValueOnce(mockCurrentUser)
+
+    global.fetch = vi
+      .fn()
+      // Get current user
+      .mockResolvedValueOnce({
+        ok: true,
+        json: () => Promise.resolve(mockCurrentUser),
+      })
+      // Get target user
+      .mockResolvedValueOnce({
+        ok: true,
+        json: () => Promise.resolve(mockTargetUser),
+      })
+      // Update current user
+      .mockResolvedValueOnce({
+        ok: true,
+        json: () => Promise.resolve({ ...mockCurrentUser, following: [] }),
+      })
+      // Update target user
+      .mockResolvedValueOnce({
+        ok: true,
+        json: () => Promise.resolve({ ...mockTargetUser, followers: [] }),
+      })
+
+    const result = await unfollowUser("1", "2")
+
+    expect(result).toEqual({
+      message: "Successfully unfollowed user",
+      success: true,
+    })
+
+    expect(fetch).toHaveBeenCalledTimes(4)
+  })
+
+  test("handles not following user", async () => {
+    const { checkAuth } = await import("../auth/actions")
+    ;(checkAuth as Mock).mockResolvedValueOnce(mockCurrentUser)
+
+    const currentUserNotFollowing = {
+      ...mockCurrentUser,
+      following: [],
+    }
+
+    global.fetch = vi
+      .fn()
+      .mockResolvedValueOnce({
+        ok: true,
+        json: () => Promise.resolve(currentUserNotFollowing),
+      })
+      .mockResolvedValueOnce({
+        ok: true,
+        json: () => Promise.resolve(mockTargetUser),
+      })
+
+    const result = await unfollowUser("1", "2")
+
+    expect(result).toEqual({
+      message: "You are not following this user",
+      success: false,
+    })
+
+    expect(fetch).toHaveBeenCalledTimes(2)
+  })
+
+  test("handles trying to unfollow self", async () => {
+    const { checkAuth } = await import("../auth/actions")
+    ;(checkAuth as Mock).mockResolvedValueOnce(mockCurrentUser)
+
+    const result = await unfollowUser("1", "1")
+
+    expect(result).toEqual({
+      message: "You cannot unfollow yourself",
+      success: false,
+    })
+
+    expect(fetch).not.toHaveBeenCalled()
+  })
+
+  test("handles unauthenticated user", async () => {
+    const { checkAuth } = await import("../auth/actions")
+    ;(checkAuth as Mock).mockResolvedValueOnce(null)
+
+    const result = await unfollowUser("1", "2")
+
+    expect(result).toEqual({
+      message: "You must be logged in to unfollow users",
+      success: false,
+    })
+  })
+
+  test("handles unauthorized user", async () => {
+    const { checkAuth } = await import("../auth/actions")
+    const otherUser = {
+      id: "3",
+      name: "Other User",
+      email: "other@example.com",
+    }
+    ;(checkAuth as Mock).mockResolvedValueOnce(otherUser)
+
+    const result = await unfollowUser("1", "2")
+
+    expect(result).toEqual({
+      message: "You can only perform unfollow actions for your own account",
       success: false,
     })
   })

@@ -3,11 +3,12 @@ import { ArrowLeft, Pencil } from "lucide-react"
 
 import { checkAuth } from "@/app/auth/actions"
 import { getUserBookmarks } from "@/app/post/bookmark-actions"
-import { getUsers } from "@/app/user/actions"
+import { getUsers, isFollowing } from "@/app/user/actions"
 import { Button } from "@/components/ui/button"
 import { BookmarkedPosts } from "@/components/user/bookmarked-posts"
+import { FollowingList } from "@/components/user/following-list"
 import UserDeleteDialog from "@/components/user/user-delete-dialog"
-import { UserDetail } from "@/components/user/user-detail"
+import { UserProfileWithFollow } from "@/components/user/user-profile-with-follow"
 
 import { getUser } from "../actions"
 
@@ -27,12 +28,32 @@ export default async function UserDetailPage({
   const bookmarkedPosts = user ? await getUserBookmarks(user.id) : []
   const isOwnProfile = authUser?.id === user?.id
 
+  // Get follow status and following users data
+  let userIsFollowing = false
+  let followingUsers: typeof users = []
+
+  if (user && authUser && !isOwnProfile) {
+    userIsFollowing = await isFollowing(authUser.id, user.id)
+  }
+
+  if (user && user.following && user.following.length > 0) {
+    followingUsers = users.filter((u) => user.following!.includes(u.id))
+  }
+
   return (
     <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-      <UserDetail user={user} bookmarkCount={bookmarkedPosts.length} />
+      {/* User Profile with Follow Functionality */}
+      <UserProfileWithFollow
+        user={user}
+        bookmarkCount={bookmarkedPosts.length}
+        currentUserId={authUser?.id}
+        initialIsFollowing={userIsFollowing}
+        showFollowButton={!!authUser && !isOwnProfile}
+      />
 
       {user ? (
         <>
+          {/* Profile Actions */}
           {authUser?.id === user.id && (
             <div className="mt-6 flex space-x-2">
               <Button variant="outline" className="flex items-center" asChild>
@@ -42,6 +63,24 @@ export default async function UserDetailPage({
                 </Link>
               </Button>
               <UserDeleteDialog user={user} />
+            </div>
+          )}
+
+          {/* Following Section */}
+          {followingUsers.length > 0 && (
+            <div className="mt-8">
+              <div className="mb-6">
+                <h2 className="text-xl font-semibold text-gray-900">
+                  {isOwnProfile
+                    ? "You're Following"
+                    : `${user.name} is Following`}
+                </h2>
+                <p className="mt-1 text-sm text-gray-600">
+                  {followingUsers.length} user
+                  {followingUsers.length !== 1 ? "s" : ""}
+                </p>
+              </div>
+              <FollowingList followingUsers={followingUsers} />
             </div>
           )}
 
@@ -64,6 +103,24 @@ export default async function UserDetailPage({
               isOwnProfile={isOwnProfile}
             />
           </div>
+
+          {/* Empty State for No Following */}
+          {followingUsers.length === 0 && isOwnProfile && (
+            <div className="mt-8">
+              <div className="rounded-lg border border-gray-200 bg-gray-50 p-8 text-center">
+                <h3 className="mb-2 text-lg font-medium text-gray-900">
+                  Start Following Users
+                </h3>
+                <p className="mb-4 text-gray-600">
+                  Discover and follow other users to see their activity and
+                  build connections.
+                </p>
+                <Button variant="outline" asChild>
+                  <Link href="/user">Browse Users</Link>
+                </Button>
+              </div>
+            </div>
+          )}
         </>
       ) : (
         <div className="mt-6 flex space-x-2">
