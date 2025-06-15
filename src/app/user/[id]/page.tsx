@@ -2,12 +2,10 @@ import Link from "next/link"
 import { ArrowLeft, Pencil } from "lucide-react"
 
 import { checkAuth } from "@/app/auth/actions"
-import { getUserBookmarks } from "@/app/post/bookmark-actions"
-import { getUsers, isFollowing } from "@/app/user/actions"
+import { isFollowing } from "@/app/user/actions"
 import { Button } from "@/components/ui/button"
-import { BookmarkedPosts } from "@/components/user/bookmarked-posts"
-import { FollowingList } from "@/components/user/following-list"
 import UserDeleteDialog from "@/components/user/user-delete-dialog"
+import { UserProfileTabs } from "@/components/user/user-profile-tabs"
 import { UserProfileWithFollow } from "@/components/user/user-profile-with-follow"
 
 import { getUser } from "../actions"
@@ -18,26 +16,20 @@ export default async function UserDetailPage({
   params: Promise<{ id: string }>
 }) {
   const { id } = await params
-  const [user, authUser, users] = await Promise.all([
-    getUser(id),
-    checkAuth(),
-    getUsers(),
-  ])
+  const [user, authUser] = await Promise.all([getUser(id), checkAuth()])
 
-  // Get user's bookmarked posts if user exists
-  const bookmarkedPosts = user ? await getUserBookmarks(user.id) : []
   const isOwnProfile = authUser?.id === user?.id
 
-  // Get follow status and following users data
+  // Get follow status only if not own profile
   let userIsFollowing = false
-  let followingUsers: typeof users = []
-
   if (user && authUser && !isOwnProfile) {
     userIsFollowing = await isFollowing(authUser.id, user.id)
   }
 
-  if (user && user.following && user.following.length > 0) {
-    followingUsers = users.filter((u) => user.following!.includes(u.id))
+  // Get bookmarked posts count for user profile display
+  let bookmarkCount = 0
+  if (user && authUser) {
+    bookmarkCount = user.bookmarkedPosts?.length || 0
   }
 
   return (
@@ -45,7 +37,7 @@ export default async function UserDetailPage({
       {/* User Profile with Follow Functionality */}
       <UserProfileWithFollow
         user={user}
-        bookmarkCount={bookmarkedPosts.length}
+        bookmarkCount={bookmarkCount}
         currentUserId={authUser?.id}
         initialIsFollowing={userIsFollowing}
         showFollowButton={!!authUser && !isOwnProfile}
@@ -66,61 +58,12 @@ export default async function UserDetailPage({
             </div>
           )}
 
-          {/* Following Section */}
-          {followingUsers.length > 0 && (
-            <div className="mt-8">
-              <div className="mb-6">
-                <h2 className="text-xl font-semibold text-gray-900">
-                  {isOwnProfile
-                    ? "You're Following"
-                    : `${user.name} is Following`}
-                </h2>
-                <p className="mt-1 text-sm text-gray-600">
-                  {followingUsers.length} user
-                  {followingUsers.length !== 1 ? "s" : ""}
-                </p>
-              </div>
-              <FollowingList followingUsers={followingUsers} />
-            </div>
-          )}
-
-          {/* Bookmarked Posts Section */}
-          <div className="mt-8">
-            <div className="mb-6">
-              <h2 className="text-xl font-semibold text-gray-900">
-                {isOwnProfile ? "Your Bookmarks" : `${user.name}'s Bookmarks`}
-              </h2>
-              <p className="mt-1 text-sm text-gray-600">
-                {isOwnProfile
-                  ? "Posts you've saved for later reading"
-                  : `Posts bookmarked by ${user.name}`}
-              </p>
-            </div>
-            <BookmarkedPosts
-              posts={bookmarkedPosts}
-              authors={users}
-              currentUserId={authUser?.id}
-              isOwnProfile={isOwnProfile}
-            />
-          </div>
-
-          {/* Empty State for No Following */}
-          {followingUsers.length === 0 && isOwnProfile && (
-            <div className="mt-8">
-              <div className="rounded-lg border border-gray-200 bg-gray-50 p-8 text-center">
-                <h3 className="mb-2 text-lg font-medium text-gray-900">
-                  Start Following Users
-                </h3>
-                <p className="mb-4 text-gray-600">
-                  Discover and follow other users to see their activity and
-                  build connections.
-                </p>
-                <Button variant="outline" asChild>
-                  <Link href="/user">Browse Users</Link>
-                </Button>
-              </div>
-            </div>
-          )}
+          {/* User Profile Tabs */}
+          <UserProfileTabs
+            user={user}
+            currentUserId={authUser?.id}
+            isOwnProfile={isOwnProfile}
+          />
         </>
       ) : (
         <div className="mt-6 flex space-x-2">

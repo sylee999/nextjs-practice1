@@ -81,6 +81,25 @@ export async function getPost(id: string): Promise<Post | null> {
   }
 }
 
+// TODO: use proper REST API
+export async function getUserPosts(userId: string): Promise<Post[]> {
+  try {
+    const allPosts = await getPosts()
+
+    // Filter posts by userId
+    const userPosts = allPosts.filter((post) => post.userId === userId)
+
+    // Sort by creation date (newest first)
+    return userPosts.sort(
+      (a, b) =>
+        new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+    )
+  } catch (error) {
+    console.error("Error fetching user posts:", error)
+    throw error
+  }
+}
+
 export async function createPostAction(
   prevState: PostActionState,
   formData: FormData
