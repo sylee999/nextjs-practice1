@@ -32,24 +32,6 @@ alwaysApply: true
 - Create one branch per issue
 - Use GitHub MCP to link branches with issues automatically
 
-## Implementation Preparation Workflow
-When preparing to implement a feature or fix based on an issue number, follow this workflow:
-
-1. **Create and Switch to Branch**
-   - Create a new branch following the naming convention: `feature/{issue-number}-{short-title}` or `bugfix/{issue-number}-{short-title}`
-   - Switch to the newly created branch
-   - Use GitHub MCP to ensure proper syncing with GitHub
-
-2. **Add Implementation Plan**
-   - Analyze the issue requirements and create a detailed implementation plan
-   - Add the implementation plan as a comment to the GitHub issue
-   - Include:
-     - Technical approach and architecture decisions
-     - File changes required
-     - Key implementation steps
-     - Testing strategy
-     - Any dependencies or considerations
-
 ## Commit Messages
 - Format: `<type>: <subject>`
 - Types: `feat`, `fix`, `docs`, `chore`
@@ -89,3 +71,39 @@ When preparing to implement a feature or fix based on an issue number, follow th
 - Create integration tests for REST API endpoints
 - Implement E2E tests for critical user flows
 - All tests must pass before merging into `main`
+
+## Implementation Workflow
+1. Preparation step
+  1. **Create and Switch to Branch**
+    - Create a new branch following the naming convention
+    - Switch to the newly created branch
+    - Use GitHub MCP to ensure proper syncing with GitHub
+
+  2. **Add Implementation Plan**
+    - Analyze the issue requirements and create a detailed implementation plan
+    - Add the implementation plan as a comment to the GitHub issue
+    - Include:
+      - Technical approach and architecture decisions
+      - File changes required
+      - Key implementation steps
+      - Testing strategy
+      - Any dependencies or considerations
+
+2. Implementation step
+  1. **Implement Following the Plan**
+    - Follow the implementation plan step by step
+    - Test each component as you build it
+    - Show implementation progress and any deviations from the original plan
+
+  2. **Commit and Document Progress**
+    - Make regular commits with proper commit message format
+    - Add progress updates as comments to the GitHub issue
+    - Include any challenges encountered and solutions implemented
+    - Document any deviations from the original plan with reasoning
+
+3. Finish step
+  1. **Final Review and PR Creation**
+    - Ensure all tests pass
+    - Review code for quality and adherence to guidelines
+    - Create pull request following the PR template
+    - Link PR to the related issue

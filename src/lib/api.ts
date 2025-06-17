@@ -20,7 +20,9 @@ export function getUserApiUrl(id?: string): string {
 export function getPostApiUrl(postId?: string, userId?: string): string {
   const baseUrl = getApiBaseUrl()
   return userId
-    ? `${baseUrl}/users/${userId}/posts/${postId}`
+    ? postId
+      ? `${baseUrl}/users/${userId}/posts/${postId}`
+      : `${baseUrl}/users/${userId}/posts`
     : postId
       ? `${baseUrl}/posts/${postId}`
       : `${baseUrl}/posts`

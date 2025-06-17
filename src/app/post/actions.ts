@@ -81,6 +81,40 @@ export async function getPost(id: string): Promise<Post | null> {
   }
 }
 
+export async function getUserPosts(userId: string): Promise<Post[]> {
+  try {
+    const response = await fetch(getPostApiUrl(undefined, userId), {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+      },
+    })
+
+    if (response.status === 404) {
+      return []
+    }
+
+    if (!response.ok) {
+      throw new APIError(
+        `Failed to fetch user posts: ${response.statusText}`,
+        response.status,
+        getPostApiUrl(undefined, userId)
+      )
+    }
+
+    const posts = await response.json()
+
+    // Ensure bookmarkedBy is always an array
+    return posts.map((post: Post) => ({
+      ...post,
+      bookmarkedBy: post.bookmarkedBy || [],
+    }))
+  } catch (error) {
+    console.error("Error fetching user posts:", error)
+    throw error
+  }
+}
+
 export async function createPostAction(
   prevState: PostActionState,
   formData: FormData
