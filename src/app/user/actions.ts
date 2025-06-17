@@ -97,6 +97,30 @@ export async function getUsersByIds(ids: string[]): Promise<User[]> {
   }
 }
 
+export async function getUsersByFollower(userId: string): Promise<User[]> {
+  try {
+    const response = await fetch(getUserApiUrl() + `?followers=${userId}`, {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+      },
+    })
+
+    if (!response.ok) {
+      throw new APIError(
+        `Failed to fetch users by follower: ${response.statusText}`,
+        response.status,
+        getUserApiUrl() + `?followers=${userId}`
+      )
+    }
+    const users = await response.json()
+    return users.filter((user: User) => user !== null) as User[]
+  } catch (error) {
+    console.error("Error fetching users by follower:", error)
+    throw error
+  }
+}
+
 export async function createUserAction(
   prevState: UserActionState | void,
   formData: FormData
