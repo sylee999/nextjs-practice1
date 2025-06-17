@@ -1,6 +1,6 @@
 import Link from "next/link"
 
-import { getUsers } from "@/app/user/actions"
+import { getUsersByIds } from "@/app/user/actions"
 import { FollowingList } from "@/components/user/following-list"
 import { User } from "@/types/user"
 
@@ -13,13 +13,11 @@ export async function FollowingTab({
   user,
   isOwnProfile = false,
 }: FollowingTabProps): Promise<React.JSX.Element> {
-  // Get following users data
   let followingUsers: User[] = []
 
   if (user.following && user.following.length > 0) {
     try {
-      const allUsers = await getUsers()
-      followingUsers = allUsers.filter((u) => user.following!.includes(u.id))
+      followingUsers = await getUsersByIds(user.following)
     } catch (error) {
       console.error("Error fetching following users:", error)
       followingUsers = []

@@ -1,6 +1,6 @@
 import Link from "next/link"
 
-import { getUsersByFollower } from "@/app/user/actions"
+import { getUsersByIds } from "@/app/user/actions"
 import { FollowersList } from "@/components/user/followers-full-list"
 import { User } from "@/types/user"
 
@@ -17,7 +17,7 @@ export async function FollowersTab({
 
   if (user.followers && user.followers.length > 0) {
     try {
-      followers = await getUsersByFollower(user.id)
+      followers = await getUsersByIds(user.followers)
     } catch (error) {
       console.error("Error fetching followers:", error)
       followers = []
