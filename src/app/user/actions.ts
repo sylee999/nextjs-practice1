@@ -87,6 +87,16 @@ export async function getUser(id: string): Promise<User | null> {
   }
 }
 
+export async function getUsersByIds(ids: string[]): Promise<User[]> {
+  try {
+    const users = await Promise.all(ids.map((id) => getUser(id)))
+    return users.filter((user) => user !== null) as User[]
+  } catch (error) {
+    console.error("Error fetching users by IDs:", error)
+    throw error
+  }
+}
+
 export async function createUserAction(
   prevState: UserActionState | void,
   formData: FormData

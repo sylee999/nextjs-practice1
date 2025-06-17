@@ -1,5 +1,5 @@
 import { getUserBookmarks } from "@/app/post/bookmark-actions"
-import { getUsers } from "@/app/user/actions"
+import { getUsersByIds } from "@/app/user/actions"
 import { BookmarkedPosts } from "@/components/user/bookmarked-posts"
 import { Post } from "@/types/post"
 import { User } from "@/types/user"
@@ -19,10 +19,8 @@ export async function BookmarksTab({
   let bookmarkedPosts: Post[]
   let authors: User[]
   try {
-    ;[bookmarkedPosts, authors] = await Promise.all([
-      getUserBookmarks(user.id),
-      getUsers(),
-    ])
+    bookmarkedPosts = await getUserBookmarks(user.id)
+    authors = await getUsersByIds(bookmarkedPosts.map((post) => post.userId))
   } catch (error) {
     console.error("Error fetching bookmarked posts:", error)
     bookmarkedPosts = []
