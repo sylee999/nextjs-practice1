@@ -115,7 +115,7 @@ describe("UserForm", () => {
       expect(screen.getByText("Create your account")).toBeInTheDocument()
       expect(
         screen.getByText(
-          "Enter your name, email and password below to create your account"
+          "Enter your details below to create your account and set up your profile"
         )
       ).toBeInTheDocument()
 
@@ -270,9 +270,7 @@ describe("UserForm", () => {
 
       expect(screen.getByText("Update your profile")).toBeInTheDocument()
       expect(
-        screen.getByText(
-          "Update your name and password below to modify your profile"
-        )
+        screen.getByText("Update your information below to modify your profile")
       ).toBeInTheDocument()
 
       expect(screen.getByLabelText("Name")).toBeInTheDocument()
