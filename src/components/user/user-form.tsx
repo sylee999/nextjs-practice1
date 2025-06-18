@@ -9,6 +9,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
+import { Textarea } from "@/components/ui/textarea"
 import {
   useFormCancelNavigation,
   useFormNavigation,
@@ -51,6 +52,7 @@ function SubmitButton({
 
 /**
  * UserForm component for creating and editing user profiles
+ * Enhanced with bio field support for richer user profiles
  * Supports both create and edit modes with proper validation and state management
  *
  * @param mode - Form operation mode ('create' or 'edit')
@@ -68,6 +70,7 @@ export function UserForm({
     name: initialData.name,
     email: initialData.email,
     password: initialData.password || "",
+    bio: initialData.bio || "",
   }
 
   // Use custom hooks for form state and navigation
@@ -95,11 +98,11 @@ export function UserForm({
     create: {
       title: "Create your account",
       description:
-        "Enter your name, email and password below to create your account",
+        "Enter your details below to create your account and set up your profile",
     },
     edit: {
       title: "Update your profile",
-      description: "Update your name and password below to modify your profile",
+      description: "Update your information below to modify your profile",
     },
   }
 
@@ -142,20 +145,6 @@ export function UserForm({
         </div>
 
         <div className="grid gap-3">
-          <Label htmlFor="name">Name</Label>
-          <Input
-            id="name"
-            name="name"
-            type="text"
-            placeholder="Your name"
-            required
-            disabled={pending}
-            value={formData.name}
-            onChange={(e) => updateField("name", e.target.value)}
-          />
-        </div>
-
-        <div className="grid gap-3">
           <Label htmlFor="email">Email</Label>
           <Input
             id="email"
@@ -175,7 +164,6 @@ export function UserForm({
           />
         </div>
 
-        {/* Password field for both create and edit modes */}
         <div className="grid gap-3">
           <div className="flex items-center">
             <Label htmlFor="password">
@@ -198,6 +186,44 @@ export function UserForm({
             value={formData.password}
             onChange={(e) => updateField("password", e.target.value)}
           />
+        </div>
+
+        <div className="grid gap-3">
+          <Label htmlFor="name">Name</Label>
+          <Input
+            id="name"
+            name="name"
+            type="text"
+            placeholder="Your name"
+            required
+            disabled={pending}
+            value={formData.name}
+            onChange={(e) => updateField("name", e.target.value)}
+          />
+        </div>
+
+        <div className="grid gap-3">
+          <Label htmlFor="bio">
+            Bio{" "}
+            <span className="text-muted-foreground text-sm">(optional)</span>
+          </Label>
+          <Textarea
+            id="bio"
+            name="bio"
+            placeholder="Tell us about yourself..."
+            rows={4}
+            maxLength={500}
+            disabled={pending}
+            value={formData.bio}
+            onChange={(e) => updateField("bio", e.target.value)}
+            className="resize-none"
+          />
+          <div className="text-muted-foreground flex justify-between text-xs">
+            <span>
+              Share a bit about yourself, your interests, or what you do
+            </span>
+            <span>{formData.bio?.length || 0}/500</span>
+          </div>
         </div>
 
         <div className="grid gap-3">
