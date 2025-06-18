@@ -57,7 +57,7 @@ This is a Next.js 15 application with TypeScript and Tailwind CSS, using mockapi
 
 ### User Entity
 
-- id, createdAt, name, avatar, email, password
+- id, createdAt, name, avatar, email, bio, password
 - followers, following, bookmarkedPosts arrays
 
 ### Post Entity
