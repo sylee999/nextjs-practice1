@@ -14,6 +14,7 @@ interface UserDetailProps extends UserComponentProps {
 
 /**
  * UserDetail component for displaying user information with follow functionality
+ * Enhanced with larger avatar display, bio section, and improved visual hierarchy
  * Optimized with React.memo for performance
  *
  * @param user - User object to display
@@ -33,7 +34,7 @@ export const UserDetail = memo(function UserDetail({
 }: UserDetailProps): React.JSX.Element {
   if (!user) {
     return (
-      <div className="rounded-lg border border-gray-200 bg-white p-6">
+      <div className="rounded-xl border border-gray-200 bg-white p-8 shadow-sm">
         <div className="text-center text-gray-500">User not found</div>
       </div>
     )
@@ -43,57 +44,91 @@ export const UserDetail = memo(function UserDetail({
   const followingCount = user.following?.length || 0
 
   return (
-    <div className="rounded-lg border border-gray-200 bg-white p-6">
-      <div className="flex items-start justify-between">
-        <div className="flex items-center gap-4">
-          <UserAvatar user={user} size="lg" />
-          <div className="flex flex-col">
-            <h1 className="text-xl font-semibold text-gray-900">{user.name}</h1>
-            <p className="text-gray-600">{user.email}</p>
-            <p className="text-sm text-gray-500">
-              Member since {new Date(user.createdAt).toLocaleDateString()}
-            </p>
+    <div className="rounded-xl border border-gray-200 bg-white shadow-sm">
+      {/* Header Section - Avatar and Basic Info */}
+      <div className="relative p-8 pb-6">
+        {/* Follow Button - Positioned absolutely in top right */}
+        {showFollowButton && (
+          <div className="absolute top-6 right-6">
+            <FollowButton
+              currentUserId={currentUserId}
+              targetUserId={user.id}
+              isFollowing={isFollowing}
+              onToggle={onFollowToggle}
+              size="default"
+              variant="outline"
+            />
+          </div>
+        )}
+
+        {/* Main Profile Content */}
+        <div className="flex flex-col items-center text-center sm:flex-row sm:items-start sm:text-left">
+          {/* Large Avatar */}
+          <div className="mb-6 sm:mr-8 sm:mb-0">
+            <UserAvatar
+              user={user}
+              size="2xl"
+              className="ring-4 ring-gray-50"
+            />
+          </div>
+
+          {/* User Information */}
+          <div className="flex-1 space-y-3">
+            <div>
+              <h1 className="text-2xl font-bold text-gray-900 sm:text-3xl">
+                {user.name}
+              </h1>
+              <p className="mt-1 text-lg text-gray-600">{user.email}</p>
+            </div>
+
+            {/* Bio Section */}
+            {user.bio && (
+              <div className="pt-2">
+                <p className="max-w-2xl leading-relaxed text-gray-700">
+                  {user.bio}
+                </p>
+              </div>
+            )}
+
+            {/* Member Since */}
+            <div className="pt-1">
+              <p className="text-sm text-gray-500">
+                Member since {new Date(user.createdAt).toLocaleDateString()}
+              </p>
+            </div>
           </div>
         </div>
-
-        {/* Follow Button */}
-        {showFollowButton && (
-          <FollowButton
-            currentUserId={currentUserId}
-            targetUserId={user.id}
-            isFollowing={isFollowing}
-            onToggle={onFollowToggle}
-            size="default"
-            variant="outline"
-          />
-        )}
       </div>
 
-      {/* User Stats */}
-      <div className="mt-6 flex items-center gap-8 border-t border-gray-100 pt-4">
-        <div className="text-center">
-          <div className="text-lg font-semibold text-gray-900">
-            {bookmarkCount}
+      {/* Stats Section */}
+      <div className="border-t border-gray-100 px-8 py-6">
+        <div className="grid grid-cols-3 gap-8 text-center">
+          <div className="space-y-1">
+            <div className="text-2xl font-bold text-gray-900">
+              {bookmarkCount}
+            </div>
+            <div className="text-sm font-medium tracking-wide text-gray-600 uppercase">
+              {bookmarkCount === 1 ? "Bookmark" : "Bookmarks"}
+            </div>
           </div>
-          <div className="text-sm text-gray-600">
-            {bookmarkCount === 1 ? "Bookmark" : "Bookmarks"}
-          </div>
-        </div>
 
-        <div className="text-center">
-          <div className="text-lg font-semibold text-gray-900">
-            {followersCount}
+          <div className="space-y-1">
+            <div className="text-2xl font-bold text-gray-900">
+              {followersCount}
+            </div>
+            <div className="text-sm font-medium tracking-wide text-gray-600 uppercase">
+              {followersCount === 1 ? "Follower" : "Followers"}
+            </div>
           </div>
-          <div className="text-sm text-gray-600">
-            {followersCount === 1 ? "Follower" : "Followers"}
-          </div>
-        </div>
 
-        <div className="text-center">
-          <div className="text-lg font-semibold text-gray-900">
-            {followingCount}
+          <div className="space-y-1">
+            <div className="text-2xl font-bold text-gray-900">
+              {followingCount}
+            </div>
+            <div className="text-sm font-medium tracking-wide text-gray-600 uppercase">
+              Following
+            </div>
           </div>
-          <div className="text-sm text-gray-600">Following</div>
         </div>
       </div>
     </div>
