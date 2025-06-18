@@ -107,6 +107,7 @@ export async function createUserAction(
     const email = formData.get("email")?.toString()
     const password = formData.get("password")?.toString()
     const avatar = formData.get("avatar")?.toString()
+    const bio = formData.get("bio")?.toString()
 
     if (!name || !email || !password) {
       return {
@@ -120,6 +121,7 @@ export async function createUserAction(
       email,
       password,
       avatar: avatar || "",
+      bio: bio || "",
       followers: [],
       following: [],
     }
@@ -183,6 +185,7 @@ export async function updateUserAction(
     const email = formData.get("email")?.toString()
     const password = formData.get("password")?.toString()
     const avatar = formData.get("avatar")?.toString()
+    const bio = formData.get("bio")?.toString()
 
     if (!id) {
       return { message: "User ID is required", success: false }
@@ -203,6 +206,7 @@ export async function updateUserAction(
     if (email) updateData.email = email
     if (password) updateData.password = password
     if (avatar !== undefined) updateData.avatar = avatar
+    if (bio !== undefined) updateData.bio = bio
 
     if (Object.keys(updateData).length === 0) {
       return { message: "No changes provided", success: false }
@@ -234,6 +238,7 @@ export async function updateUserAction(
       name: updatedUser.name,
       email: updatedUser.email,
       avatar: updatedUser.avatar,
+      bio: updatedUser.bio,
       // Only include password in session if it was actually updated
       ...(updateData.password && { password: updatedUser.password }),
     }
