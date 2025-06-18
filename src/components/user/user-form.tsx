@@ -145,20 +145,6 @@ export function UserForm({
         </div>
 
         <div className="grid gap-3">
-          <Label htmlFor="name">Name</Label>
-          <Input
-            id="name"
-            name="name"
-            type="text"
-            placeholder="Your name"
-            required
-            disabled={pending}
-            value={formData.name}
-            onChange={(e) => updateField("name", e.target.value)}
-          />
-        </div>
-
-        <div className="grid gap-3">
           <Label htmlFor="email">Email</Label>
           <Input
             id="email"
@@ -178,32 +164,6 @@ export function UserForm({
           />
         </div>
 
-        {/* Bio field */}
-        <div className="grid gap-3">
-          <Label htmlFor="bio">
-            Bio{" "}
-            <span className="text-muted-foreground text-sm">(optional)</span>
-          </Label>
-          <Textarea
-            id="bio"
-            name="bio"
-            placeholder="Tell us about yourself..."
-            rows={4}
-            maxLength={500}
-            disabled={pending}
-            value={formData.bio}
-            onChange={(e) => updateField("bio", e.target.value)}
-            className="resize-none"
-          />
-          <div className="text-muted-foreground flex justify-between text-xs">
-            <span>
-              Share a bit about yourself, your interests, or what you do
-            </span>
-            <span>{formData.bio?.length || 0}/500</span>
-          </div>
-        </div>
-
-        {/* Password field for both create and edit modes */}
         <div className="grid gap-3">
           <div className="flex items-center">
             <Label htmlFor="password">
@@ -226,6 +186,44 @@ export function UserForm({
             value={formData.password}
             onChange={(e) => updateField("password", e.target.value)}
           />
+        </div>
+
+        <div className="grid gap-3">
+          <Label htmlFor="name">Name</Label>
+          <Input
+            id="name"
+            name="name"
+            type="text"
+            placeholder="Your name"
+            required
+            disabled={pending}
+            value={formData.name}
+            onChange={(e) => updateField("name", e.target.value)}
+          />
+        </div>
+
+        <div className="grid gap-3">
+          <Label htmlFor="bio">
+            Bio{" "}
+            <span className="text-muted-foreground text-sm">(optional)</span>
+          </Label>
+          <Textarea
+            id="bio"
+            name="bio"
+            placeholder="Tell us about yourself..."
+            rows={4}
+            maxLength={500}
+            disabled={pending}
+            value={formData.bio}
+            onChange={(e) => updateField("bio", e.target.value)}
+            className="resize-none"
+          />
+          <div className="text-muted-foreground flex justify-between text-xs">
+            <span>
+              Share a bit about yourself, your interests, or what you do
+            </span>
+            <span>{formData.bio?.length || 0}/500</span>
+          </div>
         </div>
 
         <div className="grid gap-3">
