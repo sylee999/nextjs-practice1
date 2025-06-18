@@ -148,7 +148,7 @@ export interface ErrorProps {
  */
 export interface AvatarComponentProps {
   user: User | null
-  size?: "sm" | "md" | "lg" | "xl"
+  size?: "sm" | "md" | "lg" | "xl" | "2xl" | "3xl"
   className?: string
 }
 
