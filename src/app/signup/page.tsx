@@ -13,6 +13,7 @@ export default function SignUpPage() {
                 name: "",
                 email: "",
                 password: "",
+                bio: "",
               }}
             />
           </div>

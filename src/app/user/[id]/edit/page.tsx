@@ -38,6 +38,7 @@ export default async function UserEditPage({
           name: user.name,
           email: user.email,
           password: user.password || "",
+          bio: user.bio || "",
         }}
       />
     </div>
