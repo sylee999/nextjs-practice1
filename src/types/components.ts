@@ -64,6 +64,7 @@ export interface UserFormData {
   name: string
   email: string
   password?: string
+  bio?: string
 }
 
 export interface UserFormProps
