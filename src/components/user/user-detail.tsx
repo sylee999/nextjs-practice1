@@ -10,6 +10,7 @@ interface UserDetailProps extends UserComponentProps {
   isFollowing?: boolean
   onFollowToggle?: () => void
   showFollowButton?: boolean
+  variant?: "default" | "compact"
 }
 
 /**
@@ -24,6 +25,7 @@ interface UserDetailProps extends UserComponentProps {
  * @param isFollowing - Whether current user is following this user
  * @param onFollowToggle - Callback for follow toggle
  * @param showFollowButton - Whether to show the follow button
+ * @param variant - Display variant: "default" for full profile, "compact" for list view
  */
 export const UserDetail = memo(function UserDetail({
   user,
@@ -32,10 +34,13 @@ export const UserDetail = memo(function UserDetail({
   isFollowing = false,
   onFollowToggle,
   showFollowButton = false,
+  variant = "default",
 }: UserDetailProps): React.JSX.Element {
   if (!user) {
     return (
-      <div className="rounded-2xl border border-gray-200/80 bg-white/95 p-8 shadow-lg backdrop-blur-sm">
+      <div
+        className={`rounded-2xl border border-gray-200/80 bg-white/95 shadow-lg backdrop-blur-sm ${variant === "compact" ? "p-4" : "p-8"}`}
+      >
         <div className="text-center text-gray-500">User not found</div>
       </div>
     )
@@ -44,6 +49,52 @@ export const UserDetail = memo(function UserDetail({
   const followersCount = user.followers?.length || 0
   const followingCount = user.following?.length || 0
 
+  // Compact variant for user list
+  if (variant === "compact") {
+    return (
+      <div className="group rounded-lg border border-gray-200/80 bg-white/95 shadow-md backdrop-blur-sm transition-all duration-300 hover:shadow-lg hover:shadow-gray-200/50">
+        <div className="p-4">
+          <div className="flex items-center space-x-4">
+            {/* Compact Avatar */}
+            <div className="flex-shrink-0">
+              <UserAvatar
+                user={user}
+                size="lg"
+                className="shadow-md ring-2 ring-white/70 transition-all duration-300 group-hover:shadow-lg"
+              />
+            </div>
+
+            {/* User Information */}
+            <div className="min-w-0 flex-1">
+              <div className="space-y-1">
+                <h3 className="truncate text-lg font-bold tracking-tight text-gray-900">
+                  {user.name}
+                </h3>
+                <p className="truncate text-sm font-medium text-gray-600">
+                  {user.email}
+                </p>
+              </div>
+
+              {/* Compact Stats */}
+              <div className="mt-2 flex items-center space-x-4 text-xs text-gray-500">
+                <span className="font-medium">
+                  {followersCount}{" "}
+                  {followersCount === 1 ? "follower" : "followers"}
+                </span>
+                <span className="font-medium">{followingCount} following</span>
+                <span className="font-medium">
+                  {bookmarkCount}{" "}
+                  {bookmarkCount === 1 ? "bookmark" : "bookmarks"}
+                </span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    )
+  }
+
+  // Default variant for full profile display
   return (
     <div className="group rounded-2xl border border-gray-200/80 bg-white/95 shadow-lg backdrop-blur-sm transition-all duration-300 hover:shadow-xl hover:shadow-gray-200/50">
       {/* Header Section - Avatar and Basic Info */}
