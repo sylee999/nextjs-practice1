@@ -5,12 +5,18 @@ import {
   deletePostAction,
   getPost,
   getPosts,
+  getPostsFromFollowedUsers,
   updatePostAction,
 } from "./actions"
 
 // Mock the auth actions
 vi.mock("../auth/actions", () => ({
   checkAuth: vi.fn(),
+}))
+
+// Mock the user actions
+vi.mock("../user/actions", () => ({
+  getUser: vi.fn(),
 }))
 
 // Mock revalidatePath
@@ -382,6 +388,206 @@ describe("Post Actions", () => {
         message: "You can only delete your own posts",
         success: false,
       })
+    })
+  })
+
+  describe("getPostsFromFollowedUsers", () => {
+    test("returns empty posts for unauthenticated user", async () => {
+      const { checkAuth } = await import("../auth/actions")
+      ;(checkAuth as Mock).mockResolvedValueOnce(null)
+
+      const result = await getPostsFromFollowedUsers()
+
+      expect(result).toEqual({ posts: [], authors: {} })
+      expect(fetch).not.toHaveBeenCalled()
+    })
+
+    test("returns empty posts when user follows no one", async () => {
+      const mockUser = { id: "1", name: "Test User", email: "test@example.com" }
+      const mockCurrentUser = {
+        id: "1",
+        name: "Test User",
+        email: "test@example.com",
+        following: [],
+      }
+
+      const { checkAuth } = await import("../auth/actions")
+      ;(checkAuth as Mock).mockResolvedValueOnce(mockUser)
+
+      // Mock user API call
+      const { getUser } = await import("../user/actions")
+      ;(getUser as Mock).mockResolvedValueOnce(mockCurrentUser)
+
+      const result = await getPostsFromFollowedUsers()
+
+      expect(result).toEqual({ posts: [], authors: {} })
+    })
+
+    test("fetches and sorts posts from followed users", async () => {
+      const mockUser = { id: "1", name: "Test User", email: "test@example.com" }
+      const mockCurrentUser = {
+        id: "1",
+        name: "Test User",
+        email: "test@example.com",
+        following: ["2", "3"],
+      }
+
+      const mockUser2 = {
+        id: "2",
+        name: "User 2",
+        email: "user2@example.com",
+        avatar: "avatar2.jpg",
+      }
+
+      const mockUser3 = {
+        id: "3",
+        name: "User 3",
+        email: "user3@example.com",
+        avatar: "avatar3.jpg",
+      }
+
+      const mockPostsUser2 = [
+        {
+          id: "p1",
+          userId: "2",
+          title: "Post 1",
+          content: "Content 1",
+          createdAt: "2024-01-01T10:00:00Z",
+          updatedAt: "2024-01-01T10:00:00Z",
+          bookmarkedBy: [],
+        },
+      ]
+
+      const mockPostsUser3 = [
+        {
+          id: "p2",
+          userId: "3",
+          title: "Post 2",
+          content: "Content 2",
+          createdAt: "2024-01-02T10:00:00Z", // Newer post
+          updatedAt: "2024-01-02T10:00:00Z",
+          bookmarkedBy: [],
+        },
+      ]
+
+      const { checkAuth } = await import("../auth/actions")
+      ;(checkAuth as Mock).mockResolvedValueOnce(mockUser)
+
+      const { getUser } = await import("../user/actions")
+      ;(getUser as Mock)
+        .mockResolvedValueOnce(mockCurrentUser) // Get current user
+        .mockResolvedValueOnce(mockUser2) // Get user 2
+        .mockResolvedValueOnce(mockUser3) // Get user 3
+
+      // Mock fetch calls in order
+      global.fetch = vi
+        .fn()
+        // Get posts for user 2
+        .mockResolvedValueOnce({
+          ok: true,
+          json: () => Promise.resolve(mockPostsUser2),
+        })
+        // Get posts for user 3
+        .mockResolvedValueOnce({
+          ok: true,
+          json: () => Promise.resolve(mockPostsUser3),
+        })
+
+      const result = await getPostsFromFollowedUsers()
+
+      // Check posts are sorted by date (newest first)
+      expect(result.posts).toHaveLength(2)
+      expect(result.posts[0].id).toBe("p2") // Newer post
+      expect(result.posts[1].id).toBe("p1") // Older post
+
+      // Check authors map
+      expect(result.authors).toEqual({
+        "2": { id: "2", name: "User 2", avatar: "avatar2.jpg" },
+        "3": { id: "3", name: "User 3", avatar: "avatar3.jpg" },
+      })
+    })
+
+    test("handles partial API failures gracefully", async () => {
+      const mockUser = { id: "1", name: "Test User", email: "test@example.com" }
+      const mockCurrentUser = {
+        id: "1",
+        name: "Test User",
+        email: "test@example.com",
+        following: ["2", "3"],
+      }
+
+      const mockUser2 = {
+        id: "2",
+        name: "User 2",
+        email: "user2@example.com",
+        avatar: "avatar2.jpg",
+      }
+
+      const mockPostsUser2 = [
+        {
+          id: "p1",
+          userId: "2",
+          title: "Post 1",
+          content: "Content 1",
+          createdAt: "2024-01-01T10:00:00Z",
+          updatedAt: "2024-01-01T10:00:00Z",
+          bookmarkedBy: [],
+        },
+      ]
+
+      const { checkAuth } = await import("../auth/actions")
+      ;(checkAuth as Mock).mockResolvedValueOnce(mockUser)
+
+      const { getUser } = await import("../user/actions")
+      ;(getUser as Mock)
+        .mockResolvedValueOnce(mockCurrentUser) // Get current user
+        .mockResolvedValueOnce(mockUser2) // Get user 2
+        .mockRejectedValueOnce(new Error("User not found")) // Get user 3 fails
+
+      const consoleSpy = vi.spyOn(console, "error").mockImplementation(() => {})
+
+      // Mock fetch calls with one failure
+      global.fetch = vi
+        .fn()
+        // Get posts for user 2 - success
+        .mockResolvedValueOnce({
+          ok: true,
+          json: () => Promise.resolve(mockPostsUser2),
+        })
+        // Get posts for user 3 - failure
+        .mockRejectedValueOnce(new Error("Failed to fetch posts"))
+
+      const result = await getPostsFromFollowedUsers()
+
+      // Should still return successful results
+      expect(result.posts).toHaveLength(1)
+      expect(result.posts[0].id).toBe("p1")
+      expect(result.authors).toEqual({
+        "2": { id: "2", name: "User 2", avatar: "avatar2.jpg" },
+      })
+
+      // Check error logging
+      expect(consoleSpy).toHaveBeenCalled()
+      consoleSpy.mockRestore()
+    })
+
+    test("handles current user not found error", async () => {
+      const mockUser = { id: "1", name: "Test User", email: "test@example.com" }
+
+      const { checkAuth } = await import("../auth/actions")
+      ;(checkAuth as Mock).mockResolvedValueOnce(mockUser)
+
+      const { getUser } = await import("../user/actions")
+      ;(getUser as Mock).mockResolvedValueOnce(null)
+
+      const consoleSpy = vi.spyOn(console, "error").mockImplementation(() => {})
+
+      const result = await getPostsFromFollowedUsers()
+
+      // Should return empty results on error
+      expect(result).toEqual({ posts: [], authors: {} })
+      expect(consoleSpy).toHaveBeenCalled()
+      consoleSpy.mockRestore()
     })
   })
 })

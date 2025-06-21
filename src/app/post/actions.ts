@@ -4,7 +4,8 @@ import { revalidatePath } from "next/cache"
 import { redirect } from "next/navigation"
 
 import { checkAuth } from "@/app/auth/actions"
-import { getPostApiUrl } from "@/lib/api"
+import { getUser } from "@/app/user/actions"
+import { getPostApiUrl, getUserApiUrl } from "@/lib/api"
 import {
   APIError,
   AuthenticationError,
@@ -312,4 +313,101 @@ export async function deletePostAction(
 
   // Redirect to post list page after successful deletion
   redirect("/post")
+}
+
+/**
+ * Fetches posts from all users that the current user follows.
+ * Used for the personalized home feed.
+ * Returns posts sorted by creation date (newest first).
+ */
+export async function getPostsFromFollowedUsers(): Promise<{
+  posts: Post[]
+  authors: Record<string, { id: string; name: string; avatar: string }>
+}> {
+  try {
+    // Step 1: Check authentication
+    const authUser = await checkAuth()
+    if (!authUser) {
+      // Return empty posts for unauthenticated users
+      return { posts: [], authors: {} }
+    }
+
+    // Step 2: Get current user's following list
+    const currentUser = await getUser(authUser.id)
+    if (!currentUser) {
+      throw new APIError(
+        "Failed to fetch current user data",
+        404,
+        getUserApiUrl(authUser.id)
+      )
+    }
+
+    // Handle edge case: user follows no one
+    const followingList = currentUser.following || []
+    if (followingList.length === 0) {
+      return { posts: [], authors: {} }
+    }
+
+    // Step 3: Fetch posts from all followed users in parallel
+    const postPromises = followingList.map((userId) => getUserPosts(userId))
+    const userPromises = followingList.map((userId) => getUser(userId))
+
+    const [allPostsArrays, allUsers] = await Promise.all([
+      Promise.allSettled(postPromises),
+      Promise.allSettled(userPromises),
+    ])
+
+    // Step 4: Process results and handle partial failures
+    const allPosts: Post[] = []
+    const authors: Record<
+      string,
+      { id: string; name: string; avatar: string }
+    > = {}
+
+    // Process posts
+    allPostsArrays.forEach((result, index) => {
+      if (result.status === "fulfilled" && result.value) {
+        allPosts.push(...result.value)
+      } else {
+        console.error(
+          `Failed to fetch posts for user ${followingList[index]}:`,
+          result.status === "rejected" ? result.reason : "Unknown error"
+        )
+      }
+    })
+
+    // Process authors
+    allUsers.forEach((result, index) => {
+      if (result.status === "fulfilled" && result.value) {
+        const user = result.value
+        authors[user.id] = {
+          id: user.id,
+          name: user.name,
+          avatar: user.avatar,
+        }
+      } else {
+        console.error(
+          `Failed to fetch user data for ${followingList[index]}:`,
+          result.status === "rejected" ? result.reason : "Unknown error"
+        )
+      }
+    })
+
+    // Step 5: Sort posts by creation date (newest first)
+    const sortedPosts = allPosts.sort((a, b) => {
+      const dateA = new Date(a.createdAt).getTime()
+      const dateB = new Date(b.createdAt).getTime()
+      return dateB - dateA // Newest first
+    })
+
+    return { posts: sortedPosts, authors }
+  } catch (error) {
+    console.error("Error fetching posts from followed users:", error)
+    // Re-throw authentication errors
+    if (error instanceof AuthenticationError) {
+      throw error
+    }
+    // Return empty results for other errors to allow graceful degradation
+    return { posts: [], authors: {} }
+  }
 }
