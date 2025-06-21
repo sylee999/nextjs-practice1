@@ -13,6 +13,7 @@ import {
   NotFoundError,
 } from "@/types/errors"
 import { CreatePostData, Post, UpdatePostData } from "@/types/post"
+import { User } from "@/types/user"
 
 type PostActionState = {
   message: string
@@ -322,14 +323,14 @@ export async function deletePostAction(
  */
 export async function getPostsFromFollowedUsers(): Promise<{
   posts: Post[]
-  authors: Record<string, { id: string; name: string; avatar: string }>
+  authors: User[]
 }> {
   try {
     // Step 1: Check authentication
     const authUser = await checkAuth()
     if (!authUser) {
       // Return empty posts for unauthenticated users
-      return { posts: [], authors: {} }
+      return { posts: [], authors: [] }
     }
 
     // Step 2: Get current user's following list
@@ -345,7 +346,7 @@ export async function getPostsFromFollowedUsers(): Promise<{
     // Handle edge case: user follows no one
     const followingList = currentUser.following || []
     if (followingList.length === 0) {
-      return { posts: [], authors: {} }
+      return { posts: [], authors: [] }
     }
 
     // Step 3: Fetch posts from all followed users in parallel
@@ -359,10 +360,7 @@ export async function getPostsFromFollowedUsers(): Promise<{
 
     // Step 4: Process results and handle partial failures
     const allPosts: Post[] = []
-    const authors: Record<
-      string,
-      { id: string; name: string; avatar: string }
-    > = {}
+    const authors: User[] = []
 
     // Process posts
     allPostsArrays.forEach((result, index) => {
@@ -379,12 +377,7 @@ export async function getPostsFromFollowedUsers(): Promise<{
     // Process authors
     allUsers.forEach((result, index) => {
       if (result.status === "fulfilled" && result.value) {
-        const user = result.value
-        authors[user.id] = {
-          id: user.id,
-          name: user.name,
-          avatar: user.avatar,
-        }
+        authors.push(result.value)
       } else {
         console.error(
           `Failed to fetch user data for ${followingList[index]}:`,
@@ -408,6 +401,6 @@ export async function getPostsFromFollowedUsers(): Promise<{
       throw error
     }
     // Return empty results for other errors to allow graceful degradation
-    return { posts: [], authors: {} }
+    return { posts: [], authors: [] }
   }
 }

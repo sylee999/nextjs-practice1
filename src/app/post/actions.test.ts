@@ -398,7 +398,7 @@ describe("Post Actions", () => {
 
       const result = await getPostsFromFollowedUsers()
 
-      expect(result).toEqual({ posts: [], authors: {} })
+      expect(result).toEqual({ posts: [], authors: [] })
       expect(fetch).not.toHaveBeenCalled()
     })
 
@@ -420,7 +420,7 @@ describe("Post Actions", () => {
 
       const result = await getPostsFromFollowedUsers()
 
-      expect(result).toEqual({ posts: [], authors: {} })
+      expect(result).toEqual({ posts: [], authors: [] })
     })
 
     test("fetches and sorts posts from followed users", async () => {
@@ -437,6 +437,7 @@ describe("Post Actions", () => {
         name: "User 2",
         email: "user2@example.com",
         avatar: "avatar2.jpg",
+        createdAt: "2024-01-01T00:00:00Z",
       }
 
       const mockUser3 = {
@@ -444,6 +445,7 @@ describe("Post Actions", () => {
         name: "User 3",
         email: "user3@example.com",
         avatar: "avatar3.jpg",
+        createdAt: "2024-01-01T00:00:00Z",
       }
 
       const mockPostsUser2 = [
@@ -500,11 +502,10 @@ describe("Post Actions", () => {
       expect(result.posts[0].id).toBe("p2") // Newer post
       expect(result.posts[1].id).toBe("p1") // Older post
 
-      // Check authors map
-      expect(result.authors).toEqual({
-        "2": { id: "2", name: "User 2", avatar: "avatar2.jpg" },
-        "3": { id: "3", name: "User 3", avatar: "avatar3.jpg" },
-      })
+      // Check authors array
+      expect(result.authors).toHaveLength(2)
+      expect(result.authors).toContainEqual(mockUser2)
+      expect(result.authors).toContainEqual(mockUser3)
     })
 
     test("handles partial API failures gracefully", async () => {
@@ -521,6 +522,7 @@ describe("Post Actions", () => {
         name: "User 2",
         email: "user2@example.com",
         avatar: "avatar2.jpg",
+        createdAt: "2024-01-01T00:00:00Z",
       }
 
       const mockPostsUser2 = [
@@ -562,9 +564,8 @@ describe("Post Actions", () => {
       // Should still return successful results
       expect(result.posts).toHaveLength(1)
       expect(result.posts[0].id).toBe("p1")
-      expect(result.authors).toEqual({
-        "2": { id: "2", name: "User 2", avatar: "avatar2.jpg" },
-      })
+      expect(result.authors).toHaveLength(1)
+      expect(result.authors[0]).toEqual(mockUser2)
 
       // Check error logging
       expect(consoleSpy).toHaveBeenCalled()
@@ -585,7 +586,7 @@ describe("Post Actions", () => {
       const result = await getPostsFromFollowedUsers()
 
       // Should return empty results on error
-      expect(result).toEqual({ posts: [], authors: {} })
+      expect(result).toEqual({ posts: [], authors: [] })
       expect(consoleSpy).toHaveBeenCalled()
       consoleSpy.mockRestore()
     })
