@@ -33,7 +33,7 @@ export default async function UserDetailPage({
   }
 
   return (
-    <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+    <div className="mx-auto max-w-4xl space-y-6 p-4">
       {/* User Profile with Follow Functionality */}
       <UserProfileWithFollow
         user={user}
