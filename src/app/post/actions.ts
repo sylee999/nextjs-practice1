@@ -118,7 +118,7 @@ export async function getUserPosts(userId: string): Promise<Post[]> {
 }
 
 export async function createPostAction(
-  prevState: PostActionState,
+  prevState: PostActionState | void,
   formData: FormData
 ): Promise<PostActionState | void> {
   let createdId: string | undefined
@@ -180,7 +180,7 @@ export async function createPostAction(
 }
 
 export async function updatePostAction(
-  prevState: PostActionState,
+  prevState: PostActionState | void,
   formData: FormData
 ): Promise<PostActionState | void> {
   let updatedId: string | undefined

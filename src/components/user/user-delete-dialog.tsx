@@ -41,9 +41,9 @@ export default function UserDeleteDialog({ user }: { user: User }) {
             <DialogDescription>
               This action cannot be undone. This will permanently delete your
               account and remove your data from our servers.
-              {state.message && state.success === false && (
+              {state?.message && state?.success === false && (
                 <Alert variant="destructive">
-                  <AlertDescription>{state.message}</AlertDescription>
+                  <AlertDescription>{state?.message}</AlertDescription>
                 </Alert>
               )}
             </DialogDescription>
