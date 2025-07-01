@@ -1,7 +1,7 @@
 "use client"
 
 import * as React from "react"
-import { MessageSquareText, UserRound } from "lucide-react"
+import { Home, MessageSquareText, UserRound } from "lucide-react"
 
 import {
   Sidebar,
@@ -14,6 +14,11 @@ import {
 import { useIsMobile } from "@/hooks/use-mobile"
 
 const data = [
+  {
+    title: "Home",
+    url: "/home",
+    icon: Home,
+  },
   {
     title: "Users",
     url: "/user",
