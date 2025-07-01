@@ -404,3 +404,66 @@ export async function getPostsFromFollowedUsers(): Promise<{
     return { posts: [], authors: [] }
   }
 }
+
+/**
+ * Fetches popular posts for the public home feed.
+ * Used when users are not authenticated or as a fallback.
+ * Returns posts sorted by popularity criteria (newest and most bookmarked).
+ */
+export async function getPopularPosts(limit = 20): Promise<{
+  posts: Post[]
+  authors: User[]
+}> {
+  try {
+    // Step 1: Fetch all posts
+    const allPosts = await getPosts()
+
+    // Step 2: Sort posts by popularity criteria
+    // Primary: Number of bookmarks (descending)
+    // Secondary: Creation date (newest first)
+    const sortedPosts = allPosts.sort((a, b) => {
+      // First, compare by bookmark count
+      const bookmarkDiff =
+        (b.bookmarkedBy?.length || 0) - (a.bookmarkedBy?.length || 0)
+      if (bookmarkDiff !== 0) {
+        return bookmarkDiff
+      }
+
+      // If bookmark counts are equal, sort by creation date
+      const dateA = new Date(a.createdAt).getTime()
+      const dateB = new Date(b.createdAt).getTime()
+      return dateB - dateA // Newest first
+    })
+
+    // Step 3: Limit the number of posts
+    const popularPosts = sortedPosts.slice(0, limit)
+
+    // Step 4: Get unique author IDs
+    const uniqueAuthorIds = [
+      ...new Set(popularPosts.map((post) => post.userId)),
+    ]
+
+    // Step 5: Fetch author information in parallel
+    const authorPromises = uniqueAuthorIds.map((userId) => getUser(userId))
+    const authorResults = await Promise.allSettled(authorPromises)
+
+    // Step 6: Process author results
+    const authors: User[] = []
+    authorResults.forEach((result, index) => {
+      if (result.status === "fulfilled" && result.value) {
+        authors.push(result.value)
+      } else {
+        console.error(
+          `Failed to fetch author data for user ${uniqueAuthorIds[index]}:`,
+          result.status === "rejected" ? result.reason : "Unknown error"
+        )
+      }
+    })
+
+    return { posts: popularPosts, authors }
+  } catch (error) {
+    console.error("Error fetching popular posts:", error)
+    // Return empty results for errors to allow graceful degradation
+    return { posts: [], authors: [] }
+  }
+}

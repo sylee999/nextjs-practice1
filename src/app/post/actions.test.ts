@@ -3,6 +3,7 @@ import { beforeEach, describe, expect, test, vi, type Mock } from "vitest"
 import {
   createPostAction,
   deletePostAction,
+  getPopularPosts,
   getPost,
   getPosts,
   getPostsFromFollowedUsers,
@@ -589,6 +590,202 @@ describe("Post Actions", () => {
       expect(result).toEqual({ posts: [], authors: [] })
       expect(consoleSpy).toHaveBeenCalled()
       consoleSpy.mockRestore()
+    })
+  })
+
+  describe("getPopularPosts", () => {
+    test("returns empty posts when no posts exist", async () => {
+      // Mock empty posts response
+      ;(global.fetch as Mock).mockResolvedValueOnce({
+        ok: true,
+        json: vi.fn().mockResolvedValueOnce([]),
+      })
+
+      const result = await getPopularPosts()
+
+      expect(result).toEqual({ posts: [], authors: [] })
+    })
+
+    test("sorts posts by bookmark count then by date", async () => {
+      const mockPosts = [
+        {
+          id: "1",
+          userId: "user1",
+          title: "Post 1",
+          content: "Content 1",
+          createdAt: "2024-01-01T00:00:00Z",
+          bookmarkedBy: ["a", "b", "c"], // 3 bookmarks
+        },
+        {
+          id: "2",
+          userId: "user2",
+          title: "Post 2",
+          content: "Content 2",
+          createdAt: "2024-01-03T00:00:00Z",
+          bookmarkedBy: ["a", "b", "c"], // 3 bookmarks, newer
+        },
+        {
+          id: "3",
+          userId: "user1",
+          title: "Post 3",
+          content: "Content 3",
+          createdAt: "2024-01-02T00:00:00Z",
+          bookmarkedBy: ["a", "b", "c", "d", "e"], // 5 bookmarks
+        },
+        {
+          id: "4",
+          userId: "user3",
+          title: "Post 4",
+          content: "Content 4",
+          createdAt: "2024-01-04T00:00:00Z",
+          bookmarkedBy: [], // 0 bookmarks
+        },
+      ]
+
+      const mockUser1 = {
+        id: "user1",
+        name: "User 1",
+        email: "user1@example.com",
+        avatar: "",
+        createdAt: "2024-01-01T00:00:00Z",
+        following: [],
+      }
+      const mockUser2 = {
+        id: "user2",
+        name: "User 2",
+        email: "user2@example.com",
+        avatar: "",
+        createdAt: "2024-01-01T00:00:00Z",
+        following: [],
+      }
+      const mockUser3 = {
+        id: "user3",
+        name: "User 3",
+        email: "user3@example.com",
+        avatar: "",
+        createdAt: "2024-01-01T00:00:00Z",
+        following: [],
+      }
+
+      // Mock posts response
+      ;(global.fetch as Mock).mockResolvedValueOnce({
+        ok: true,
+        json: vi.fn().mockResolvedValueOnce(mockPosts),
+      })
+
+      // Mock user responses
+      const { getUser } = await import("../user/actions")
+      ;(getUser as Mock)
+        .mockResolvedValueOnce(mockUser1)
+        .mockResolvedValueOnce(mockUser2)
+        .mockResolvedValueOnce(mockUser3)
+
+      const result = await getPopularPosts()
+
+      // Should be sorted by bookmarks (desc) then date (desc)
+      expect(result.posts).toHaveLength(4)
+      expect(result.posts[0].id).toBe("3") // 5 bookmarks
+      expect(result.posts[1].id).toBe("2") // 3 bookmarks, newer
+      expect(result.posts[2].id).toBe("1") // 3 bookmarks, older
+      expect(result.posts[3].id).toBe("4") // 0 bookmarks
+
+      expect(result.authors).toHaveLength(3)
+      expect(result.authors).toEqual(
+        expect.arrayContaining([mockUser1, mockUser2, mockUser3])
+      )
+    })
+
+    test("respects limit parameter", async () => {
+      const mockPosts = Array.from({ length: 30 }, (_, i) => ({
+        id: `${i + 1}`,
+        userId: `user${(i % 3) + 1}`,
+        title: `Post ${i + 1}`,
+        content: `Content ${i + 1}`,
+        createdAt: new Date(2024, 0, i + 1).toISOString(),
+        bookmarkedBy: Array.from({ length: i }, (_, j) => `user${j}`),
+      }))
+
+      // Mock posts response
+      ;(global.fetch as Mock).mockResolvedValueOnce({
+        ok: true,
+        json: vi.fn().mockResolvedValueOnce(mockPosts),
+      })
+
+      // Mock user responses
+      const { getUser } = await import("../user/actions")
+      ;(getUser as Mock).mockResolvedValue({
+        id: "user1",
+        name: "User",
+        email: "user@example.com",
+        avatar: "",
+        createdAt: "2024-01-01T00:00:00Z",
+        following: [],
+      })
+
+      const result = await getPopularPosts(10)
+
+      expect(result.posts).toHaveLength(10)
+      // Should get the posts with most bookmarks
+      expect(result.posts[0].bookmarkedBy?.length || 0).toBeGreaterThanOrEqual(
+        result.posts[9].bookmarkedBy?.length || 0
+      )
+    })
+
+    test("handles partial author fetch failures gracefully", async () => {
+      const mockPosts = [
+        {
+          id: "1",
+          userId: "user1",
+          title: "Post 1",
+          content: "Content 1",
+          createdAt: "2024-01-01T00:00:00Z",
+          bookmarkedBy: ["a"],
+        },
+        {
+          id: "2",
+          userId: "user2",
+          title: "Post 2",
+          content: "Content 2",
+          createdAt: "2024-01-02T00:00:00Z",
+          bookmarkedBy: ["a", "b"],
+        },
+      ]
+
+      const mockUser2 = {
+        id: "user2",
+        name: "User 2",
+        email: "user2@example.com",
+        avatar: "",
+        createdAt: "2024-01-01T00:00:00Z",
+        following: [],
+      }
+
+      // Mock posts response
+      ;(global.fetch as Mock).mockResolvedValueOnce({
+        ok: true,
+        json: vi.fn().mockResolvedValueOnce(mockPosts),
+      })
+
+      // Mock user responses - first fails, second succeeds
+      const { getUser } = await import("../user/actions")
+      ;(getUser as Mock)
+        .mockRejectedValueOnce(new Error("User fetch failed"))
+        .mockResolvedValueOnce(mockUser2)
+
+      const result = await getPopularPosts()
+
+      expect(result.posts).toHaveLength(2)
+      expect(result.authors).toHaveLength(1)
+      expect(result.authors[0]).toEqual(mockUser2)
+    })
+
+    test("handles API errors gracefully", async () => {
+      // Mock API error
+      ;(global.fetch as Mock).mockRejectedValueOnce(new Error("Network error"))
+
+      const result = await getPopularPosts()
+
+      expect(result).toEqual({ posts: [], authors: [] })
     })
   })
 })
