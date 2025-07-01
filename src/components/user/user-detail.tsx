@@ -13,6 +13,18 @@ interface UserDetailProps extends UserComponentProps {
 }
 
 /**
+ * Formats a date string to a consistent format (YYYY-MM-DD)
+ * This ensures server and client render the same output
+ */
+function formatDate(dateInput: string | Date): string {
+  const date = dateInput instanceof Date ? dateInput : new Date(dateInput)
+  const year = date.getFullYear()
+  const month = String(date.getMonth() + 1).padStart(2, "0")
+  const day = String(date.getDate()).padStart(2, "0")
+  return `${year}-${month}-${day}`
+}
+
+/**
  * UserDetail component for displaying user information with follow functionality
  * Optimized with React.memo for performance
  *
@@ -51,7 +63,7 @@ export const UserDetail = memo(function UserDetail({
             <h1 className="text-xl font-semibold text-gray-900">{user.name}</h1>
             <p className="text-gray-600">{user.email}</p>
             <p className="text-sm text-gray-500">
-              Member since {new Date(user.createdAt).toLocaleDateString()}
+              Member since {formatDate(user.createdAt)}
             </p>
           </div>
         </div>
