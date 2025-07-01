@@ -3,7 +3,7 @@ import "@testing-library/jest-dom"
 import { render, screen } from "@testing-library/react"
 import { beforeEach, describe, expect, test, vi } from "vitest"
 
-import Home from "./page"
+import LandingPage from "./page"
 
 // Mock the auth actions
 vi.mock("./auth/actions", () => ({
@@ -35,39 +35,45 @@ vi.mock("next/navigation", () => ({
   usePathname: () => "/",
 }))
 
-describe("Home Page", () => {
+describe("Landing Page", () => {
   beforeEach(() => {
     vi.clearAllMocks()
   })
 
-  test("shows welcome page for unauthenticated users", async () => {
+  test("shows landing page for unauthenticated users", async () => {
     const { checkAuth } = await import("./auth/actions")
     vi.mocked(checkAuth).mockResolvedValueOnce(null)
 
-    const component = await Home()
+    const component = await LandingPage()
     render(component)
 
-    // Check for welcome message
+    // Check hero section
     expect(screen.getByText("Welcome to Our Community")).toBeInTheDocument()
     expect(
       screen.getByText(
-        "Connect with people, share your thoughts, and discover amazing content from the community."
+        "Connect with like-minded people, share your thoughts, and discover amazing content from our vibrant community."
       )
     ).toBeInTheDocument()
 
-    // Check for call-to-action buttons
-    expect(screen.getByText("Get Started")).toBeInTheDocument()
-    expect(screen.getByText("Sign in")).toBeInTheDocument()
+    // Check CTA buttons for unauthenticated users
+    expect(screen.getByText("Explore Popular Posts")).toBeInTheDocument()
+    expect(screen.getByText("Join the Community")).toBeInTheDocument()
+    expect(screen.getByText("Sign Up Free")).toBeInTheDocument()
+    expect(screen.getByText("Sign In")).toBeInTheDocument()
 
-    // Check links
-    const getStartedLink = screen.getByRole("link", { name: /get started/i })
-    expect(getStartedLink).toHaveAttribute("href", "/signup")
+    // Check features section
+    expect(screen.getByText("Why Join Our Platform?")).toBeInTheDocument()
+    expect(screen.getByText("Connect with People")).toBeInTheDocument()
+    expect(screen.getByText("Share Your Voice")).toBeInTheDocument()
+    expect(screen.getByText("Bookmark Favorites")).toBeInTheDocument()
 
-    const signInLink = screen.getByRole("link", { name: /sign in/i })
-    expect(signInLink).toHaveAttribute("href", "/login")
+    // Check quick links
+    expect(screen.getByText("Home Feed")).toBeInTheDocument()
+    expect(screen.getByText("All Posts")).toBeInTheDocument()
+    expect(screen.getByText("Discover People")).toBeInTheDocument()
   })
 
-  test("shows empty feed when user follows no one", async () => {
+  test("shows landing page for authenticated users", async () => {
     const mockUser = {
       id: "1",
       name: "Test User",
@@ -80,110 +86,58 @@ describe("Home Page", () => {
     const { checkAuth } = await import("./auth/actions")
     vi.mocked(checkAuth).mockResolvedValueOnce(mockUser)
 
-    const { getPostsFromFollowedUsers } = await import("./post/actions")
-    vi.mocked(getPostsFromFollowedUsers).mockResolvedValueOnce({
-      posts: [],
-      authors: [],
-    })
-
-    const component = await Home()
+    const component = await LandingPage()
     render(component)
 
-    // Check for home page title
-    expect(screen.getByText("Home")).toBeInTheDocument()
-    expect(
-      screen.getByText("See the latest posts from people you follow")
-    ).toBeInTheDocument()
+    // Check hero section
+    expect(screen.getByText("Welcome to Our Community")).toBeInTheDocument()
 
-    // Check for empty state
-    expect(screen.getByText("Your feed is empty")).toBeInTheDocument()
-    expect(
-      screen.getByText("Start following people to see their posts here.")
-    ).toBeInTheDocument()
+    // Check CTA buttons for authenticated users
+    const goToHomeButtons = screen.getAllByText("Go to Home Feed")
+    expect(goToHomeButtons).toHaveLength(2) // One in hero, one in CTA section
+    expect(screen.queryByText("Join the Community")).not.toBeInTheDocument()
 
-    // Check for action buttons
-    expect(screen.getByText("Discover People")).toBeInTheDocument()
-    expect(screen.getByText("Browse All Posts")).toBeInTheDocument()
+    // Check CTA section for authenticated users
+    expect(screen.getByText("Continue Exploring")).toBeInTheDocument()
+    const createPostButtons = screen.getAllByText("Create a Post")
+    expect(createPostButtons.length).toBeGreaterThan(0)
+
+    // No signup/signin buttons for authenticated users
+    expect(screen.queryByText("Sign Up Free")).not.toBeInTheDocument()
+    expect(screen.queryByText("Sign In")).not.toBeInTheDocument()
+
+    // Check features section still shows
+    expect(screen.getByText("Why Join Our Platform?")).toBeInTheDocument()
+
+    // Check quick links include create post for authenticated users
+    const createPostLinks = screen.getAllByText("Create Post")
+    expect(createPostLinks.length).toBeGreaterThan(0)
   })
 
-  test("shows empty feed when followed users have no posts", async () => {
-    const mockUser = {
-      id: "1",
-      name: "Test User",
-      email: "test@example.com",
-      avatar: "",
-      createdAt: "2024-01-01T00:00:00Z",
-      following: ["2", "3"],
-    }
-
+  test("has correct link destinations", async () => {
     const { checkAuth } = await import("./auth/actions")
-    vi.mocked(checkAuth).mockResolvedValueOnce(mockUser)
+    vi.mocked(checkAuth).mockResolvedValueOnce(null)
 
-    const { getPostsFromFollowedUsers } = await import("./post/actions")
-    vi.mocked(getPostsFromFollowedUsers).mockResolvedValueOnce({
-      posts: [],
-      authors: [],
-    })
+    const component = await LandingPage()
+    const { container } = render(component)
 
-    const component = await Home()
-    render(component)
+    // Check home link
+    const homeLink = container.querySelector('a[href="/home"]')
+    expect(homeLink).toBeInTheDocument()
 
-    // Check for empty state with different message
-    expect(screen.getByText("Your feed is empty")).toBeInTheDocument()
-    expect(
-      screen.getByText("The people you follow haven't posted anything yet.")
-    ).toBeInTheDocument()
-  })
+    // Check signup link
+    const signupLink = container.querySelector('a[href="/signup"]')
+    expect(signupLink).toBeInTheDocument()
 
-  test("shows posts from followed users", async () => {
-    const mockUser = {
-      id: "1",
-      name: "Test User",
-      email: "test@example.com",
-      avatar: "",
-      createdAt: "2024-01-01T00:00:00Z",
-      following: ["2"],
-    }
+    // Check login link
+    const loginLink = container.querySelector('a[href="/login"]')
+    expect(loginLink).toBeInTheDocument()
 
-    const mockPosts = [
-      {
-        id: "p1",
-        userId: "2",
-        title: "Test Post",
-        content: "Test content",
-        createdAt: "2024-01-01T10:00:00Z",
-        updatedAt: "2024-01-01T10:00:00Z",
-        bookmarkedBy: [],
-      },
-    ]
+    // Check other navigation links
+    const postLink = container.querySelector('a[href="/post"]')
+    expect(postLink).toBeInTheDocument()
 
-    const mockAuthors = [
-      {
-        id: "2",
-        name: "Author User",
-        email: "author@example.com",
-        avatar: "avatar.jpg",
-        createdAt: "2024-01-01T00:00:00Z",
-      },
-    ]
-
-    const { checkAuth } = await import("./auth/actions")
-    vi.mocked(checkAuth).mockResolvedValueOnce(mockUser)
-
-    const { getPostsFromFollowedUsers } = await import("./post/actions")
-    vi.mocked(getPostsFromFollowedUsers).mockResolvedValueOnce({
-      posts: mockPosts,
-      authors: mockAuthors,
-    })
-
-    const component = await Home()
-    render(component)
-
-    // Check for home page title
-    expect(screen.getByText("Home")).toBeInTheDocument()
-
-    // Check that PostList is rendered with posts
-    expect(screen.getByTestId("post-list")).toBeInTheDocument()
-    expect(screen.getByTestId("post-p1")).toBeInTheDocument()
+    const userLink = container.querySelector('a[href="/user"]')
+    expect(userLink).toBeInTheDocument()
   })
 })
