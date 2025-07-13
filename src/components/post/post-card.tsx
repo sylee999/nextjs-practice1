@@ -88,7 +88,8 @@ export function PostCard({
             </span>
 
             {/* Updated indicator */}
-            {post.updatedAt !== post.createdAt && (
+            {new Date(post.updatedAt).getTime() !==
+              new Date(post.createdAt).getTime() && (
               <span className="text-xs">Edited</span>
             )}
           </div>
