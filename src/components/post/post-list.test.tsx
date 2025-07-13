@@ -5,13 +5,13 @@ import { Post } from "@/types/post"
 
 import { PostList } from "./post-list"
 
-// Mock the PostDetail component
-vi.mock("@/components/post/post-detail", () => ({
-  PostDetail: vi.fn(({ post, author }) => (
-    <div data-testid={`post-detail-${post.id}`}>
+// Mock the PostCard component
+vi.mock("@/components/post/post-card", () => ({
+  PostCard: vi.fn(({ post, author }) => (
+    <div data-testid={`post-card-${post.id}`}>
       <h3>{post.title}</h3>
       <p>{post.content}</p>
-      {author && <span>by {author.name}</span>}
+      {author ? <span>by {author.name}</span> : <span>Unknown Author</span>}
     </div>
   )),
 }))
@@ -74,8 +74,22 @@ describe("PostList", () => {
     expect(screen.getByTestId("post-list")).toBeInTheDocument()
     expect(screen.getByTestId("post-1")).toBeInTheDocument()
     expect(screen.getByTestId("post-2")).toBeInTheDocument()
-    expect(screen.getByTestId("post-detail-1")).toBeInTheDocument()
-    expect(screen.getByTestId("post-detail-2")).toBeInTheDocument()
+
+    // Check that post titles are displayed
+    expect(screen.getByText("First Post")).toBeInTheDocument()
+    expect(screen.getByText("Second Post")).toBeInTheDocument()
+
+    // Check that post content summaries are displayed
+    expect(
+      screen.getByText(/This is the first post content/)
+    ).toBeInTheDocument()
+    expect(
+      screen.getByText(/This is the second post content/)
+    ).toBeInTheDocument()
+
+    // Check that author names are displayed
+    expect(screen.getByText(/John Doe/)).toBeInTheDocument()
+    expect(screen.getByText(/Jane Smith/)).toBeInTheDocument()
   })
 
   test("renders posts without authors", () => {
@@ -84,6 +98,9 @@ describe("PostList", () => {
     expect(screen.getByTestId("post-list")).toBeInTheDocument()
     expect(screen.getByTestId("post-1")).toBeInTheDocument()
     expect(screen.getByTestId("post-2")).toBeInTheDocument()
+
+    // When no authors provided, should show "Unknown Author"
+    expect(screen.getAllByText("Unknown Author")).toHaveLength(2)
   })
 
   test("displays empty state when no posts", () => {

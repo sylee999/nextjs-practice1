@@ -1,6 +1,6 @@
 import Link from "next/link"
 
-import { PostDetail } from "@/components/post/post-detail"
+import { PostCard } from "@/components/post/post-card"
 import { Post } from "@/types/post"
 import { User } from "@/types/user"
 
@@ -57,7 +57,7 @@ export function UserPostsList({
             href={`/post/${post.id}`}
             className="block transition-opacity hover:opacity-80"
           >
-            <PostDetail
+            <PostCard
               post={post}
               author={author}
               currentUserId={currentUserId}
