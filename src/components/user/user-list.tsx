@@ -156,37 +156,43 @@ export const UserList = memo(function UserList({
     <ErrorBoundary fallback={<ListSkeleton count={3} />}>
       <ul className="space-y-4" data-testid="user-list">
         {users.map((user) => (
-          <li
-            key={user.id}
-            data-testid={`user-${user.id}`}
-            className="rounded-lg border border-gray-200 bg-white"
-          >
+          <li key={user.id} data-testid={`user-${user.id}`}>
             {/* User Info Section */}
             <Link
               href={`/user/${user.id}`}
-              className="block p-6 transition-transform hover:scale-[1.01]"
+              className="block transition-transform hover:scale-[1.01]"
             >
-              <UserDetail user={user} />
+              <UserDetail user={user} variant="compact" />
             </Link>
 
             {/* Follow Section */}
-            <div className="flex items-center justify-between border-t border-gray-100 p-4 pt-0">
-              {/* Followers List */}
-              <FollowersAvatarList
-                followers={followersData[user.id] || []}
-                maxDisplay={3}
-                size="sm"
-              />
+            <div className="relative rounded-b-lg border border-t-0 border-gray-200/80 bg-gray-50/50 p-6">
+              {/* Left side content */}
+              <div className="flex items-center">
+                {followersData[user.id] && followersData[user.id].length > 0 ? (
+                  <FollowersAvatarList
+                    followers={followersData[user.id]}
+                    maxDisplay={3}
+                    size="sm"
+                  />
+                ) : (
+                  <div className="text-xs font-medium text-gray-500">
+                    No followers yet
+                  </div>
+                )}
+              </div>
 
-              {/* Follow Button */}
-              <FollowButton
-                currentUserId={currentUserId}
-                targetUserId={user.id}
-                isFollowing={followStates[user.id] || false}
-                onToggle={() => handleFollowToggle(user.id)}
-                size="sm"
-                variant="outline"
-              />
+              {/* Follow Button - Always positioned bottom right */}
+              <div className="absolute right-4 bottom-4">
+                <FollowButton
+                  currentUserId={currentUserId}
+                  targetUserId={user.id}
+                  isFollowing={followStates[user.id] || false}
+                  onToggle={() => handleFollowToggle(user.id)}
+                  size="sm"
+                  variant="outline"
+                />
+              </div>
             </div>
           </li>
         ))}

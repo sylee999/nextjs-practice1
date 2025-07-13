@@ -53,6 +53,7 @@ describe("createUser", () => {
     mockFormData.append("email", "test@example.com")
     mockFormData.append("password", "password")
     mockFormData.append("avatar", "https://example.com/avatar.jpg")
+    mockFormData.append("bio", "This is a test bio for the user")
 
     // Should throw NEXT_REDIRECT error
     await expect(createUserAction(mockState, mockFormData)).rejects.toThrow(
@@ -68,7 +69,7 @@ describe("createUser", () => {
       "Content-Type": "application/json",
     })
 
-    // Parse the body and check its contents
+    // Parse the body and check its contents - now includes bio field
     const body = JSON.parse(options.body)
     expect(body).toEqual({
       avatar: "https://example.com/avatar.jpg",
@@ -76,6 +77,47 @@ describe("createUser", () => {
       email: "test@example.com",
       name: "Test User",
       password: "password",
+      bio: "This is a test bio for the user",
+      followers: [],
+      following: [],
+    })
+  })
+
+  test("creates user successfully with empty bio", async () => {
+    global.fetch = vi.fn().mockResolvedValueOnce({
+      ok: true,
+      json: () => Promise.resolve({ id: "1" }),
+    })
+
+    const mockFormData = new FormData()
+    mockFormData.append("name", "Test User")
+    mockFormData.append("email", "test@example.com")
+    mockFormData.append("password", "password")
+    mockFormData.append("avatar", "https://example.com/avatar.jpg")
+    // No bio field appended - tests backward compatibility
+
+    // Should throw NEXT_REDIRECT error
+    await expect(createUserAction(mockState, mockFormData)).rejects.toThrow(
+      "NEXT_REDIRECT"
+    )
+
+    const fetchCall = (fetch as Mock).mock.calls[0]
+    const [url, options] = fetchCall
+
+    expect(url).toBe("https://test-token.mockapi.io/api/v1/users")
+    expect(options.method).toBe("POST")
+    expect(options.headers).toEqual({
+      "Content-Type": "application/json",
+    })
+
+    // Parse the body and check bio defaults to empty string
+    const body = JSON.parse(options.body)
+    expect(body).toEqual({
+      avatar: "https://example.com/avatar.jpg",
+      email: "test@example.com",
+      name: "Test User",
+      password: "password",
+      bio: "", // Should default to empty string
       followers: [],
       following: [],
     })
@@ -147,6 +189,7 @@ describe("updateUserAction", () => {
       email: "updated@example.com",
       avatar: "https://example.com/new-avatar.jpg",
       password: "newpassword",
+      bio: "Updated bio content",
       bookmarkedPosts: [],
     }
 
@@ -168,6 +211,7 @@ describe("updateUserAction", () => {
     mockFormData.append("email", "updated@example.com")
     mockFormData.append("password", "newpassword")
     mockFormData.append("avatar", "https://example.com/new-avatar.jpg")
+    mockFormData.append("bio", "Updated bio content")
 
     // Should throw NEXT_REDIRECT error
     await expect(updateUserAction(mockState, mockFormData)).rejects.toThrow(
@@ -183,6 +227,10 @@ describe("updateUserAction", () => {
     expect(options.headers).toEqual({
       "Content-Type": "application/json",
     })
+
+    // Verify bio field is included in the request body
+    const body = JSON.parse(options.body)
+    expect(body.bio).toBe("Updated bio content")
   })
 
   test("updates user successfully without password", async () => {
@@ -195,6 +243,7 @@ describe("updateUserAction", () => {
       name: "Updated Name",
       email: "updated@example.com",
       avatar: "https://example.com/new-avatar.jpg",
+      bio: "New bio without password update",
       bookmarkedPosts: [],
     }
 
@@ -215,6 +264,7 @@ describe("updateUserAction", () => {
     mockFormData.append("name", "Updated Name")
     mockFormData.append("email", "updated@example.com")
     mockFormData.append("avatar", "https://example.com/new-avatar.jpg")
+    mockFormData.append("bio", "New bio without password update")
 
     // Should throw NEXT_REDIRECT error
     await expect(updateUserAction(mockState, mockFormData)).rejects.toThrow(
@@ -230,6 +280,10 @@ describe("updateUserAction", () => {
     expect(options.headers).toEqual({
       "Content-Type": "application/json",
     })
+
+    // Verify bio field is included in the request body
+    const body = JSON.parse(options.body)
+    expect(body.bio).toBe("New bio without password update")
   })
 
   test("updates session cookie with new user data", async () => {
@@ -250,6 +304,7 @@ describe("updateUserAction", () => {
       email: "newemail@example.com",
       avatar: "https://example.com/new.jpg",
       password: "newpass123",
+      bio: "Updated bio for session test",
       bookmarkedPosts: [],
     }
 
@@ -271,13 +326,14 @@ describe("updateUserAction", () => {
     mockFormData.append("email", "newemail@example.com")
     mockFormData.append("password", "newpass123")
     mockFormData.append("avatar", "https://example.com/new.jpg")
+    mockFormData.append("bio", "Updated bio for session test")
 
     // Should throw NEXT_REDIRECT error
     await expect(updateUserAction(mockState, mockFormData)).rejects.toThrow(
       "NEXT_REDIRECT"
     )
 
-    // Verify session cookie was updated with new user data
+    // Verify session cookie was updated with new user data including bio
     expect(mockCookieStore.set).toHaveBeenCalledWith({
       name: "session",
       value: JSON.stringify({
@@ -285,6 +341,7 @@ describe("updateUserAction", () => {
         name: "New Name",
         email: "newemail@example.com",
         avatar: "https://example.com/new.jpg",
+        bio: "Updated bio for session test",
         password: "newpass123",
       }),
       httpOnly: true,
@@ -293,6 +350,59 @@ describe("updateUserAction", () => {
       maxAge: 60 * 60 * 24 * 7, // 1 week
       sameSite: "lax",
     })
+  })
+
+  test("updates user with empty bio for backward compatibility", async () => {
+    const { checkAuth } = await import("../auth/actions")
+    ;(checkAuth as Mock).mockResolvedValueOnce(mockUser)
+
+    // Mock updated user data with empty bio
+    const mockUpdatedUser = {
+      id: "1",
+      name: "Updated Name",
+      email: "updated@example.com",
+      avatar: "https://example.com/new-avatar.jpg",
+      bio: "", // Empty bio for backward compatibility test
+      bookmarkedPosts: [],
+    }
+
+    // Mock getUser and then updateUser
+    global.fetch = vi
+      .fn()
+      .mockResolvedValueOnce({
+        ok: true,
+        json: () => Promise.resolve(mockExistingUser),
+      })
+      .mockResolvedValueOnce({
+        ok: true,
+        json: () => Promise.resolve(mockUpdatedUser),
+      })
+
+    const mockFormData = new FormData()
+    mockFormData.append("id", "1")
+    mockFormData.append("name", "Updated Name")
+    mockFormData.append("email", "updated@example.com")
+    mockFormData.append("avatar", "https://example.com/new-avatar.jpg")
+    // No bio field appended - tests backward compatibility
+
+    // Should throw NEXT_REDIRECT error
+    await expect(updateUserAction(mockState, mockFormData)).rejects.toThrow(
+      "NEXT_REDIRECT"
+    )
+
+    // Check the second fetch call (the PUT request)
+    const putCall = (fetch as Mock).mock.calls[1]
+    const [url, options] = putCall
+
+    expect(url).toBe("https://test-token.mockapi.io/api/v1/users/1")
+    expect(options.method).toBe("PUT")
+    expect(options.headers).toEqual({
+      "Content-Type": "application/json",
+    })
+
+    // Verify bio field is not included when not provided (backward compatibility)
+    const body = JSON.parse(options.body)
+    expect(body.bio).toBeUndefined()
   })
 
   test("handles unauthorized user", async () => {

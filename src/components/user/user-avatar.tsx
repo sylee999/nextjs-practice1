@@ -16,10 +16,24 @@ const DEFAULT_GUEST_USER: Partial<User> = {
  * Size configuration for avatar component
  */
 const AVATAR_SIZES = {
-  sm: "size-6",
-  md: "size-8",
-  lg: "size-12",
-  xl: "size-16",
+  sm: "size-6", // 24px
+  md: "size-8", // 32px
+  lg: "size-12", // 48px
+  xl: "size-16", // 64px
+  "2xl": "size-32", // 128px
+  "3xl": "size-48", // 192px
+} as const
+
+/**
+ * Text size configuration for avatar fallback based on avatar size
+ */
+const FALLBACK_TEXT_SIZES = {
+  sm: "text-xs",
+  md: "text-xs",
+  lg: "text-sm",
+  xl: "text-base",
+  "2xl": "text-2xl",
+  "3xl": "text-4xl",
 } as const
 
 /**
@@ -37,6 +51,7 @@ export function UserAvatar({
 }: AvatarComponentProps): React.JSX.Element {
   const displayUser = user || DEFAULT_GUEST_USER
   const sizeClass = AVATAR_SIZES[size]
+  const textSizeClass = FALLBACK_TEXT_SIZES[size]
 
   return (
     <Avatar className={`${sizeClass} ${className}`.trim()}>
@@ -44,7 +59,9 @@ export function UserAvatar({
         src={displayUser.avatar || ""}
         alt={`${displayUser.name || "Guest"} avatar`}
       />
-      <AvatarFallback className="bg-primary text-primary-foreground text-xs">
+      <AvatarFallback
+        className={`bg-primary text-primary-foreground ${textSizeClass}`}
+      >
         {(displayUser.name || "G").charAt(0).toUpperCase()}
       </AvatarFallback>
     </Avatar>
