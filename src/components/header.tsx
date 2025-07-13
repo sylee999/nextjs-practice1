@@ -25,7 +25,7 @@ export async function Header(): Promise<React.JSX.Element> {
   return (
     <header className="bg-background sticky top-0 z-50 flex w-full items-center border-b">
       <div className="flex h-(--header-height) w-full items-center gap-2 px-4">
-        <Link href="/home" className="no-wrap flex items-center gap-2">
+        <Link href="/" className="no-wrap flex items-center gap-2">
           <div className="bg-sidebar-primary text-sidebar-primary-foreground flex aspect-square size-8 items-center justify-center rounded-lg">
             <GalleryVerticalEnd className="size-4" />
           </div>
