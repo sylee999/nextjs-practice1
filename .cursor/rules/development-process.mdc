@@ -1,11 +1,13 @@
 ---
-description: 
-globs: 
+description:
+globs:
 alwaysApply: true
 ---
+
 # Development Process Guidelines
 
 ## Branch Strategy
+
 - Use **GitHub Flow**
 - Create branches from `main`
 - Use branch types: `feature/*` and `bugfix/*`
@@ -14,18 +16,22 @@ alwaysApply: true
 - Merge to `main` only when the task is complete and reviewed
 
 ## Issue Management
+
 - Use labels: `feature` for new features, `bug` for bugs
 - Issue titles should be brief and descriptive without prefixes (use labels instead)
 - Follow this issue template:
 
   ```markdown
   ### Why?
+
   (Purpose)
 
   ### What?
+
   (Tasks or changes required)
 
   ### Notes
+
   (Screenshots, links, context)
   ```
 
@@ -33,53 +39,66 @@ alwaysApply: true
 - Use GitHub MCP to link branches with issues automatically
 
 ## Commit Messages
+
 - Format: `<type>: <subject>`
 - Types: `feat`, `fix`, `docs`, `chore`
 - Subject: use the imperative mood and keep under 50 characters
 - Examples:
+
   ```
-  feat: connect login API  
+  feat: connect login API
   fix: correct avatar upload error
   ```
 
 - Use GitHub MCP when committing to ensure proper linking and formatting
 
 ## Pull Requests
-- **Title: Reflect the main purpose of the PR based on the related issue title**
-  - Use the same format as the related issue title (e.g., `feat: implement post bookmark functionality`)
-  - Should represent the primary feature/fix being delivered, not individual commit messages
-  - For multi-commit PRs, focus on the overall outcome rather than specific implementation details
+
+- **Title: Add type prefix to the issue title**
+  - Format: `<type>: <issue title>` (types: `feat`, `fix`, `docs`, `chore`)
+  - Example: Issue "Show title and summary in post list" → PR: `feat: show title and summary in post list`
 - Follow this PR template:
+
   ```markdown
   ### Summary
+
   - Key changes introduced
 
   ### Details
+
   - Additional explanation or reasoning
 
   ### Related Issue
+
   - Closes #<issue-number>
   ```
+
 - Compose PR message based on the related issue's description and commit history
-- Do **not** merge PRs directly  
+- Do **not** merge PRs directly
 - Always wait for **reviewer confirmation** (e.g., team lead or requestor), even if CI passes
 - Use draft PRs for large or ongoing changes
 - Use **GitHub MCP** to open, track, and manage PRs effectively
 
 ## Testing & Quality
+
 - Write unit tests for business logic
 - Create integration tests for REST API endpoints
 - Implement E2E tests for critical user flows
 - All tests must pass before merging into `main`
 
 ## Implementation Workflow
+
 1. Preparation step
-  1. **Create and Switch to Branch**
+1. **Create and Switch to Branch**
+
+
     - Create a new branch following the naming convention
     - Switch to the newly created branch
     - Use GitHub MCP to ensure proper syncing with GitHub
 
-  2. **Add Implementation Plan**
+2. **Add Implementation Plan**
+
+
     - Analyze the issue requirements and create a detailed implementation plan
     - Add the implementation plan as a comment to the GitHub issue
     - Include:
@@ -90,19 +109,25 @@ alwaysApply: true
       - Any dependencies or considerations
 
 2. Implementation step
-  1. **Implement Following the Plan**
+1. **Implement Following the Plan**
+
+
     - Follow the implementation plan step by step
     - Test each component as you build it
     - Show implementation progress and any deviations from the original plan
 
-  2. **Commit and Document Progress**
+2. **Commit and Document Progress**
+
+
     - Make regular commits with proper commit message format
     - Add progress updates as comments to the GitHub issue
     - Include any challenges encountered and solutions implemented
     - Document any deviations from the original plan with reasoning
 
 3. Finish step
-  1. **Final Review and PR Creation**
+1. **Final Review and PR Creation**
+
+
     - Ensure all tests pass
     - Review code for quality and adherence to guidelines
     - Create pull request following the PR template

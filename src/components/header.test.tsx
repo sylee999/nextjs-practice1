@@ -28,7 +28,7 @@ describe("Header", () => {
     const { container } = render(component)
 
     // Find the logo link
-    const logoLink = container.querySelector('a[href="/home"]')
+    const logoLink = container.querySelector('a[href="/"]')
     expect(logoLink).toBeInTheDocument()
     expect(logoLink).toHaveTextContent("My Social Media")
   })
