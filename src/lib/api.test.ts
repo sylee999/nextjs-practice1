@@ -108,48 +108,92 @@ describe("Search API Methods", () => {
       expect(mockFetch).not.toHaveBeenCalled()
     })
 
-    it("should search users by name", async () => {
+    it("should search users by name and bio", async () => {
       const mockUsers = [
         {
           id: "1",
           name: "John Doe",
           email: "john@example.com",
           avatar: "avatar1.jpg",
+          bio: "Software developer",
           createdAt: new Date().toISOString(),
         },
         {
           id: "2",
-          name: "John Smith",
-          email: "smith@example.com",
+          name: "Jane Smith",
+          email: "jane@example.com",
           avatar: "avatar2.jpg",
+          bio: "John's colleague",
           createdAt: new Date().toISOString(),
         },
       ]
 
-      mockFetch.mockResolvedValueOnce({
-        ok: true,
-        json: async () => mockUsers,
-      } as Response)
+      mockFetch
+        .mockResolvedValueOnce({
+          ok: true,
+          json: async () => [mockUsers[0]],
+        } as Response)
+        .mockResolvedValueOnce({
+          ok: true,
+          json: async () => [mockUsers[1]],
+        } as Response)
 
       const result = await searchUsers("John")
 
-      expect(mockFetch).toHaveBeenCalledTimes(1)
+      expect(mockFetch).toHaveBeenCalledTimes(2)
       expect(mockFetch).toHaveBeenCalledWith(
         "https://test-token.mockapi.io/api/v1/users?name=John&page=1&limit=10"
       )
-      expect(result).toEqual(mockUsers)
+      expect(mockFetch).toHaveBeenCalledWith(
+        "https://test-token.mockapi.io/api/v1/users?bio=John&page=1&limit=10"
+      )
+      expect(result).toHaveLength(2)
+    })
+
+    it("should deduplicate results when user appears in both name and bio search", async () => {
+      const duplicateUser = {
+        id: "1",
+        name: "John Developer",
+        email: "john@example.com",
+        avatar: "avatar.jpg",
+        bio: "John is a developer",
+        createdAt: new Date().toISOString(),
+      }
+
+      mockFetch
+        .mockResolvedValueOnce({
+          ok: true,
+          json: async () => [duplicateUser],
+        } as Response)
+        .mockResolvedValueOnce({
+          ok: true,
+          json: async () => [duplicateUser],
+        } as Response)
+
+      const result = await searchUsers("John")
+
+      expect(result).toHaveLength(1)
+      expect(result[0]).toEqual(duplicateUser)
     })
 
     it("should handle pagination parameters", async () => {
-      mockFetch.mockResolvedValueOnce({
-        ok: true,
-        json: async () => [],
-      } as Response)
+      mockFetch
+        .mockResolvedValueOnce({
+          ok: true,
+          json: async () => [],
+        } as Response)
+        .mockResolvedValueOnce({
+          ok: true,
+          json: async () => [],
+        } as Response)
 
       await searchUsers("test", 2, 20)
 
       expect(mockFetch).toHaveBeenCalledWith(
         "https://test-token.mockapi.io/api/v1/users?name=test&page=2&limit=20"
+      )
+      expect(mockFetch).toHaveBeenCalledWith(
+        "https://test-token.mockapi.io/api/v1/users?bio=test&page=2&limit=20"
       )
     })
 

@@ -96,17 +96,39 @@ export async function searchUsers(
   const baseUrl = getApiBaseUrl()
 
   try {
-    // Search users by name
-    const response = await fetch(
-      `${baseUrl}/users?name=${encodeURIComponent(query)}&page=${page}&limit=${limit}`
-    )
+    // MockAPI limitation: Can't do OR queries, so we need to make parallel requests
+    // Search in name and bio fields separately
+    const [nameResults, bioResults] = await Promise.all([
+      fetch(
+        `${baseUrl}/users?name=${encodeURIComponent(query)}&page=${page}&limit=${limit}`
+      ),
+      fetch(
+        `${baseUrl}/users?bio=${encodeURIComponent(query)}&page=${page}&limit=${limit}`
+      ),
+    ])
 
-    if (!response.ok) {
+    if (!nameResults.ok || !bioResults.ok) {
       throw new Error("Failed to search users")
     }
 
-    const users: User[] = await response.json()
-    return users
+    const nameUsers: User[] = await nameResults.json()
+    const bioUsers: User[] = await bioResults.json()
+
+    // Merge results and remove duplicates
+    const userMap = new Map<string, User>()
+
+    // Add name matches first (higher priority)
+    nameUsers.forEach((user) => userMap.set(user.id, user))
+
+    // Add bio matches (won't override name matches)
+    bioUsers.forEach((user) => {
+      if (!userMap.has(user.id)) {
+        userMap.set(user.id, user)
+      }
+    })
+
+    // Return deduplicated results
+    return Array.from(userMap.values())
   } catch (error) {
     console.error("Error searching users:", error)
     throw error
