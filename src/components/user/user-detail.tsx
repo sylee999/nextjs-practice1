@@ -50,17 +50,22 @@ export const UserDetail = memo(function UserDetail({
   const followersCount = user.followers?.length || 0
   const followingCount = user.following?.length || 0
 
-  return (
-    <div className="rounded-lg border border-gray-200 bg-white p-6">
-      <div className="flex items-start justify-between">
-        <div className="flex items-center gap-4">
-          <UserAvatar user={user} size="lg" />
-          <div className="flex flex-col">
-            <h1 className="text-xl font-semibold text-gray-900">{user.name}</h1>
-            <p className="text-gray-600">{user.email}</p>
-            <p className="text-sm text-gray-500">
-              Member since {formatDate(user.createdAt)}
-            </p>
+  // Compact variant for list view
+  if (variant === "compact") {
+    return (
+      <div className="rounded-lg border border-gray-200 bg-white p-6">
+        <div className="flex items-start justify-between">
+          <div className="flex items-center gap-4">
+            <UserAvatar user={user} size="lg" />
+            <div className="flex flex-col">
+              <h1 className="text-xl font-semibold text-gray-900">
+                {user.name}
+              </h1>
+              <p className="text-gray-600">{user.email}</p>
+              <p className="text-sm text-gray-500">
+                Member since {formatDate(user.createdAt)}
+              </p>
+            </div>
           </div>
         </div>
       </div>
