@@ -1,5 +1,7 @@
 import { UserForm } from "@/components/user/user-form"
 
+export const dynamic = "force-dynamic"
+
 export default function SignUpPage() {
   return (
     <div className="grid min-h-svh">

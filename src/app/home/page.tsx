@@ -2,6 +2,8 @@ import { checkAuth } from "@/app/auth/actions"
 import { getPopularPosts, getPostsFromFollowedUsers } from "@/app/post/actions"
 import { PostList } from "@/components/post/post-list"
 
+export const dynamic = "force-dynamic"
+
 export default async function HomePage() {
   // Check authentication status
   const authUser = await checkAuth()

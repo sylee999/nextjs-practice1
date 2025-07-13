@@ -5,6 +5,8 @@ import { SearchResults } from "@/components/search/search-results"
 import { searchPosts, searchUsers } from "@/lib/api"
 import { SearchType } from "@/types/search"
 
+export const dynamic = "force-dynamic"
+
 interface SearchPageProps {
   searchParams: Promise<{
     q?: string

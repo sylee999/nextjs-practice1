@@ -3,6 +3,8 @@ import { UserList } from "@/components/user/user-list"
 
 import { getUsers } from "./actions"
 
+export const dynamic = "force-dynamic"
+
 export default async function UserPage() {
   // Get both users and current authentication context
   const [users, currentUser] = await Promise.all([getUsers(), checkAuth()])

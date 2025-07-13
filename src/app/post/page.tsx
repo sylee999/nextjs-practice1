@@ -8,6 +8,8 @@ import { Button } from "@/components/ui/button"
 
 import { getPosts } from "./actions"
 
+export const dynamic = "force-dynamic"
+
 export default async function PostPage() {
   const [posts, users, authUser] = await Promise.all([
     getPosts(),
