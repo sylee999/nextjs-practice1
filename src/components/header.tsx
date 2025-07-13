@@ -9,7 +9,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 
-import { SearchForm } from "./search-form"
+import { SearchBar } from "./search/search-bar"
 import { LogoutLabel } from "./user/logout-label"
 import { UserAvatar } from "./user/user-avatar"
 
@@ -34,7 +34,7 @@ export async function Header(): Promise<React.JSX.Element> {
             <span className="">v1.0.0</span>
           </div>
         </Link>
-        <SearchForm className="ml-auto w-auto" />
+        <SearchBar className="ml-auto w-full max-w-sm" />
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <UserAvatar user={user} size="md" />
