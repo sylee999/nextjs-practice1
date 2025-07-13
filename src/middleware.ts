@@ -39,7 +39,7 @@ export function middleware(request: NextRequest) {
   // Redirect to from page if accessing login/signup while authenticated
   if (isAuthRoute && isAuthenticated) {
     const from = request.nextUrl.searchParams.get("from")
-    return NextResponse.redirect(new URL(from || "/", request.url))
+    return NextResponse.redirect(new URL(from || "/home", request.url))
   }
 
   // Allow the request to proceed

@@ -1,5 +1,6 @@
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Card, CardContent, CardHeader } from "@/components/ui/card"
+import { formatDate, formatTime } from "@/lib/utils"
 import { Post } from "@/types/post"
 import { User } from "@/types/user"
 
@@ -47,8 +48,7 @@ export function PostDetail({
               {author?.name || "Unknown Author"}
             </p>
             <p className="text-xs text-gray-500">
-              {new Date(post.createdAt).toLocaleDateString()} at{" "}
-              {new Date(post.createdAt).toLocaleTimeString()}
+              {formatDate(post.createdAt)} at {formatTime(post.createdAt)}
             </p>
           </div>
         </div>
@@ -65,7 +65,7 @@ export function PostDetail({
             </span>
             {post.updatedAt !== post.createdAt && (
               <span className="text-sm text-gray-500">
-                Updated: {new Date(post.updatedAt).toLocaleDateString()}
+                Updated: {formatDate(post.updatedAt)}
               </span>
             )}
           </div>

@@ -4,7 +4,8 @@ import { revalidatePath } from "next/cache"
 import { redirect } from "next/navigation"
 
 import { checkAuth } from "@/app/auth/actions"
-import { getPostApiUrl } from "@/lib/api"
+import { getUser } from "@/app/user/actions"
+import { getPostApiUrl, getUserApiUrl } from "@/lib/api"
 import {
   APIError,
   AuthenticationError,
@@ -12,6 +13,7 @@ import {
   NotFoundError,
 } from "@/types/errors"
 import { CreatePostData, Post, UpdatePostData } from "@/types/post"
+import { User } from "@/types/user"
 
 type PostActionState = {
   message: string
@@ -116,7 +118,7 @@ export async function getUserPosts(userId: string): Promise<Post[]> {
 }
 
 export async function createPostAction(
-  prevState: PostActionState,
+  prevState: PostActionState | void,
   formData: FormData
 ): Promise<PostActionState | void> {
   let createdId: string | undefined
@@ -178,7 +180,7 @@ export async function createPostAction(
 }
 
 export async function updatePostAction(
-  prevState: PostActionState,
+  prevState: PostActionState | void,
   formData: FormData
 ): Promise<PostActionState | void> {
   let updatedId: string | undefined
@@ -312,4 +314,156 @@ export async function deletePostAction(
 
   // Redirect to post list page after successful deletion
   redirect("/post")
+}
+
+/**
+ * Fetches posts from all users that the current user follows.
+ * Used for the personalized home feed.
+ * Returns posts sorted by creation date (newest first).
+ */
+export async function getPostsFromFollowedUsers(): Promise<{
+  posts: Post[]
+  authors: User[]
+}> {
+  try {
+    // Step 1: Check authentication
+    const authUser = await checkAuth()
+    if (!authUser) {
+      // Return empty posts for unauthenticated users
+      return { posts: [], authors: [] }
+    }
+
+    // Step 2: Get current user's following list
+    const currentUser = await getUser(authUser.id)
+    if (!currentUser) {
+      throw new APIError(
+        "Failed to fetch current user data",
+        404,
+        getUserApiUrl(authUser.id)
+      )
+    }
+
+    // Handle edge case: user follows no one
+    const followingList = currentUser.following || []
+    if (followingList.length === 0) {
+      return { posts: [], authors: [] }
+    }
+
+    // Step 3: Fetch posts from all followed users in parallel
+    const postPromises = followingList.map((userId) => getUserPosts(userId))
+    const userPromises = followingList.map((userId) => getUser(userId))
+
+    const [allPostsArrays, allUsers] = await Promise.all([
+      Promise.allSettled(postPromises),
+      Promise.allSettled(userPromises),
+    ])
+
+    // Step 4: Process results and handle partial failures
+    const allPosts: Post[] = []
+    const authors: User[] = []
+
+    // Process posts
+    allPostsArrays.forEach((result, index) => {
+      if (result.status === "fulfilled" && result.value) {
+        allPosts.push(...result.value)
+      } else {
+        console.error(
+          `Failed to fetch posts for user ${followingList[index]}:`,
+          result.status === "rejected" ? result.reason : "Unknown error"
+        )
+      }
+    })
+
+    // Process authors
+    allUsers.forEach((result, index) => {
+      if (result.status === "fulfilled" && result.value) {
+        authors.push(result.value)
+      } else {
+        console.error(
+          `Failed to fetch user data for ${followingList[index]}:`,
+          result.status === "rejected" ? result.reason : "Unknown error"
+        )
+      }
+    })
+
+    // Step 5: Sort posts by creation date (newest first)
+    const sortedPosts = allPosts.sort((a, b) => {
+      const dateA = new Date(a.createdAt).getTime()
+      const dateB = new Date(b.createdAt).getTime()
+      return dateB - dateA // Newest first
+    })
+
+    return { posts: sortedPosts, authors }
+  } catch (error) {
+    console.error("Error fetching posts from followed users:", error)
+    // Re-throw authentication errors
+    if (error instanceof AuthenticationError) {
+      throw error
+    }
+    // Return empty results for other errors to allow graceful degradation
+    return { posts: [], authors: [] }
+  }
+}
+
+/**
+ * Fetches popular posts for the public home feed.
+ * Used when users are not authenticated or as a fallback.
+ * Returns posts sorted by popularity criteria (newest and most bookmarked).
+ */
+export async function getPopularPosts(limit = 20): Promise<{
+  posts: Post[]
+  authors: User[]
+}> {
+  try {
+    // Step 1: Fetch all posts
+    const allPosts = await getPosts()
+
+    // Step 2: Sort posts by popularity criteria
+    // Primary: Number of bookmarks (descending)
+    // Secondary: Creation date (newest first)
+    const sortedPosts = allPosts.sort((a, b) => {
+      // First, compare by bookmark count
+      const bookmarkDiff =
+        (b.bookmarkedBy?.length || 0) - (a.bookmarkedBy?.length || 0)
+      if (bookmarkDiff !== 0) {
+        return bookmarkDiff
+      }
+
+      // If bookmark counts are equal, sort by creation date
+      const dateA = new Date(a.createdAt).getTime()
+      const dateB = new Date(b.createdAt).getTime()
+      return dateB - dateA // Newest first
+    })
+
+    // Step 3: Limit the number of posts
+    const popularPosts = sortedPosts.slice(0, limit)
+
+    // Step 4: Get unique author IDs
+    const uniqueAuthorIds = [
+      ...new Set(popularPosts.map((post) => post.userId)),
+    ]
+
+    // Step 5: Fetch author information in parallel
+    const authorPromises = uniqueAuthorIds.map((userId) => getUser(userId))
+    const authorResults = await Promise.allSettled(authorPromises)
+
+    // Step 6: Process author results
+    const authors: User[] = []
+    authorResults.forEach((result, index) => {
+      if (result.status === "fulfilled" && result.value) {
+        authors.push(result.value)
+      } else {
+        console.error(
+          `Failed to fetch author data for user ${uniqueAuthorIds[index]}:`,
+          result.status === "rejected" ? result.reason : "Unknown error"
+        )
+      }
+    })
+
+    return { posts: popularPosts, authors }
+  } catch (error) {
+    console.error("Error fetching popular posts:", error)
+    // Return empty results for errors to allow graceful degradation
+    return { posts: [], authors: [] }
+  }
 }

@@ -2,6 +2,7 @@ import { memo } from "react"
 
 import { FollowButton } from "@/components/user/follow-button"
 import { UserAvatar } from "@/components/user/user-avatar"
+import { formatDate } from "@/lib/utils"
 import type { UserComponentProps } from "@/types/components"
 
 interface UserDetailProps extends UserComponentProps {
@@ -49,45 +50,17 @@ export const UserDetail = memo(function UserDetail({
   const followersCount = user.followers?.length || 0
   const followingCount = user.following?.length || 0
 
-  // Compact variant for user list
-  if (variant === "compact") {
-    return (
-      <div className="group rounded-lg border border-gray-200/80 bg-white/95 shadow-md backdrop-blur-sm transition-all duration-300 hover:shadow-lg hover:shadow-gray-200/50">
-        <div className="p-4">
-          <div className="flex items-center space-x-4">
-            {/* Compact Avatar */}
-            <div className="flex-shrink-0">
-              <UserAvatar
-                user={user}
-                size="lg"
-                className="shadow-md ring-2 ring-white/70 transition-all duration-300 group-hover:shadow-lg"
-              />
-            </div>
-
-            {/* User Information */}
-            <div className="min-w-0 flex-1">
-              <div className="space-y-1">
-                <h3 className="truncate text-lg font-bold tracking-tight text-gray-900">
-                  {user.name}
-                </h3>
-                <p className="truncate text-sm font-medium text-gray-600">
-                  {user.email}
-                </p>
-              </div>
-
-              {/* Compact Stats */}
-              <div className="mt-2 flex items-center space-x-4 text-xs text-gray-500">
-                <span className="font-medium">
-                  {followersCount}{" "}
-                  {followersCount === 1 ? "follower" : "followers"}
-                </span>
-                <span className="font-medium">{followingCount} following</span>
-                <span className="font-medium">
-                  {bookmarkCount}{" "}
-                  {bookmarkCount === 1 ? "bookmark" : "bookmarks"}
-                </span>
-              </div>
-            </div>
+  return (
+    <div className="rounded-lg border border-gray-200 bg-white p-6">
+      <div className="flex items-start justify-between">
+        <div className="flex items-center gap-4">
+          <UserAvatar user={user} size="lg" />
+          <div className="flex flex-col">
+            <h1 className="text-xl font-semibold text-gray-900">{user.name}</h1>
+            <p className="text-gray-600">{user.email}</p>
+            <p className="text-sm text-gray-500">
+              Member since {formatDate(user.createdAt)}
+            </p>
           </div>
         </div>
       </div>

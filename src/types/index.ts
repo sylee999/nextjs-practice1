@@ -86,7 +86,7 @@ export interface FollowStats {
   isFollowing: boolean
 }
 
-// Bookmark functionality types  
+// Bookmark functionality types
 export interface BookmarkStats {
   isBookmarked: boolean
   bookmarkCount: number

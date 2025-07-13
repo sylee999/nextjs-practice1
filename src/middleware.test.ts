@@ -82,7 +82,7 @@ describe("Middleware", () => {
     expect(NextResponse.redirect).toHaveBeenCalledWith(expect.any(URL))
     expect(NextResponse.next).not.toHaveBeenCalled()
     const redirectUrl = (NextResponse.redirect as Mock).mock.calls[0][0] as URL
-    expect(redirectUrl.pathname).toBe("/")
+    expect(redirectUrl.pathname).toBe("/home")
   })
 
   it("should redirect non-authenticated users from protected routes to login page", () => {

@@ -73,6 +73,7 @@ describe("createUser", () => {
     const body = JSON.parse(options.body)
     expect(body).toEqual({
       avatar: "https://example.com/avatar.jpg",
+      bio: "",
       email: "test@example.com",
       name: "Test User",
       password: "password",

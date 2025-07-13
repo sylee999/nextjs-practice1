@@ -26,7 +26,7 @@ export async function loginAction(
 ): Promise<LoginState & { from: string }> {
   const email = formData.get("email") as string
   const password = formData.get("password") as string
-  const from = (formData.get("from") as string) || "/user"
+  const from = (formData.get("from") as string) || "/home"
 
   if (!email || !password) {
     return {

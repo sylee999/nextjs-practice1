@@ -33,7 +33,7 @@ describe("auth actions", () => {
       expect(result).toEqual({
         success: false,
         message: "Email and password are required.",
-        from: "/user",
+        from: "/home",
       })
     })
 
@@ -56,7 +56,7 @@ describe("auth actions", () => {
         success: false,
         message:
           "Configuration error: MOCKAPI_TOKEN environment variable is not defined is not properly configured",
-        from: "/user",
+        from: "/home",
       })
 
       // Restore the mock environment variable
@@ -89,7 +89,7 @@ describe("auth actions", () => {
       expect(result).toEqual({
         success: false,
         message: "Login failed. Please try again.",
-        from: "/user",
+        from: "/home",
       })
 
       expect(global.fetch).toHaveBeenCalledWith(
@@ -122,7 +122,7 @@ describe("auth actions", () => {
       expect(result).toEqual({
         success: false,
         message: "Invalid email or password.",
-        from: "/user",
+        from: "/home",
       })
     })
 
@@ -158,7 +158,7 @@ describe("auth actions", () => {
       expect(result).toEqual({
         success: false,
         message: "Invalid email or password.",
-        from: "/user",
+        from: "/home",
       })
     })
 
