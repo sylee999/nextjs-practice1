@@ -58,6 +58,7 @@ vi.mock("@/components/ui/avatar", () => ({
     <div data-testid="avatar-fallback">{children}</div>
   ),
   AvatarImage: ({ alt, ...props }: any) => (
+    // eslint-disable-next-line @next/next/no-img-element
     <img data-testid="avatar-image" alt={alt} {...props} />
   ),
 }))

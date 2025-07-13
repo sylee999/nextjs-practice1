@@ -19,6 +19,21 @@ vi.mock("next/link", () => ({
   }) => <a href={href}>{children}</a>,
 }))
 
+// Mock Next.js navigation hooks
+vi.mock("next/navigation", () => ({
+  useRouter: () => ({
+    push: vi.fn(),
+    replace: vi.fn(),
+    refresh: vi.fn(),
+    back: vi.fn(),
+    forward: vi.fn(),
+    prefetch: vi.fn(),
+  }),
+  useSearchParams: () => ({
+    get: vi.fn(() => null),
+  }),
+}))
+
 describe("Header", () => {
   test("logo links to /home", async () => {
     const { checkAuth } = await import("@/app/auth/actions")
@@ -42,7 +57,7 @@ describe("Header", () => {
 
     // Check for search input
     const searchInput = container.querySelector(
-      'input[placeholder="Type to search..."]'
+      'input[placeholder="Search posts and users..."]'
     )
     expect(searchInput).toBeInTheDocument()
   })

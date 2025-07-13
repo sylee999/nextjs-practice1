@@ -1,3 +1,4 @@
+import { Suspense } from "react"
 import Link from "next/link"
 import { GalleryVerticalEnd } from "lucide-react"
 
@@ -34,7 +35,9 @@ export async function Header(): Promise<React.JSX.Element> {
             <span className="">v1.0.0</span>
           </div>
         </Link>
-        <SearchBar className="ml-auto w-full max-w-sm" />
+        <Suspense fallback={<div className="ml-auto w-full max-w-sm" />}>
+          <SearchBar className="ml-auto w-full max-w-sm" />
+        </Suspense>
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <UserAvatar user={user} size="md" />

@@ -6,11 +6,11 @@ import { searchPosts, searchUsers } from "@/lib/api"
 import { SearchType } from "@/types/search"
 
 interface SearchPageProps {
-  searchParams: {
+  searchParams: Promise<{
     q?: string
     type?: SearchType
     page?: string
-  }
+  }>
 }
 
 async function SearchResultsWrapper({
@@ -34,10 +34,11 @@ async function SearchResultsWrapper({
   return <SearchResults posts={posts} users={users} query={query} type={type} />
 }
 
-export default function SearchPage({ searchParams }: SearchPageProps) {
-  const query = searchParams.q || ""
-  const type = (searchParams.type as SearchType) || "all"
-  const page = parseInt(searchParams.page || "1", 10)
+export default async function SearchPage({ searchParams }: SearchPageProps) {
+  const params = await searchParams
+  const query = params.q || ""
+  const type = (params.type as SearchType) || "all"
+  const page = parseInt(params.page || "1", 10)
 
   return (
     <div className="container mx-auto max-w-4xl px-4 py-8">
